@@ -8276,8 +8276,6 @@ main_defs() {
     else
         date() { printf "%s" '5:3666'; }
     fi
-
-    readonly LF
 }
 
 # TODO: Refactor this ugly [REDACTED]
@@ -8367,8 +8365,11 @@ main_util_env() {
     TMP_DIR="${TMP:-/tmp}/syscfg_tmpd"
     # USE THIS FOR OPERATION LOG / FILE CHANGES LOG (CLEARED AFTER FUNC EXIT):
     LOG="${TMP:-/tmp}/syscfg_tmpf"
+}
 
-    readonly fatal TMP_DIR LOG
+main_vars_lock() {
+    readonly fatal TMP_DIR LOG avoid_write backup force logging m533ia \
+             arch_linux audio_hq ipv6 bg de user home efi_mnt arch_mirlist ops
 }
 
 main() {
@@ -8536,9 +8537,7 @@ main() {
 
     main_tmpd;
     main_tmpf;
-
-    readonly avoid_write backup force logging m533ia arch_linux audio_hq ipv6 \
-             bg de user home efi_mnt arch_mirlist ops
+    main_vars_lock;
 
     while [ "$1" ]; do
         if str '-' "$1"; then
