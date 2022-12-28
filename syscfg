@@ -4133,6 +4133,36 @@ _BASHRC
 
 _bash_init_sway() {
     FILE_PATH_fd1 \
+<<'ENVIRONMENT'
+/etc/environment
+ENVIRONMENT
+
+    __FILE_PATH_preload;
+    FILE=$(libfile; cnt_init; lf;
+        FLAG_DESKTOP=0
+
+        printf "%s" "$FILE" | { while IFS= read -r LINE; do cnt_incr;
+            if LINE_PFIX 'XDG_CURRENT_DESKTOP='; then
+                FLAG_DESKTOP=1
+                STR 'XDG_CURRENT_DESKTOP=sway'
+                LINE_chg && continue
+            fi
+        printf "%s\n" "$LINE"; done
+
+        while :; do
+            if [ "$FLAG_DESKTOP" = 0 ]; then
+                FLAG_DESKTOP=1
+                STR 'XDG_CURRENT_DESKTOP=sway'
+                LINE_addF && continue
+            else
+                break
+            fi
+        done; }
+    ); FILE="${FILE%"${FILE##*[!$LF]}"}$LF"
+
+    __file_write_overwrite;
+
+    FILE_PATH_fd1 \
 <<_BASH_PROFILE
 $home/.bash_profile
 _BASH_PROFILE
