@@ -2932,6 +2932,7 @@ _autostart() {
 
     __systemd_service_enable 'dnsmasq'
     __systemd_service_enable 'iwd'
+    __systemd_service_enable 'rtkit-daemon'
 
     FILE_PATH_fd1 \
 <<MOC_SERVICE
