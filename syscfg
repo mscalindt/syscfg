@@ -2703,6 +2703,8 @@ __loc_chmod() {
         exit 222
     fi
 
+    chattr_remove "$FILE_PATH"
+
     if [ "$logging" = 1 ]; then
         if ! chmod "$1" "$FILE_PATH"; then
             EPERMS "$FILE_PATH"
@@ -2762,6 +2764,8 @@ __loc_target_chmod() {
         err - - "$FILE_PATH_TARGET"
         exit 222
     fi
+
+    chattr_remove "$FILE_PATH_TARGET"
 
     if [ "$logging" = 1 ]; then
         if ! chmod "$1" "$FILE_PATH_TARGET"; then
