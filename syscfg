@@ -6533,10 +6533,10 @@ set $mod Mod4
 set $term kitty
 
 set $menu exec \
-    $term --class=launcher \
+    $term --class=sway-app-launcher \
     /usr/bin/sway-launcher-desktop
-for_window [app_id="^launcher$"] floating enable, sticky enable, \
-                                 resize set 30 ppt 60 ppt, border pixel 10
+for_window [app_id="sway-app-launcher"] \
+    floating enable, sticky enable, resize set 30 ppt 60 ppt, border pixel 10
 
 input type:touchpad {
     dwt disabled
