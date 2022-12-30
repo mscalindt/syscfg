@@ -1066,84 +1066,377 @@ EERROR() {
 
 # END custom_err_functions; 230-235
 
+#! .desc:
+# Modify a file in-place according to format
+# A - anywhere; E - exact; P - prefix; S - suffix
+# + - add; - - remove; ~ - replace
+#! .params (<2+>):
+# <$1> - type(
+#     '-' - {-} pre-line
+#     '+' - {+} pre-line
+#     '+0' - {E} pre-line & {+} post-line
+#     '+1' - {P} pre-line & {+} post-line
+#     '+2' - {S} pre-line & {+} post-line
+#     '+3' - {A} pre-line & {+} post-line
+#     '~0' - {E} pre-line {~} post-line
+#     '~1' - {P} pre-line {~} post-line
+#     '~2' - {S} pre-line {~} post-line
+#     '~3' - {A} pre-line {~} post-line
+#     '~~1' - {P} pre-line {~} post-line | {+} post-line
+#     '~~2' - {S} pre-line {~} post-line | {+} post-line
+#     '~~3' - {A} pre-line {~} post-line | {+} post-line
+#     '~~~1' - {P} pre-line & match {~} post-line
+#         {
+#             <"$1"> - match
+#         }
+#     '~~~2' - {S} pre-line & match {~} post-line
+#         {
+#             <"$1"> - match
+#         }
+#     '~~~3' - {A} pre-line & match {~} post-line
+#         {
+#             <"$1"> - match
+#         }
+#     .
+# )
+# {["$1"] - pre-line
+# ["$2"]}+ - post-line
+#! .uses (<1+>):
+# [FILE] $ - an already parsed file
+# [FILE_PATH] $ - absolute path
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input/usage
 libfile() {
-    cnt_init() {
-        i=0
-    }
+    args_min 2 "$#" || return 255
 
-    cnt_incr() {
-        i=$((i + 1))
-    }
+    if [ ! "$FILE" ]; then
+        if ! __FILE_PATH_preload; then
+            return 0
+        fi
+    fi
 
-    lf() {
+    FILE=$(
+        line_add() {
+            while IFS= read -r line; do
+                i=$((i + 1))
+
+                # In a later stage, log writing can be made an internal
+                # setting, effectively increasing the number of conditional
+                # checks to a total of two. This way, specific line additions
+                # can be abbreviated (or not) as desired in the log file,
+                # without disabling the logging of other line additions.
+                if [ "$logging" = 1 ]; then
+                    LOG_write 1 "$i" "$line"
+                fi
+
+                printf "%s\n" "$line"
+            done <<EOF
+$1
+EOF
+        }
+
+        line_replace() {
+            # Here, $l is used to determine the current iteration of line.
+            l=0; while IFS= read -r line; do
+                l=$((l + 1))
+
+                # If $l is 1, it means we are in the first iteration. For the
+                # first iteration we do not increment the file line counter
+                # because we are simply replacing the line. For the following
+                # iterations we increment the file line counter because we are
+                # adding lines.
+                if [ "$l" -ne 1 ]; then
+                    i=$((i + 1))
+                fi
+
+                # If $l is 1, it means we are in the first iteration. For the
+                # first iteration we log line replace, for the following
+                # iterations we log line addition.
+                if [ "$logging" = 1 ]; then
+                    if [ "$l" -eq 1 ]; then
+                        if [ "$LINE" != "$line" ]; then
+                            LOG_write 3 "$i" "$LINE" "$line"
+                        fi
+                    else
+                        LOG_write 1 "$i" "$line"
+                    fi
+                fi
+
+                printf "%s\n" "$line"
+            done <<EOF
+$1
+EOF
+        }
+
+        parse_args() {
+            j=0; m=0; while [ "$#" -ge 2 ]; do case "$1" in
+                # - - {-} pre-line; $2
+                '-')
+                    case "$2" in
+                        *"$LF"*) exit 255 ;;
+                    esac
+
+                    case "$LINE" in
+                        "$2")
+                            if [ "$logging" = 1 ]; then
+                                LOG_write 2 "$i" "$LINE"
+                            fi
+
+                            i=$((i - 1))
+
+                            return;
+                        ;;
+                        *)
+                            shift 2
+                        ;;
+                    esac
+                ;;
+                # + - {+} pre-line; $2
+                '+')
+                    # The following variable helps to later compare and
+                    # determine which lines requsted to be added should
+                    # actually be added. It does this by noting the current
+                    # iteration of lines requsted to be added.
+                    j=$((j + 1))
+
+                    case "$LINE" in
+                        "$2")
+                            # The line requested to be added already exists.
+                            # Note it in the following variable to later
+                            # compare and add any missing requested lines, if
+                            # any. The comma character is used as a delimiter
+                            # between the numbers for easy and fail-safe number
+                            # grep.
+                            k="${k},${j},"
+
+                            printf "%s\n" "$LINE"
+
+                            return;
+                        ;;
+                        *)
+                            shift 2
+                        ;;
+                    esac
+                ;;
+                # +0 - {E} pre-line & {+} post-line; $2 & $3 respectively
+                # +1 - {P} pre-line & {+} post-line; $2 & $3 respectively
+                # +2 - {S} pre-line & {+} post-line; $2 & $3 respectively
+                # +3 - {A} pre-line & {+} post-line; $2 & $3 respectively
+                '+0'|'+1'|'+2'|'+3')
+                    args_min 3 "$#" || exit 255
+
+                    case "$2" in
+                        *"$LF"*) exit 255 ;;
+                    esac
+
+                    case "$1$LINE" in
+                        "+0$2" | \
+                        "+1$2"* | \
+                        '+2'*"$2" | \
+                        '+3'*"$2"*)
+                            printf "%s\n" "$LINE"
+
+                            # Properly print $3 and increment the file line
+                            # counter if $3 contains newlines, i.e. if $3 is
+                            # multiple lines in one string. This function
+                            # automatically writes the relevant details to the
+                            # log file.
+                            line_add "$3"
+
+                            return;
+                        ;;
+                        *)
+                            shift 3
+                        ;;
+                    esac
+                ;;
+                # ~0 - {E} pre-line {~} post-line; $2 & $3 respectively
+                # ~1 - {P} pre-line {~} post-line; $2 & $3 respectively
+                # ~2 - {S} pre-line {~} post-line; $2 & $3 respectively
+                # ~3 - {A} pre-line {~} post-line; $2 & $3 respectively
+                '~0'|'~1'|'~2'|'~3')
+                    args_min 3 "$#" || exit 255
+
+                    case "$2" in
+                        *"$LF"*) exit 255 ;;
+                    esac
+
+                    case "$1$LINE" in
+                        "~0$2" | \
+                        "~1$2"* | \
+                        '~2'*"$2" | \
+                        '~3'*"$2"*)
+                            # Properly replace the line with $3 and increment
+                            # the file line counter if $3 contains newlines,
+                            # i.e. if $3 is multiple lines in one string. This
+                            # function automatically writes the relevant
+                            # details to the log file.
+                            line_replace "$3"
+
+                            return;
+                        ;;
+                        *)
+                            shift 3
+                        ;;
+                    esac
+                ;;
+                # ~~1 - {P} pre-line {~} post-line | {+} post-line; $2 & $3
+                # ~~2 - {S} pre-line {~} post-line | {+} post-line; $2 & $3
+                # ~~3 - {A} pre-line {~} post-line | {+} post-line; $2 & $3
+                '~~1'|'~~2'|'~~3')
+                    args_min 3 "$#" || exit 255
+
+                    case "$2" in
+                        *"$LF"*) exit 255 ;;
+                    esac
+
+                    m=$((m + 1))
+
+                    case "$1$LINE" in
+                        "~~1$2"* | \
+                        '~~2'*"$2" | \
+                        '~~3'*"$2"*)
+                            n="${n},${m},"
+
+                            # Properly replace the line with $3 and increment
+                            # the file line counter if $3 contains newlines,
+                            # i.e. if $3 is multiple lines in one string. This
+                            # function automatically writes the relevant
+                            # details to the log file.
+                            line_replace "$3"
+
+                            return;
+                        ;;
+                        *)
+                            shift 3
+                        ;;
+                    esac
+                ;;
+                # ~~~1 - {P} pre-line & match {~} post-line; $3 & $2 & $4
+                # ~~~2 - {S} pre-line & match {~} post-line; $3 & $2 & $4
+                # ~~~3 - {A} pre-line & match {~} post-line; $3 & $2 & $4
+                '~~~1'|'~~~2'|'~~~3')
+                    args_min 4 "$#" || exit 255
+
+                    case "$2$3" in
+                        *"$LF"*) exit 255 ;;
+                    esac
+
+                    case "$1$LINE" in
+                        "~~~1$3"* | \
+                        '~~~2'*"$3" | \
+                        '~~~3'*"$3"*)
+                            case "$LINE" in
+                                *"$2"*) : ;;
+                                *) shift 4 && continue ;;
+                            esac
+
+                            # Properly replace the line with $4 and increment
+                            # the file line counter if $4 contains newlines,
+                            # i.e. if $4 is multiple lines in one string. This
+                            # function automatically writes the relevant
+                            # details to the log file.
+                            line_replace "$3"
+
+                            return;
+                        ;;
+                        *)
+                            shift 4
+                        ;;
+                    esac
+                ;;
+                *)
+                    exit 255
+                ;;
+            esac; done
+
+            args_eq 0 "$#" || exit 255
+
+            # Print the line as-is since no match was found.
+            printf "%s\n" "$LINE"
+        }
+
+        # It is almost always preferred that any lines added by us are placed
+        # distinguishably, i.e. they are separated by our newline. This has the
+        # added benefit of standardizing the process of line addition as the
+        # count of trailing newlines in the original file, be it zero or more
+        # than one, will not matter. This could be made configurable at a later
+        # stage.
         case "${FILE#"${FILE%??}"}" in
             "$LF$LF") : ;;
             *"$LF") FILE="$FILE$LF" ;;
             *) FILE="$FILE$LF$LF" ;;
         esac
-    }
 
-    STR() {
-        STRING="$*"
-    }
+        i=0; printf "%s" "$FILE" | { while IFS= read -r LINE; do
+            i=$((i + 1)); parse_args "$@"
+        done
 
-    LINE() {
-        str "$1" "$LINE"
-    }
+        # Add lines remaining to be added, if any.
+        j=0; m=0; while [ "$#" -ge 2 ]; do case "$1" in
+            '+')
+                j=$((j + 1))
 
-    LINE_PFIX() {
-        str_pfix "$1" "$LINE"
-    }
+                case "$k" in
+                    *",${j},"*)
+                        : # line already added
+                    ;;
+                    *)
+                        # Properly print $2 and increment the file line counter
+                        # if $2 contains newlines, i.e. if $2 is multiple lines
+                        # in one string. This function automatically writes the
+                        # relevant details to the log file.
+                        line_add "$2"
+                    ;;
+                esac
 
-    LINE_SFIX() {
-        str_sfix "$1" "$LINE"
-    }
+                shift 2
+            ;;
+            '~~1'|'~~2'|'~~3')
+                args_min 3 "$#" || exit 255
 
-    LINE_add() {
-        if [ "$LINE" ]; then
-            printf "%s\n%s\n" "$STRING" "$LINE"
+                case "$2" in
+                    *"$LF"*) exit 255 ;;
+                esac
 
-            [ "$logging" = 1 ] && LOG_write 1 "$i" "$STRING"
+                m=$((m + 1))
 
-            i=$((i + 1))
-        else
-            printf "%s\n" "$STRING"
+                case "$n" in
+                    *",${m},"*)
+                        : # line already replaced
+                    ;;
+                    *)
+                        # Properly print $3 and increment the file line counter
+                        # if $3 contains newlines, i.e. if $3 is multiple lines
+                        # in one string. This function automatically writes the
+                        # relevant details to the log file.
+                        line_add "$3"
+                    ;;
+                esac
 
-            i=$((i + 1))
+                shift 3
+            ;;
+            '-')
+                shift 2
+            ;;
+            '+0'|'+1'|'+2'|'+3'|'~0'|'~1'|'~2'|'~3')
+                shift 3
+            ;;
+            '~~~1'|'~~~2'|'~~~3')
+                shift 4
+            ;;
+            *)
+                exit 255
+            ;;
+        esac; done
 
-            [ "$logging" = 1 ] && LOG_write 1 "$i" "$STRING"
-        fi
-    }
+        args_eq 0 "$#" || exit 255; }
+    )
 
-    LINE_addF() {
-        printf "%s\n" "$STRING"
-
-        if [ "$LINE" ]; then
-            [ "$logging" = 1 ] && LOG_write 1 "$i" "$STRING"
-
-            i=$((i + 1))
-        else
-            i=$((i + 1))
-
-            [ "$logging" = 1 ] && LOG_write 1 "$i" "$STRING"
-        fi
-    }
-
-    LINE_chg() {
-        printf "%s\n" "$STRING"
-
-        if [ "$logging" = 1 ] && [ ! "$LINE" = "$STRING" ]; then
-            LOG_write 3 "$i" "$LINE" "$STRING"
-        fi
-    }
-
-    LINE_rm() {
-        if [ "$logging" = 1 ]; then
-            LOG_write 2 "$i" "$LINE"
-        fi
-
-        i=$((i - 1))
-    }
+    # Add a newline, as the command substitution removed all trailing ones.
+    FILE="$FILE$LF"
 }
 
 #! .desc:
@@ -4138,28 +4431,9 @@ _bash_init_sway() {
 /etc/environment
 ENVIRONMENT
 
-    __FILE_PATH_preload;
-    FILE=$(libfile; cnt_init; lf;
-        FLAG_DESKTOP=0
-
-        printf "%s" "$FILE" | { while IFS= read -r LINE; do cnt_incr;
-            if LINE_PFIX 'XDG_CURRENT_DESKTOP='; then
-                FLAG_DESKTOP=1
-                STR 'XDG_CURRENT_DESKTOP=sway'
-                LINE_chg && continue
-            fi
-        printf "%s\n" "$LINE"; done
-
-        while :; do
-            if [ "$FLAG_DESKTOP" = 0 ]; then
-                FLAG_DESKTOP=1
-                STR 'XDG_CURRENT_DESKTOP=sway'
-                LINE_addF && continue
-            else
-                break
-            fi
-        done; }
-    ); FILE="${FILE%"${FILE##*[!$LF]}"}$LF"
+    libfile ~~1 \
+            'XDG_CURRENT_DESKTOP=' \
+            'XDG_CURRENT_DESKTOP=sway'
 
     __file_write_overwrite;
 
@@ -4489,34 +4763,58 @@ $home/.mozilla/firefox/profiles.ini
 PROFILES_INI
 
     __FILE_PATH_preload;
-    FILE=$(libfile; cnt_init; lf;
-        FLAG_PROFILE=0; PROFILE_COUNT=0
 
-        printf "%s" "$FILE" | { while IFS= read -r LINE; do cnt_incr;
-            if LINE_PFIX 'Path=499sh1ev.HARDENED'; then
-                FLAG_PROFILE=1
-            elif LINE_PFIX '[Profile' && LINE_SFIX ']'; then
-                PROFILE_COUNT=$((PROFILE_COUNT + 1))
-            fi
-        printf "%s\n" "$LINE"; done
+    FILE=$(
+        line_add() {
+            while IFS= read -r line; do
+                i=$((i + 1))
+
+                if [ "$logging" = 1 ]; then
+                    LOG_write 1 "$i" "$line"
+                fi
+
+                printf "%s\n" "$line"
+            done <<EOF
+$1
+EOF
+        }
+
+        case "${FILE#"${FILE%??}"}" in
+            "$LF$LF") : ;;
+            *"$LF") FILE="$FILE$LF" ;;
+            *) FILE="$FILE$LF$LF" ;;
+        esac
+
+        FLAG_PROFILE=0
+
+        i=0; j=0; printf "%s" "$FILE" | { while IFS= read -r LINE; do
+            i=$((i + 1))
+
+            case "$LINE" in
+                'Path=499sh1ev.HARDENED')
+                    FLAG_PROFILE=1
+                ;;
+                '[Profile'*']')
+                    j=$((j + 1))
+                ;;
+            esac
+
+            printf "%s\n" "$LINE"
+        done
 
         while :; do
             if [ "$FLAG_PROFILE" = 0 ]; then
                 FLAG_PROFILE=1
-                STR "[Profile${PROFILE_COUNT}]"
-                LINE_addF;
-                STR 'Name=HARDENED'
-                LINE_addF;
-                STR 'IsRelative=1'
-                LINE_addF;
-                STR 'Path=499sh1ev.HARDENED'
-                LINE_addF;
-                continue
+
+                line_add "[Profile${j}]"
+                line_add 'Name=HARDENED'
+                line_add 'IsRelative=1'
+                line_add 'Path=499sh1ev.HARDENED'
             else
                 break
             fi
         done; }
-    ); FILE="${FILE%"${FILE##*[!$LF]}"}$LF"
+    ); FILE="$FILE$LF"
 
     __file_write_overwrite;
 }
@@ -4527,28 +4825,9 @@ _firefox_wayland_conf() {
 /etc/environment
 ENVIRONMENT
 
-    __FILE_PATH_preload;
-    FILE=$(libfile; cnt_init; lf;
-        FLAG_MOZ_WAYLAND=0
-
-        printf "%s" "$FILE" | { while IFS= read -r LINE; do cnt_incr;
-            if LINE_PFIX 'MOZ_ENABLE_WAYLAND='; then
-                FLAG_MOZ_WAYLAND=1
-                STR 'MOZ_ENABLE_WAYLAND=1'
-                LINE_chg && continue
-            fi
-        printf "%s\n" "$LINE"; done
-
-        while :; do
-            if [ "$FLAG_MOZ_WAYLAND" = 0 ]; then
-                FLAG_MOZ_WAYLAND=1
-                STR 'MOZ_ENABLE_WAYLAND=1'
-                LINE_addF && continue
-            else
-                break
-            fi
-        done; }
-    ); FILE="${FILE%"${FILE##*[!$LF]}"}$LF"
+    libfile ~~1 \
+            'MOZ_ENABLE_WAYLAND=' \
+            'MOZ_ENABLE_WAYLAND=1'
 
     __file_write_overwrite;
 }
@@ -5699,18 +5978,13 @@ _makepkg_conf() {
 /etc/makepkg.conf
 MAKEPKG_CONF
 
-    __FILE_PATH_preload;
-    FILE=$(libfile; cnt_init; lf;
-        printf "%s" "$FILE" | while IFS= read -r LINE; do cnt_incr;
-            if LINE_PFIX 'CFLAGS="' && LINE ' -mtune='; then
-                STR "${LINE%' -mtune='*}"' -mtune=native '"${LINE#*'-mtune='* }"
-                LINE_chg && continue
-            elif LINE 'MAKEFLAGS="-j'; then
-                STR 'MAKEFLAGS="-j6"'
-                LINE_chg && continue
-            fi
-        printf "%s\n" "$LINE"; done
-    ); FILE="${FILE%"${FILE##*[!$LF]}"}$LF"
+    libfile ~~~1 \
+            ' -O2 -pipe -fno-plt -fexceptions \' \
+            'CFLAGS="-march=x86-64 -mtune=' \
+            'CFLAGS="-march=x86-64 -mtune=native -O2 -pipe -fno-plt -fexceptions \' \
+            ~~3 \
+            'MAKEFLAGS="-j' \
+            'MAKEFLAGS="-j6"'
 
     __file_write_overwrite;
 }
@@ -5916,62 +6190,105 @@ _pacman_conf() {
 /etc/pacman.conf
 PACMAN_CONF
 
-    __FILE_PATH_preload;
-    FILE=$(libfile; cnt_init; lf;
-        _FLAG_MLIB=0; FLAG_MLIB=0; FLAG_CLR=0; FLAG_PRLDWN=0; FLAG_PKGLIST=0
+    libfile ~~3 \
+            'Color' \
+            'Color' \
+            ~~3 \
+            'ParallelDownloads' \
+            'ParallelDownloads = 3' \
+            ~~3 \
+            'VerbosePkgLists' \
+            'VerbosePkgLists'
 
-        printf "%s" "$FILE" | { while IFS= read -r LINE; do cnt_incr;
+    FILE=$(
+        line_add() {
+            while IFS= read -r line; do
+                i=$((i + 1))
+
+                if [ "$logging" = 1 ]; then
+                    LOG_write 1 "$i" "$line"
+                fi
+
+                printf "%s\n" "$line"
+            done <<EOF
+$1
+EOF
+        }
+
+        line_replace() {
+            l=0; while IFS= read -r line; do
+                l=$((l + 1))
+
+                if [ "$l" -ne 1 ]; then
+                    i=$((i + 1))
+                fi
+
+                if [ "$logging" = 1 ]; then
+                    if [ "$l" -eq 1 ]; then
+                        if [ "$LINE" != "$line" ]; then
+                            LOG_write 3 "$i" "$LINE" "$line"
+                        fi
+                    else
+                        LOG_write 1 "$i" "$line"
+                    fi
+                fi
+
+                printf "%s\n" "$line"
+            done <<EOF
+$1
+EOF
+        }
+
+        case "${FILE#"${FILE%??}"}" in
+            "$LF$LF") : ;;
+            *"$LF") FILE="$FILE$LF" ;;
+            *) FILE="$FILE$LF$LF" ;;
+        esac
+
+        _FLAG_MLIB=0; FLAG_MLIB=0
+
+        i=0; printf "%s" "$FILE" | { while IFS= read -r LINE; do
+            i=$((i + 1))
+
             if [ "$_FLAG_MLIB" = 1 ]; then
                 _FLAG_MLIB=0
-                STR 'Include = '"$arch_mirlist"
-                if LINE 'Include ='; then LINE_chg; else LINE_add; fi
+
+                case "$LINE" in
+                    *'Include = '*)
+                        line_replace "Include = $arch_mirlist"
+                    ;;
+                    *)
+                        line_add "Include = $arch_mirlist"
+                    ;;
+                esac
+
                 continue
             fi
 
-            if LINE '[multilib]'; then
-                FLAG_MLIB=1; _FLAG_MLIB=1
-                STR '[multilib]'
-                LINE_chg && continue
-            elif LINE 'Color'; then
-                FLAG_CLR=1
-                STR 'Color'
-                LINE_chg && continue
-            elif LINE 'ParallelDownloads'; then
-                FLAG_PRLDWN=1
-                STR 'ParallelDownloads = 3'
-                LINE_chg && continue
-            elif LINE 'VerbosePkgLists'; then
-                FLAG_PKGLIST=1
-                STR 'VerbosePkgLists'
-                LINE_chg && continue
-            fi
-        printf "%s\n" "$LINE"; done
+            case "$LINE" in
+                *'[multilib]'*)
+                    FLAG_MLIB=1; _FLAG_MLIB=1
+
+                    line_replace '[multilib]'
+
+                    continue
+                ;;
+            esac
+
+            printf "%s\n" "$LINE"
+        done
 
         while :; do
             if [ "$FLAG_MLIB" = 0 ]; then
                 FLAG_MLIB=1
-                STR '[multilib]'
-                LINE_addF;
-                STR 'Include = '"$arch_mirlist"
-                LINE_addF;
-                continue
-            elif [ "$FLAG_CLR" = 0 ]; then
-                FLAG_CLR=1
-                STR 'Color'
-                LINE_add && continue
-            elif [ "$FLAG_PRLDWN" = 0 ]; then
-                FLAG_PRLDWN=1
-                STR 'ParallelDownloads = 3'
-                LINE_add && continue
-            elif [ "$FLAG_PKGLIST" = 0 ]; then
-                FLAG_PKGLIST=1
-                STR 'VerbosePkgLists'
-                LINE_add && continue
+
+                line_add '[multilib]'
+                line_add "Include = $arch_mirlist"
             else
                 break
             fi
         done; }
-    ); FILE="${FILE%"${FILE##*[!$LF]}"}$LF"
+    ); FILE="$FILE$LF"
 
     __file_write_overwrite;
 }
@@ -6004,19 +6321,60 @@ FAILLOCK_CONF
 SU
 
     __FILE_PATH_preload;
-    FILE=$(libfile; cnt_init; lf;
-        printf "%s" "$FILE" | while IFS= read -r LINE; do cnt_incr;
-            while :; do
-                if LINE_PFIX 'auth' && LINE 'pam_unix.so'; then
-                    LINE 'nodelay' && break
-                    STR "$LINE"' nodelay'
-                    LINE_chg && continue 2
-                else
-                    break
+
+    FILE=$(
+        line_replace() {
+            l=0; while IFS= read -r line; do
+                l=$((l + 1))
+
+                if [ "$l" -ne 1 ]; then
+                    i=$((i + 1))
                 fi
-            done
-        printf "%s\n" "$LINE"; done
-    ); FILE="${FILE%"${FILE##*[!$LF]}"}$LF"
+
+                if [ "$logging" = 1 ]; then
+                    if [ "$l" -eq 1 ]; then
+                        if [ "$LINE" != "$line" ]; then
+                            LOG_write 3 "$i" "$LINE" "$line"
+                        fi
+                    else
+                        LOG_write 1 "$i" "$line"
+                    fi
+                fi
+
+                printf "%s\n" "$line"
+            done <<EOF
+$1
+EOF
+        }
+
+        case "${FILE#"${FILE%??}"}" in
+            "$LF$LF") : ;;
+            *"$LF") FILE="$FILE$LF" ;;
+            *) FILE="$FILE$LF$LF" ;;
+        esac
+
+        i=0; printf "%s" "$FILE" | while IFS= read -r LINE; do
+            i=$((i + 1))
+
+            case "$LINE" in
+                'auth'*'pam_unix.so'*)
+                    case "$LINE" in
+                        *'nodelay'*)
+                            printf "%s\n" "$LINE"
+
+                            continue
+                        ;;
+                    esac
+
+                    line_replace "${LINE} nodelay"
+
+                    continue
+                ;;
+            esac
+
+            printf "%s\n" "$LINE"
+        done
+    ); FILE="$FILE$LF"
 
     __file_write_overwrite;
 
@@ -6026,19 +6384,60 @@ SU
 SYSTEM_AUTH
 
     __FILE_PATH_preload;
-    FILE=$(libfile; cnt_init; lf;
-        printf "%s" "$FILE" | while IFS= read -r LINE; do cnt_incr;
-            while :; do
-                if LINE_PFIX 'auth' && LINE 'pam_unix.so'; then
-                    LINE 'nodelay' && break
-                    STR "$LINE"' nodelay'
-                    LINE_chg && continue 2
-                else
-                    break
+
+    FILE=$(
+        line_replace() {
+            l=0; while IFS= read -r line; do
+                l=$((l + 1))
+
+                if [ "$l" -ne 1 ]; then
+                    i=$((i + 1))
                 fi
-            done
-        printf "%s\n" "$LINE"; done
-    ); FILE="${FILE%"${FILE##*[!$LF]}"}$LF"
+
+                if [ "$logging" = 1 ]; then
+                    if [ "$l" -eq 1 ]; then
+                        if [ "$LINE" != "$line" ]; then
+                            LOG_write 3 "$i" "$LINE" "$line"
+                        fi
+                    else
+                        LOG_write 1 "$i" "$line"
+                    fi
+                fi
+
+                printf "%s\n" "$line"
+            done <<EOF
+$1
+EOF
+        }
+
+        case "${FILE#"${FILE%??}"}" in
+            "$LF$LF") : ;;
+            *"$LF") FILE="$FILE$LF" ;;
+            *) FILE="$FILE$LF$LF" ;;
+        esac
+
+        i=0; printf "%s" "$FILE" | while IFS= read -r LINE; do
+            i=$((i + 1))
+
+            case "$LINE" in
+                'auth'*'pam_unix.so'*)
+                    case "$LINE" in
+                        *'nodelay'*)
+                            printf "%s\n" "$LINE"
+
+                            continue
+                        ;;
+                    esac
+
+                    line_replace "${LINE} nodelay"
+
+                    continue
+                ;;
+            esac
+
+            printf "%s\n" "$LINE"
+        done
+    ); FILE="$FILE$LF"
 
     __file_write_overwrite;
 }
@@ -6222,15 +6621,9 @@ DAEMON_CONF
 /etc/pulse/default.pa
 DEFAULT_PA
 
-    __FILE_PATH_preload;
-    FILE=$(libfile; cnt_init; lf;
-        printf "%s" "$FILE" | while IFS= read -r LINE; do cnt_incr;
-            if LINE_PFIX 'load-module module-suspend-on-idle'; then
-                STR '#'"$LINE"
-                LINE_chg && continue
-            fi
-        printf "%s\n" "$LINE"; done
-    ); FILE="${FILE%"${FILE##*[!$LF]}"}$LF"
+    libfile ~0 \
+            'load-module module-suspend-on-idle'
+            '#load-module module-suspend-on-idle'
 
     __file_write_overwrite;
 }
@@ -6241,28 +6634,9 @@ _qt_conf() {
 /etc/environment
 ENVIRONMENT
 
-    __FILE_PATH_preload;
-    FILE=$(libfile; cnt_init; lf;
-        FLAG_STYLE=0
-
-        printf "%s" "$FILE" | { while IFS= read -r LINE; do cnt_incr;
-            if LINE_PFIX 'QT_STYLE_OVERRIDE='; then
-                FLAG_STYLE=1
-                STR 'QT_STYLE_OVERRIDE=kvantum'
-                LINE_chg && continue
-            fi
-        printf "%s\n" "$LINE"; done
-
-        while :; do
-            if [ "$FLAG_STYLE" = 0 ]; then
-                FLAG_STYLE=1
-                STR 'QT_STYLE_OVERRIDE=kvantum'
-                LINE_addF && continue
-            else
-                break
-            fi
-        done; }
-    ); FILE="${FILE%"${FILE##*[!$LF]}"}$LF"
+    libfile ~~1 \
+            'QT_STYLE_OVERRIDE=' \
+            'QT_STYLE_OVERRIDE=kvantum'
 
     __file_write_overwrite;
 }
@@ -6997,36 +7371,12 @@ _wayland_conf() {
 /etc/environment
 ENVIRONMENT
 
-    __FILE_PATH_preload;
-    FILE=$(libfile; cnt_init; lf;
-        FLAG_PLATFORM=0; FLAG_DECORATIONS=0
-
-        printf "%s" "$FILE" | { while IFS= read -r LINE; do cnt_incr;
-            if LINE_PFIX 'QT_QPA_PLATFORM='; then
-                FLAG_PLATFORM=1
-                STR 'QT_QPA_PLATFORM=wayland'
-                LINE_chg && continue
-            elif LINE_PFIX 'QT_WAYLAND_DISABLE_WINDOWDECORATION='; then
-                FLAG_DECORATIONS=1
-                STR 'QT_WAYLAND_DISABLE_WINDOWDECORATION=1'
-                LINE_chg && continue
-            fi
-        printf "%s\n" "$LINE"; done
-
-        while :; do
-            if [ "$FLAG_PLATFORM" = 0 ]; then
-                FLAG_PLATFORM=1
-                STR 'QT_QPA_PLATFORM=wayland'
-                LINE_addF && continue
-            elif [ "$FLAG_DECORATIONS" = 0 ]; then
-                FLAG_DECORATIONS=1
-                STR 'QT_WAYLAND_DISABLE_WINDOWDECORATION=1'
-                LINE_addF && continue
-            else
-                break
-            fi
-        done; }
-    ); FILE="${FILE%"${FILE##*[!$LF]}"}$LF"
+    libfile ~~1 \
+            'QT_QPA_PLATFORM=' \
+            'QT_QPA_PLATFORM=wayland' \
+            ~~1 \
+            'QT_WAYLAND_DISABLE_WINDOWDECORATION=' \
+            'QT_WAYLAND_DISABLE_WINDOWDECORATION=1'
 
     __file_write_overwrite;
 }
@@ -8064,28 +8414,9 @@ _xorg_conf() {
 /etc/environment
 ENVIRONMENT
 
-    __FILE_PATH_preload;
-    FILE=$(libfile; cnt_init; lf;
-        FLAG_PLATFORM=0
-
-        printf "%s" "$FILE" | { while IFS= read -r LINE; do cnt_incr;
-            if LINE_PFIX 'QT_QPA_PLATFORM='; then
-                FLAG_PLATFORM=1
-                STR 'QT_QPA_PLATFORM=xcb'
-                LINE_chg && continue
-            fi
-        printf "%s\n" "$LINE"; done
-
-        while :; do
-            if [ "$FLAG_PLATFORM" = 0 ]; then
-                FLAG_PLATFORM=1
-                STR 'QT_QPA_PLATFORM=xcb'
-                LINE_addF && continue
-            else
-                break
-            fi
-        done; }
-    ); FILE="${FILE%"${FILE##*[!$LF]}"}$LF"
+    libfile ~~1 \
+            'QT_QPA_PLATFORM=' \
+            'QT_QPA_PLATFORM=xcb'
 
     __file_write_overwrite;
 
