@@ -6316,6 +6316,17 @@ FAILLOCK_CONF
     __file_write_overwrite;
 
     FILE_PATH_fd1 \
+<<'LOGIN_DEFS'
+/etc/login.defs
+LOGIN_DEFS
+
+    libfile ~1 \
+            'FAIL_DELAY' \
+            'FAIL_DELAY 0'
+
+    __file_write_overwrite;
+
+    FILE_PATH_fd1 \
 <<'SU'
 /etc/pam.d/su
 SU
