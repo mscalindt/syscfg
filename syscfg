@@ -7119,12 +7119,40 @@ STATUS
 <<'STATUS'
 #!/bin/sh
 
+replchars() {
+    replchar() {
+        IFS="$1"; _chars="$2"
+
+        set -f; set -- $3 "$3"; set +f
+
+        _str=; while [ "$#" -ge 3 ]; do
+            _str="$_str$1$_chars"; shift
+        done
+
+        case "$IFS" in
+            *"${2#"${2%?}"}"*) _str="$_str$1$_chars" ;;
+            *) _str="$_str$1" ;;
+        esac
+    }
+
+    _old_IFS="$IFS" 2> /dev/null
+    ${IFS+':'} unset _old_IFS 2> /dev/null
+
+    replchar "$1" "$2" "$3"
+
+    IFS="$_old_IFS" 2> /dev/null
+    ${_old_IFS+':'} unset IFS 2> /dev/null
+}
+
 TITLE=$(
     swaymsg -t get_tree | \
     jq '.. | select(.type?) | select(.focused==true).name' 2> /dev/null
 )
-[ "$TITLE" ] && TITLE="${TITLE#?}"
-[ "$TITLE" ] && TITLE="${TITLE%?}"
+if [ "$TITLE" ]; then
+    TITLE="${TITLE#?}"
+    TITLE="${TITLE%?}"
+    replchars '&' '&amp;' "$TITLE"; TITLE="$_str";
+fi
 
 PREV_IDLE=0
 PREV_TOTAL=0
