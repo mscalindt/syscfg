@@ -4480,11 +4480,6 @@ _BASH_PROFILE
 }
 
 _bluez_conf() {
-    [ ! "$m533ia" = 1 ] && {
-        info -w -1 'Nothing to be done.'
-        return 0
-    }
-
     FILE_PATH_fd1 \
 <<'MAIN_CONF'
 /etc/bluetooth/main.conf
