@@ -5345,6 +5345,17 @@ KITTY_CONF
 
 _kvantum_conf() {
     FILE_PATH_fd1 \
+<<'ENVIRONMENT'
+/etc/environment
+ENVIRONMENT
+
+    libfile ~~1 \
+            'QT_STYLE_OVERRIDE=' \
+            'QT_STYLE_OVERRIDE=kvantum'
+
+    __file_write_overwrite;
+
+    FILE_PATH_fd1 \
 <<KVANTUM_KVCONFIG
 $home/.config/Kvantum/kvantum.kvconfig
 KVANTUM_KVCONFIG
@@ -6558,19 +6569,6 @@ DEFAULT_PA
     libfile ~0 \
             'load-module module-suspend-on-idle'
             '#load-module module-suspend-on-idle'
-
-    __file_write_overwrite;
-}
-
-_qt_conf() {
-    FILE_PATH_fd1 \
-<<'ENVIRONMENT'
-/etc/environment
-ENVIRONMENT
-
-    libfile ~~1 \
-            'QT_STYLE_OVERRIDE=' \
-            'QT_STYLE_OVERRIDE=kvantum'
 
     __file_write_overwrite;
 }
@@ -8763,7 +8761,6 @@ main() {
     ops="$ops pam-conf"
     ops="$ops pipewire-conf"
     ops="$ops pulseaudio-conf"
-    ops="$ops qt-conf"
     ops="$ops ranger-conf"
     ops="$ops reflector"
     ops="$ops resolv-conf-dnsmasq"
