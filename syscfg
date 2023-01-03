@@ -7298,14 +7298,7 @@ CONFIG
     __file_write;
 }
 
-# $arch_linux assertion:
-# Does this require systemd? If not, remove the assertion.
 _sysctl_conf() {
-    [ ! "$arch_linux" = 1 ] && {
-        info -w -1 'Nothing to be done.'
-        return 0
-    }
-
     FILE_PATH_fd1 \
 <<'99_SYSCTL_CONF'
 /etc/sysctl.d/99-sysctl.conf
