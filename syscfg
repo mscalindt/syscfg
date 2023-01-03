@@ -2886,68 +2886,6 @@ __loc_chattr() {
 }
 
 #! .desc:
-# Set filesystem flags on a file/directory
-#! .params:
-# <$1> - flag(s) to set
-#! .uses:
-# <FILE_PATH_TARGET> $ - the file/directory
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input/usage
-__loc_target_chattr() {
-    args_eq 1 "$#" || return 255
-
-    cmd 'chattr' || return 0
-
-    if [ ! "$FILE_PATH_TARGET" ]; then
-        err -r -1 'Missing FILE_PATH_TARGET.'
-        return 255
-    fi
-
-    if ! loc_exists "$FILE_PATH_TARGET"; then
-        ENOENT;
-        err -r -- 'F/D '; err - - "$FILE_PATH_TARGET"
-        exit 202
-    fi
-
-    if [ -d "$FILE_PATH_TARGET" ]; then
-        :
-    elif [ -f "$FILE_PATH_TARGET" ]; then
-        :
-    else
-        EINVAL;
-        if [ -b "$FILE_PATH_TARGET" ]; then
-            err -r -- 'B ' # block file
-        elif [ -c "$FILE_PATH_TARGET" ]; then
-            err -r -- 'C ' # character file
-        elif [ -h "$FILE_PATH_TARGET" ]; then
-            err -r -- 'L ' # symbolic link
-        elif [ -p "$FILE_PATH_TARGET" ]; then
-            err -r -- 'P ' # named pipe
-        elif [ -S "$FILE_PATH_TARGET" ]; then
-            err -r -- 'S ' # socket
-        elif [ -t "$FILE_PATH_TARGET" ]; then
-            err -r -- 'FD ' # open file descriptor
-        elif [ -e "$FILE_PATH_TARGET" ]; then
-            err -r -- '> '
-        fi
-        err - - "$FILE_PATH_TARGET"
-        exit 222
-    fi
-
-    if [ "$logging" = 1 ]; then
-        if ! chattr +"$1" "$FILE_PATH_TARGET"; then
-            EFSFLAG "$FILE_PATH_TARGET"
-        fi
-    else
-        if ! chattr +"$1" "$FILE_PATH_TARGET" > /dev/null 2>&1; then
-            EFSFLAG "$FILE_PATH_TARGET"
-        fi
-    fi
-}
-
-#! .desc:
 # Set permissions on a file/directory
 #! .params:
 # <$1> - octal mode
@@ -3005,68 +2943,6 @@ __loc_chmod() {
     else
         if ! chmod "$1" "$FILE_PATH" > /dev/null 2>&1; then
             EPERMS "$FILE_PATH"
-        fi
-    fi
-}
-
-#! .desc:
-# Set permissions on a file/directory
-#! .params:
-# <$1> - octal mode
-#! .uses:
-# <FILE_PATH_TARGET> $ - the file/directory
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input/usage
-__loc_target_chmod() {
-    args_eq 1 "$#" || return 255
-
-    if [ ! "$FILE_PATH_TARGET" ]; then
-        err -r -1 'Missing FILE_PATH_TARGET.'
-        return 255
-    fi
-
-    if ! loc_exists "$FILE_PATH_TARGET"; then
-        ENOENT;
-        err -r -- 'F/D '; err - - "$FILE_PATH_TARGET"
-        exit 202
-    fi
-
-    if [ -d "$FILE_PATH_TARGET" ]; then
-        :
-    elif [ -f "$FILE_PATH_TARGET" ]; then
-        :
-    else
-        EINVAL;
-        if [ -b "$FILE_PATH_TARGET" ]; then
-            err -r -- 'B ' # block file
-        elif [ -c "$FILE_PATH_TARGET" ]; then
-            err -r -- 'C ' # character file
-        elif [ -h "$FILE_PATH_TARGET" ]; then
-            err -r -- 'L ' # symbolic link
-        elif [ -p "$FILE_PATH_TARGET" ]; then
-            err -r -- 'P ' # named pipe
-        elif [ -S "$FILE_PATH_TARGET" ]; then
-            err -r -- 'S ' # socket
-        elif [ -t "$FILE_PATH_TARGET" ]; then
-            err -r -- 'FD ' # open file descriptor
-        elif [ -e "$FILE_PATH_TARGET" ]; then
-            err -r -- '> '
-        fi
-        err - - "$FILE_PATH_TARGET"
-        exit 222
-    fi
-
-    chattr_remove "$FILE_PATH_TARGET"
-
-    if [ "$logging" = 1 ]; then
-        if ! chmod "$1" "$FILE_PATH_TARGET"; then
-            EPERMS "$FILE_PATH_TARGET"
-        fi
-    else
-        if ! chmod "$1" "$FILE_PATH_TARGET" > /dev/null 2>&1; then
-            EPERMS "$FILE_PATH_TARGET"
         fi
     fi
 }
