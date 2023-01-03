@@ -5046,11 +5046,6 @@ GRUB
 <<'GRUB'
 GRUB_DISTRIBUTOR="Arch"
 GRUB
-    else
-        FILE_cont_fd1 \
-<<'GRUB'
-GRUB_DISTRIBUTOR="mscalindt"
-GRUB
     fi
 
     __file_write_overwrite;
