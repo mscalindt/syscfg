@@ -4479,7 +4479,7 @@ _BASH_PROFILE
     __file_write;
 }
 
-_bluetooth_conf() {
+_bluez_conf() {
     [ ! "$m533ia" = 1 ] && {
         info -w -1 'Nothing to be done.'
         return 0
@@ -8738,7 +8738,7 @@ main() {
     ops="$ops bash-conf"
     ops="$ops bash-init-sway"
     ops="$ops bash-init-xfce4"
-    ops="$ops bluetooth-conf"
+    ops="$ops bluez-conf"
     ops="$ops clk-sync"
     ops="$ops dhcpcd-conf"
     ops="$ops dnsmasq-conf"
