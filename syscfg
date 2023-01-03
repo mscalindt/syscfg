@@ -3218,21 +3218,31 @@ ASOUND_CONF
 # Whatever it is, Poettering should fucking try to fix it on himself rather
 # than try to bend the world to his views. ¯\_(ツ)_/¯
 _autostart() {
-    [ ! "$arch_linux" = 1 ] && {
+    if [ "$init" = systemd ]; then
+        :
+    else
         info -w -1 'Nothing to be done.'
         return 0
-    }
+    fi
 
-    __systemd_service_enable 'dnsmasq'
-    __systemd_service_enable 'iwd'
-    __systemd_service_enable 'rtkit-daemon'
+    # The presence of such unit files is distribution-specific.
+    # __systemd_service_enable() only checks the default location and enables
+    # the specified units.
+    if [ "$arch_linux" = 1 ]; then
+        if [ "$init" = systemd ]; then
+            __systemd_service_enable 'dnsmasq'
+            __systemd_service_enable 'iwd'
+            __systemd_service_enable 'rtkit-daemon'
+        fi
+    fi
 
-    FILE_PATH_fd1 \
+    if [ "$init" = systemd ]; then
+        FILE_PATH_fd1 \
 <<MOC_SERVICE
 $home/.config/systemd/user/moc.service
 MOC_SERVICE
 
-    FILE_fd1 \
+        FILE_fd1 \
 <<'MOC_SERVICE'
 [Unit]
 Description=MOC server
@@ -3247,19 +3257,20 @@ ExecStop=/usr/bin/mocp -x
 WantedBy=default.target
 MOC_SERVICE
 
-    __file_write;
+        __file_write;
 
-    FILE_PATH_fd1 \
+        FILE_PATH_fd1 \
 <<MOC_SERVICE
 $home/.config/systemd/user/moc.service
 MOC_SERVICE
 
-    FILE_PATH_TARGET_fd1 \
+        FILE_PATH_TARGET_fd1 \
 <<MOC_SERVICE
 $home/.config/systemd/user/default.target.wants/moc.service
 MOC_SERVICE
 
-    __file_target_write 'SYMLINK'
+        __file_target_write 'SYMLINK'
+    fi
 }
 
 _bash_conf() {
@@ -8790,6 +8801,8 @@ main() {
     # DO NOT REMOVE ANY VAR or else ò_ó
     # Configure audio configs for highest possible quality:
     audio_hq=0
+    # Init system; currently supported: systemd
+    init='systemd'
     # Configure and prefer IPv6 over IPv4:
     ipv6=0
 
