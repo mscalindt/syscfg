@@ -2948,6 +2948,46 @@ __loc_chmod() {
 }
 
 #! .desc:
+# Remove a file/directory from the specified path
+#! .uses:
+# <FILE_PATH> $ - the file/directory
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+__loc_remove() {
+    if [ ! "$FILE_PATH" ]; then
+        err -r -1 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if ! loc_exists "$FILE_PATH"; then
+        info -w -1 'Already removed:'
+        info -g -- '> '; info - - "$FILE_PATH"
+        return 0
+    fi
+
+    if [ "$backup" = 1 ]; then
+        if [ -f "$FILE_PATH" ] || [ -d "$FILE_PATH" ]; then
+            loc_backup "$FILE_PATH"
+        fi
+    fi
+
+    if [ "$logging" = 1 ]; then
+        info -w -1 'Will remove:'
+        info -w -- '> '; info - - "$FILE_PATH"
+
+        if ! loc_delete "$FILE_PATH"; then
+            err -r -1 'Removal error:'
+            err -r -- '> '; err - - "$FILE_PATH"
+            exit 201
+        fi
+    else
+        loc_delete "$FILE_PATH" > /dev/null 2>&1
+    fi
+}
+
+#! .desc:
 # Clone a git repository to $TMP_DIR
 #! .params:
 # <"$1"> - URL
