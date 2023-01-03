@@ -4818,22 +4818,21 @@ FUSE_CONF
 }
 
 _gai_conf() {
-    [ ! "$ipv6" = 1 ] && {
-        info -w -1 'Nothing to be done.'
-        return 0
-    }
-
     FILE_PATH_fd1 \
 <<'GAI_CONF'
 /etc/gai.conf
 GAI_CONF
 
-    FILE_fd1 \
+    if [ "$ipv6" = 1 ]; then
+        __loc_remove;
+    else
+        FILE_fd1 \
 <<'GAI_CONF'
 precedence ::ffff:0:0/96  100
 GAI_CONF
 
-    __file_write_overwrite;
+        __file_write_overwrite;
+    fi
 }
 
 _git_conf() {
