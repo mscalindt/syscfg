@@ -6305,11 +6305,6 @@ EOF
 }
 
 _pam_conf() {
-    [ ! "$arch_linux" = 1 ] && {
-        info -w -1 'Nothing to be done.'
-        return 0
-    }
-
     FILE_PATH_fd1 \
 <<'FAILLOCK_CONF'
 /etc/security/faillock.conf
