@@ -7327,11 +7327,6 @@ kernel.sysrq = 1
 }
 
 _systemd_conf() {
-    [ ! "$arch_linux" = 1 ] && {
-        info -w -1 'Nothing to be done.'
-        return 0
-    }
-
     FILE_PATH_fd1 \
 <<'SYSTEM_CONF'
 /etc/systemd/system.conf.d/system.conf
