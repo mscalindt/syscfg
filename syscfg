@@ -7137,25 +7137,6 @@ kernel.sysrq = 1
     __file_write;
 }
 
-_systemd_conf() {
-    FILE_PATH_fd1 \
-<<'SYSTEM_CONF'
-/etc/systemd/system.conf.d/system.conf
-SYSTEM_CONF
-
-    FILE_fd1 \
-<<'SYSTEM_CONF'
-[Manager]
-DefaultTimeoutStartSec=10
-DefaultTimeoutStopSec=5
-DefaultTimeoutAbortSec=5
-DefaultRestartSec=5
-DefaultDeviceTimeoutSec=5
-SYSTEM_CONF
-
-    __file_write;
-}
-
 _tz() {
     if [ "$bg" = 1 ]; then
         _tz_bg;
@@ -8675,7 +8656,6 @@ main() {
     ops="$ops sway-conf"
     ops="$ops swaylock-conf"
     ops="$ops sysctl-conf"
-    ops="$ops systemd-conf"
     ops="$ops tz"
     ops="$ops wayland-conf"
     ops="$ops wireplumber-conf"
