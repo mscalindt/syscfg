@@ -6739,12 +6739,13 @@ SH
 
     __file_target_write_overwrite 'SYMLINK'
 
-    FILE_PATH_fd1 \
+    if [ "$arch_linux" = 1 ]; then
+        FILE_PATH_fd1 \
 <<'DASHBINSH_HOOK'
 /usr/share/libalpm/hooks/dashbinsh.hook
 DASHBINSH_HOOK
 
-    FILE_fd1 \
+        FILE_fd1 \
 <<'DASHBINSH_HOOK'
 [Trigger]
 Type = Package
@@ -6759,7 +6760,8 @@ Exec = /usr/bin/ln -sf /usr/bin/dash /usr/bin/sh
 Depends = dash
 DASHBINSH_HOOK
 
-    __file_write;
+        __file_write;
+    fi
 }
 
 _sway_conf() {
