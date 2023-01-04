@@ -4650,6 +4650,19 @@ FP_CONF
 _firefox_conf() {
     cmd 'git' || ENOCMD 'git'
 
+    if [ "$server" = wayland ]; then
+        FILE_PATH_fd1 \
+<<'ENVIRONMENT'
+/etc/environment
+ENVIRONMENT
+
+        libfile ~~1 \
+                'MOZ_ENABLE_WAYLAND=' \
+                'MOZ_ENABLE_WAYLAND=1'
+
+        __file_write_overwrite;
+    fi
+
     FILE_PATH_fd1 \
 <<PROFILES_INI
 $home/.mozilla/firefox/profiles.ini
@@ -4733,19 +4746,6 @@ EOF
             fi
         done; }
     ); FILE="$FILE$LF"
-
-    __file_write_overwrite;
-}
-
-_firefox_wayland_conf() {
-    FILE_PATH_fd1 \
-<<'ENVIRONMENT'
-/etc/environment
-ENVIRONMENT
-
-    libfile ~~1 \
-            'MOZ_ENABLE_WAYLAND=' \
-            'MOZ_ENABLE_WAYLAND=1'
 
     __file_write_overwrite;
 }
@@ -7220,6 +7220,11 @@ LOCALTIME
 }
 
 _wayland_conf() {
+    if [ "$server" != wayland ]; then
+        info -w -1 'Nothing to be done.'
+        return 0
+    fi
+
     FILE_PATH_fd1 \
 <<'ENVIRONMENT'
 /etc/environment
@@ -8263,16 +8268,18 @@ XSETTINGS_XML
 }
 
 _xorg_conf() {
-    FILE_PATH_fd1 \
+    if [ "$server" = x11 ]; then
+        FILE_PATH_fd1 \
 <<'ENVIRONMENT'
 /etc/environment
 ENVIRONMENT
 
-    libfile ~~1 \
-            'QT_QPA_PLATFORM=' \
-            'QT_QPA_PLATFORM=xcb'
+        libfile ~~1 \
+                'QT_QPA_PLATFORM=' \
+                'QT_QPA_PLATFORM=xcb'
 
-    __file_write_overwrite;
+        __file_write_overwrite;
+    fi
 
     FILE_PATH_fd1 \
 <<_XINITRC
@@ -8601,6 +8608,8 @@ main() {
     init='systemd'
     # Configure and prefer IPv6 over IPv4:
     ipv6=0
+    # Display server; currently supported: wayland, x11
+    server='wayland'
 
     # Utility location switches
     # Bulgaria:
@@ -8631,7 +8640,6 @@ main() {
     ops="$ops face-bin"
     ops="$ops featherpad-conf"
     ops="$ops firefox-conf"
-    ops="$ops firefox-wayland-conf"
     ops="$ops fontconfig-conf"
     ops="$ops fuse-conf"
     ops="$ops gai-conf"
