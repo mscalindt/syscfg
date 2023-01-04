@@ -2097,7 +2097,7 @@ loc_perms_user() {
 
             OP_LOC="${OP_LOC%/*}"
 
-            while [ ! "$OP_LOC" = "$home" ]; do
+            while [ "$OP_LOC" != "$home" ]; do
                 chmod 0755 "$OP_LOC" 2> /dev/null
                 set_owner "$OP_LOC" 2> /dev/null
                 OP_LOC="${OP_LOC%/*}"
@@ -4940,7 +4940,7 @@ loglevel=3 nowatchdog mitigations=off processor.ignore_ppc=1 \
 usbhid.mousepoll=1 tsc=unstable \
 GRUB
 
-    if [ ! "$ipv6" = 1 ]; then
+    if [ "$ipv6" != 1 ]; then
         FILE_cont_fd1 \
 <<'GRUB'
 ipv6.disable=1 \
@@ -5059,7 +5059,7 @@ SETTINGS_INI
 }
 
 _hostname() {
-    [ ! "$m533ia" = 1 ] && {
+    [ "$m533ia" != 1 ] && {
         info -w -1 'Nothing to be done.'
         return 0
     }
@@ -5122,7 +5122,7 @@ CONFIG
 }
 
 _initramfs_conf() {
-    [ ! "$arch_linux" = 1 ] && {
+    [ "$arch_linux" != 1 ] && {
         info -w -1 'Nothing to be done.'
         return 0
     }
@@ -5818,7 +5818,7 @@ LOCALE_GEN
 }
 
 _makepkg_conf() {
-    [ ! "$arch_linux" = 1 ] && {
+    [ "$arch_linux" != 1 ] && {
         info -w -1 'Nothing to be done.'
         return 0
     }
@@ -6030,7 +6030,7 @@ ALSOFT_CONF
 }
 
 _pacman_conf() {
-    [ ! "$arch_linux" = 1 ] && {
+    [ "$arch_linux" != 1 ] && {
         info -w -1 'Nothing to be done.'
         return 0
     }
@@ -6601,7 +6601,7 @@ RIFLE_CONF
 }
 
 _reflector() {
-    [ ! "$arch_linux" = 1 ] && {
+    [ "$arch_linux" != 1 ] && {
         info -w -1 'Nothing to be done.'
         return 0
     }
@@ -8558,18 +8558,13 @@ main_tmpf() {
 
 main_util_env() {
     # Utility env switches
-    # DO NOT REMOVE ANY VAR or else ò_ó
-    # set to 0 if script shall execute own env successfully at all cost
-    # (will disable env error checking; func env is unaffected)
+    # Enable/disable env error checking:
     fatal=0
 
     # Utility internal locations
-    # DO NOT REMOVE ANY VAR or else ò_ó
-    # DO NOT PUT TRAILING SLASH CHARACTERS or else ò_ó
-    # ONLY ABSOLUTE PATHS or else ò_ó
-    # USE THIS DIR TO STORE TEMPORARY FILES (CLEARED AFTER FUNC EXIT):
+    # Temporary per-function dir (cleared on func exit):
     TMP_DIR="${TMP:-/tmp}/syscfg_tmpd"
-    # USE THIS FOR OPERATION LOG / FILE CHANGES LOG (CLEARED AFTER FUNC EXIT):
+    # Temporary per-function file (cleared on func exit):
     LOG="${TMP:-/tmp}/syscfg_tmpf"
 }
 
@@ -8581,7 +8576,6 @@ main_vars_lock() {
 
 main() {
     # Utility control switches
-    # DO NOT REMOVE ANY VAR or else ò_ó
     # Compare the real file against our and do not write if same:
     avoid_write=1
     # Backup locations before respective write/delete:
@@ -8593,17 +8587,14 @@ main() {
     logging=1
 
     # Utility device switches
-    # DO NOT REMOVE ANY VAR or else ò_ó
     # ASUS VivoBook S15 X521IA-M533IA (AMD):
     m533ia=1
 
     # Utility OS switches
-    # DO NOT REMOVE ANY VAR or else ò_ó
     # Arch Linux system:
     arch_linux=1
 
     # Utility software switches
-    # DO NOT REMOVE ANY VAR or else ò_ó
     # Configure audio configs for highest possible quality:
     audio_hq=0
     # Init system; currently supported: systemd
@@ -8612,26 +8603,20 @@ main() {
     ipv6=0
 
     # Utility location switches
-    # DO NOT REMOVE ANY VAR or else ò_ó
     # Bulgaria:
     bg=0
     # Germany:
     de=1
 
     # Data
-    # DO NOT REMOVE ANY VAR or else ò_ó
     user='mscalindt'
 
     # Locations
-    # DO NOT REMOVE ANY VAR or else ò_ó
-    # DO NOT PUT TRAILING SLASH CHARACTERS or else ò_ó
-    # ONLY ABSOLUTE PATHS or else ò_ó
     home='/home/mscalindt'
     efi_mnt='/efi'
     arch_mirlist='/etc/pacman.d/mirrorlist'
 
     # Operations
-    # Allowed characters: 0-9A-Za-z_-
     ops=
     ops="$ops alsa-conf"
     ops="$ops autostart"
@@ -8716,6 +8701,26 @@ main() {
         info -w - "Allowed characters: 0-9A-Za-z_-"
         exit 2
     fi
+
+    [ "$fatal" ] || errF 2 - 'BAD: $fatal'
+    case "$fatal" in
+        0|1) : ;;
+        *) errF 2 - 'BAD: $fatal' ;;
+    esac
+
+    [ "$TMP_DIR" ] || errF 2 - 'BAD: $TMP_DIR'
+    case "$TMP_DIR" in
+        *'/' | *'//'*) errF 2 - 'BAD: $TMP_DIR' ;;
+        '/'*) : ;;
+        *) errF 2 - 'BAD: $TMP_DIR' ;;
+    esac
+
+    [ "$LOG" ] || errF 2 - 'BAD: $LOG'
+    case "$LOG" in
+        *'/' | *'//'*) errF 2 - 'BAD: $LOG' ;;
+        '/'*) : ;;
+        *) errF 2 - 'BAD: $LOG' ;;
+    esac
 
     # FOR DEPS:
     # ONLY POSIX UTILS,
