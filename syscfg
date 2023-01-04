@@ -8564,7 +8564,7 @@ main_util_env() {
 
 main_vars_lock() {
     readonly fatal TMP_DIR LOG avoid_write backup force logging m533ia \
-             arch_linux audio_hq init ipv6 bg de user home efi_mnt \
+             arch_linux audio_hq init ipv6 server bg de user home efi_mnt \
              arch_mirlist ops
 }
 
