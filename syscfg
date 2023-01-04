@@ -2116,14 +2116,15 @@ loc_perms_user() {
 # (*) error
 # (255) bad usage
 __bin_write() {
-    if [ ! "$FILE" ]; then
-        err -r -1 'Missing FILE.'
-        return 255
-    fi
-
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
         return 255
+    fi
+
+    if [ ! "$FILE" ]; then
+        info -w -1 'Empty FILE. Write cancelled:'
+        info -w -- 'F '; info - - "$FILE_PATH"
+        return 0
     fi
 
     if ! is_octal "$FILE"; then
@@ -2194,14 +2195,15 @@ __bin_write() {
 # (*) error
 # (255) bad usage
 __bin_write_overwrite() {
-    if [ ! "$FILE" ]; then
-        err -r -1 'Missing FILE.'
-        return 255
-    fi
-
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
         return 255
+    fi
+
+    if [ ! "$FILE" ]; then
+        info -w -1 'Empty FILE. Write cancelled:'
+        info -w -- 'F '; info - - "$FILE_PATH"
+        return 0
     fi
 
     if ! is_octal "$FILE"; then
@@ -2515,14 +2517,15 @@ __file_executable() {
 # (*) error
 # (255) bad usage
 __file_write() {
-    if [ ! "$FILE" ]; then
-        err -r -1 'Missing FILE.'
-        return 255
-    fi
-
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
         return 255
+    fi
+
+    if [ ! "$FILE" ]; then
+        info -w -1 'Empty FILE. Write cancelled:'
+        info -w -- 'F '; info - - "$FILE_PATH"
+        return 0
     fi
 
     while :; do
@@ -2588,14 +2591,15 @@ __file_write() {
 # (*) error
 # (255) bad usage
 __file_write_overwrite() {
-    if [ ! "$FILE" ]; then
-        err -r -1 'Missing FILE.'
-        return 255
-    fi
-
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
         return 255
+    fi
+
+    if [ ! "$FILE" ]; then
+        info -w -1 'Empty FILE. Write cancelled:'
+        info -w -- 'F '; info - - "$FILE_PATH"
+        return 0
     fi
 
     while :; do
