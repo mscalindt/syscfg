@@ -4447,11 +4447,21 @@ _BASH_PROFILE
         FILE_fd1 \
 <<'_BASH_PROFILE'
 if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
-    exec sway
+    exec sway > /var/log/sway.log 2>&1
 fi
 _BASH_PROFILE
 
         __file_write;
+
+        FILE_PATH_fd1 \
+<<'_BASH_PROFILE'
+/var/log/sway.log
+_BASH_PROFILE
+
+        > "$FILE_PATH"
+
+        __loc_chmod '0644'
+        __loc_chown 'mscalindt'
     elif [ "$wm" = xfce4 ]; then
         FILE_PATH_fd1 \
 <<_BASH_PROFILE
