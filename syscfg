@@ -1338,7 +1338,7 @@ EOF
                             # i.e. if $4 is multiple lines in one string. This
                             # function automatically writes the relevant
                             # details to the log file.
-                            line_replace "$3"
+                            line_replace "$4"
 
                             return;
                         ;;
