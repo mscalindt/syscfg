@@ -4356,36 +4356,43 @@ _BASHRC
     __file_write;
 }
 
-_bash_init_sway() {
-    FILE_PATH_fd1 \
+_bash_init() {
+    if [ "$wm" = sway ] || [ "$wm" = xfce4 ]; then
+        :
+    else
+        info -w -1 'Nothing to be done.'
+        return 0
+    fi
+
+    if [ "$wm" = sway ]; then
+        FILE_PATH_fd1 \
 <<_BASH_PROFILE
 $home/.bash_profile
 _BASH_PROFILE
 
-    FILE_fd1 \
+        FILE_fd1 \
 <<'_BASH_PROFILE'
 if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
     exec sway
 fi
 _BASH_PROFILE
 
-    __file_write;
-}
-
-_bash_init_xfce4() {
-    FILE_PATH_fd1 \
+        __file_write;
+    elif [ "$wm" = xfce4 ]; then
+        FILE_PATH_fd1 \
 <<_BASH_PROFILE
 $home/.bash_profile
 _BASH_PROFILE
 
-    FILE_fd1 \
+        FILE_fd1 \
 <<'_BASH_PROFILE'
 if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
     exec startx xfce4
 fi
 _BASH_PROFILE
 
-    __file_write;
+        __file_write;
+    fi
 }
 
 _bluez_conf() {
@@ -8597,6 +8604,8 @@ main() {
     ipv6=0
     # Display server; currently supported: wayland, x11
     server='wayland'
+    # Desktop environment / window manager; currently supported: sway, xfce
+    wm='sway'
 
     # Utility location switches
     # Bulgaria:
@@ -8617,8 +8626,7 @@ main() {
     ops="$ops alsa-conf"
     ops="$ops autostart"
     ops="$ops bash-conf"
-    ops="$ops bash-init-sway"
-    ops="$ops bash-init-xfce4"
+    ops="$ops bash-init"
     ops="$ops bluez-conf"
     ops="$ops clk-sync"
     ops="$ops dhcpcd-conf"
