@@ -6849,16 +6849,18 @@ DASHBINSH_HOOK
 }
 
 _sway_conf() {
-    FILE_PATH_fd1 \
+    if [ "$wm" = sway ]; then
+        FILE_PATH_fd1 \
 <<'ENVIRONMENT'
 /etc/environment
 ENVIRONMENT
 
-    libfile ~~1 \
-            'XDG_CURRENT_DESKTOP=' \
-            'XDG_CURRENT_DESKTOP=sway'
+        libfile ~~1 \
+                'XDG_CURRENT_DESKTOP=' \
+                'XDG_CURRENT_DESKTOP=sway'
 
-    __file_write_overwrite;
+        __file_write_overwrite;
+    fi
 
     FILE_PATH_fd1 \
 <<CONFIG
