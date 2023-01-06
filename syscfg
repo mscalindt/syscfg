@@ -7286,6 +7286,146 @@ STATUS
     __file_executable;
 }
 
+_sway_conf_gaming() {
+    FILE_PATH_fd1 \
+<<CONFIG
+$home/.config/sway/config
+CONFIG
+
+    FILE_fd1 \
+<<'CONFIG'
+# Mod4 = Super key
+set $mod Mod4
+
+set $term kitty
+
+set $menu exec \
+    $term --class=sway-app-launcher \
+    /usr/bin/sway-launcher-desktop
+for_window [app_id="sway-app-launcher"] \
+    floating enable, sticky enable, resize set 30 ppt 60 ppt, border pixel 5
+
+input type:touchpad {
+    dwt disabled
+    tap enabled
+}
+
+# xkb_options: Switch between keyboard layouts with Alt+Shift
+# xkb_options: Change the Caps key to act as Mod4/Super key
+input type:keyboard {
+    xkb_layout us,bg(phonetic)
+    xkb_model pc86
+    xkb_options grp:alt_shift_toggle
+    repeat_delay 222
+    repeat_rate 50
+}
+
+# Disable mouse acceleration
+input type:pointer {
+    accel_profile flat
+}
+
+# Appearance {
+    output * bg #241f31 solid_color
+    default_border pixel
+    client.focused #0A75AD #0A75AD #0A75AD #0A75AD #0A75AD
+    font pango:System-ui 12
+    seat seat0 xcursor_theme Breeze
+    exec_always /home/$USER/.config/sway/import-gsettings
+# }
+
+# App keybindings {
+    bindsym $mod+Return exec $term
+    bindsym $mod+a exec $menu
+# }
+
+# Control keybindings {
+    bindsym $mod+1 workspace number 1
+    bindsym $mod+2 workspace number 2
+    bindsym $mod+3 workspace number 3
+    bindsym $mod+4 workspace number 4
+    bindsym $mod+5 workspace number 5
+    bindsym $mod+6 workspace number 6
+
+    bindsym $mod+Left focus left
+    bindsym $mod+Down focus down
+    bindsym $mod+Up focus up
+    bindsym $mod+Right focus right
+    bindsym Alt+Tab focus right
+    bindsym Alt+Shift+Tab focus left
+
+    # Basic functions
+    bindsym $mod+F1 exec pamixer -d5
+    bindsym $mod+F2 exec pamixer -i5
+    bindsym $mod+F3 exec brightnessctl s 5%-
+    bindsym $mod+F4 exec brightnessctl s 5%+
+    bindsym print exec grim -l 9 $(date +'SS_%Y-%m-%d_%H%M%S.png')
+
+    # Extended functions
+    bindsym $mod+Shift+p exec grim -g "$(slurp -p)" -t ppm - | \
+                         convert - -format '%[pixel:p{0,0}]' txt:- | \
+                         tail -n 1 | cut -d ' ' -f 4 | wl-copy -n
+
+    # Kill window
+    bindsym $mod+q kill
+
+    # Force kill window
+    bindsym $mod+Shift+q exec /home/$USER/.config/sway/fkill
+
+    # Fullscreen window
+    bindsym $mod+f fullscreen
+
+    # Drag window by holding down $mod + LMB
+    # Resize window by holding down $mod + RMB
+    floating_modifier $mod normal
+
+    # Reload the config
+    bindsym $mod+Shift+c reload
+# }
+
+mode "nointercept" {
+    bindsym $mod+Escape mode "default"
+}
+bindsym $mod+Shift+Escape mode "nointercept"
+
+bar {
+    position top
+    status_command while true; do sleep 192000; done
+    font pango:Source Code Pro 10
+
+    colors {
+        statusline #ffffff
+        background #2b2e37
+        inactive_workspace #32323200 #32323200 #5c5c5c
+    }
+}
+
+include @sysconfdir@/sway/config.d/*
+CONFIG
+
+    if [ -f '/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1' ]; then
+        FILE_cont_fd1 \
+<<'CONFIG'
+exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+CONFIG
+    fi
+
+    if [ "$arch_linux" = 1 ]; then
+        FILE_cont_fd1 \
+<<'CONFIG'
+exec systemctl --user import-environment SWAYSOCK WAYLAND_DISPLAY DISPLAY \
+                                         XDG_CURRENT_DESKTOP \
+                                         XDG_SESSION_DESKTOP DESKTOP_SESSION
+exec systemctl --user restart xdg-desktop-portal xdg-desktop-portal-wlr \
+                              xdg-desktop-portal-gtk
+exec sleep 2 && \
+     systemctl --user restart pipewire pipewire-media-session
+CONFIG
+    fi
+
+    __file_write;
+}
+
 _swaylock_conf() {
     FILE_PATH_fd1 \
 <<CONFIG
@@ -8837,6 +8977,7 @@ main() {
     ops="$ops sdl-conf"
     ops="$ops sh"
     ops="$ops sway-conf"
+    ops="$ops sway-conf-gaming"
     ops="$ops swaylock-conf"
     ops="$ops sysctl-conf"
     ops="$ops tz"
