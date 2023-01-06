@@ -5061,6 +5061,20 @@ GRUB
 }
 
 _gtk_conf() {
+    if [ "$server" = wayland ]; then
+        FILE_PATH_fd1 \
+<<'ENVIRONMENT'
+/etc/environment
+ENVIRONMENT
+
+        libfile ~~1 \
+                'GDK_BACKEND=' \
+                'GDK_BACKEND=wayland'
+
+        __file_write_overwrite;
+        LOG_clear;
+    fi
+
     FILE_PATH_fd1 \
 <<_GTKRC_2_0
 $home/.gtkrc-2.0
