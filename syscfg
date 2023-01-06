@@ -6917,7 +6917,10 @@ ENVIRONMENT
                 'XDG_CURRENT_DESKTOP=sway' \
                 ~~1 \
                 'XDG_SESSION_DESKTOP=' \
-                'XDG_SESSION_DESKTOP=sway'
+                'XDG_SESSION_DESKTOP=sway' \
+                ~~1 \
+                'DESKTOP_SESSION=' \
+                'DESKTOP_SESSION=sway'
 
         __file_write_overwrite;
         LOG_clear;
