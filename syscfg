@@ -5950,6 +5950,7 @@ CONFIG
 
     FILE_fd1 \
 <<'CONFIG'
+SoundDriver = ALSA
 Theme = transparent-background
 CONFIG
 
