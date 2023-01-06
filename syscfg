@@ -6985,6 +6985,16 @@ exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 CONFIG
     fi
 
+    if [ "$arch_linux" = 1 ]; then
+        FILE_cont_fd1 \
+<<'CONFIG'
+exec systemctl --user import-environment SWAYSOCK WAYLAND_DISPLAY DISPLAY \
+                                         XDG_CURRENT_DESKTOP
+exec systemctl --user restart xdg-desktop-portal xdg-desktop-portal-wlr \
+                              xdg-desktop-portal-gtk
+CONFIG
+    fi
+
     __file_write;
 
     FILE_PATH_fd1 \
