@@ -6978,6 +6978,13 @@ bar {
 include @sysconfdir@/sway/config.d/*
 CONFIG
 
+    if [ -f '/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1' ]; then
+        FILE_cont_fd1 \
+<<'CONFIG'
+exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+CONFIG
+    fi
+
     __file_write;
 
     FILE_PATH_fd1 \
