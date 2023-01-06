@@ -7058,7 +7058,8 @@ exec systemctl --user import-environment SWAYSOCK WAYLAND_DISPLAY DISPLAY \
                                          XDG_SESSION_DESKTOP DESKTOP_SESSION
 exec systemctl --user restart xdg-desktop-portal xdg-desktop-portal-wlr \
                               xdg-desktop-portal-gtk
-exec systemctl --user restart pipewire pipewire-media-session
+exec sleep 2 && \
+     systemctl --user restart pipewire pipewire-media-session
 CONFIG
     fi
 
