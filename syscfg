@@ -5069,7 +5069,10 @@ ENVIRONMENT
 
         libfile ~~1 \
                 'GDK_BACKEND=' \
-                'GDK_BACKEND=wayland'
+                'GDK_BACKEND=wayland' \
+                ~~1 \
+                'GTK_USE_PORTAL=' \
+                'GTK_USE_PORTAL=1'
 
         __file_write_overwrite;
         LOG_clear;
