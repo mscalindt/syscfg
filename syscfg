@@ -7053,7 +7053,8 @@ CONFIG
         FILE_cont_fd1 \
 <<'CONFIG'
 exec systemctl --user import-environment SWAYSOCK WAYLAND_DISPLAY DISPLAY \
-                                         XDG_CURRENT_DESKTOP
+                                         XDG_CURRENT_DESKTOP \
+                                         XDG_SESSION_DESKTOP DESKTOP_SESSION
 exec systemctl --user restart xdg-desktop-portal xdg-desktop-portal-wlr \
                               xdg-desktop-portal-gtk
 CONFIG
