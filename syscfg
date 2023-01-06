@@ -6254,6 +6254,7 @@ LOGIN_DEFS
             'FAIL_DELAY 0'
 
     __file_write_overwrite;
+    LOG_clear;
 
     FILE_PATH_fd1 \
 <<'SU'
@@ -6317,6 +6318,7 @@ EOF
     ); FILE="$FILE$LF"
 
     __file_write_overwrite;
+    LOG_clear;
 
     FILE_PATH_fd1 \
 <<'SYSTEM_AUTH'
