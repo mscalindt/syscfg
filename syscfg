@@ -4745,6 +4745,7 @@ ENVIRONMENT
                 'MOZ_ENABLE_WAYLAND=1'
 
         __file_write_overwrite;
+        LOG_clear;
     fi
 
     FILE_PATH_fd1 \
