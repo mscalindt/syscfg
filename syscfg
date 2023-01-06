@@ -6810,6 +6810,24 @@ RESOLV_CONF
     __loc_chattr 'i'
 }
 
+_sdl_conf() {
+    if [ "$server" != wayland ]; then
+        info -w -1 'Nothing to be done.'
+        return 0
+    fi
+
+    FILE_PATH_fd1 \
+<<'ENVIRONMENT'
+/etc/environment
+ENVIRONMENT
+
+    libfile ~~1 \
+            'SDL_VIDEODRIVER=' \
+            'SDL_VIDEODRIVER=wayland'
+
+    __file_write_overwrite;
+}
+
 _sh() {
     FILE_PATH_fd1 \
 <<'DASH'
@@ -8767,6 +8785,7 @@ main() {
     ops="$ops ranger-conf"
     ops="$ops reflector"
     ops="$ops resolv-conf-dnsmasq"
+    ops="$ops sdl-conf"
     ops="$ops sh"
     ops="$ops sway-conf"
     ops="$ops swaylock-conf"
