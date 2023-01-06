@@ -5350,6 +5350,7 @@ ENVIRONMENT
             'QT_STYLE_OVERRIDE=kvantum'
 
     __file_write_overwrite;
+    LOG_clear;
 
     FILE_PATH_fd1 \
 <<KVANTUM_KVCONFIG
