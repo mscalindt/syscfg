@@ -8417,6 +8417,7 @@ ENVIRONMENT
                 'QT_QPA_PLATFORM=xcb'
 
         __file_write_overwrite;
+        LOG_clear;
     fi
 
     FILE_PATH_fd1 \
