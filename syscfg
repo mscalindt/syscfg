@@ -6568,6 +6568,24 @@ DEFAULT_PA
     __file_write_overwrite;
 }
 
+_qt_conf() {
+    if [ "$server" != wayland ]; then
+        info -w -1 'Nothing to be done.'
+        return 0
+    fi
+
+    FILE_PATH_fd1 \
+<<'ENVIRONMENT'
+/etc/environment
+ENVIRONMENT
+
+    libfile ~~1 \
+            'QT_QPA_PLATFORM=' \
+            'QT_QPA_PLATFORM=wayland' \
+
+    __file_write_overwrite;
+}
+
 _ranger_conf() {
     FILE_PATH_fd1 \
 <<RC_CONF
@@ -7346,9 +7364,6 @@ _wayland_conf() {
 ENVIRONMENT
 
     libfile ~~1 \
-            'QT_QPA_PLATFORM=' \
-            'QT_QPA_PLATFORM=wayland' \
-            ~~1 \
             'QT_WAYLAND_DISABLE_WINDOWDECORATION=' \
             'QT_WAYLAND_DISABLE_WINDOWDECORATION=1'
 
@@ -8782,6 +8797,7 @@ main() {
     ops="$ops pam-conf"
     ops="$ops pipewire-conf"
     ops="$ops pulseaudio-conf"
+    ops="$ops qt-conf"
     ops="$ops ranger-conf"
     ops="$ops reflector"
     ops="$ops resolv-conf-dnsmasq"
