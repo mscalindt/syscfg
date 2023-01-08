@@ -736,18 +736,17 @@ replchars() {
 # <"$1"> - file/directory
 #! .rc:
 # (0) success
-# (*) error
 # (255) bad input
 unmount() {
     args_eq 1 "$#" || return 255
+
+    cmd 'umount' || return 0
 
     if ! loc_exists "$1"; then
         return 0
     fi
 
-    if cmd 'umount'; then
-        umount -Rf "$1" > /dev/null 2>&1 || :
-    fi
+    umount -Rf "$1" > /dev/null 2>&1 || :
 }
 
 # END utility_functions
