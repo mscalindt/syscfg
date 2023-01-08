@@ -4458,7 +4458,7 @@ _BASH_PROFILE
 /var/log/sway.log
 _BASH_PROFILE
 
-        > "$FILE_PATH"
+        : > "$FILE_PATH"
 
         __loc_chmod '0644'
         __loc_chown 'mscalindt'
