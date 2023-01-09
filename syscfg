@@ -5216,10 +5216,10 @@ SETTINGS_INI
 }
 
 _hostname() {
-    [ "$m533ia" != 1 ] && {
+    if [ "$m533ia" != 1 ]; then
         info -w -1 'Nothing to be done.'
         return 0
-    }
+    fi
 
     FILE_PATH_fd1 \
 <<'HOSTNAME'
@@ -5279,10 +5279,10 @@ CONFIG
 }
 
 _initramfs_conf() {
-    [ "$arch_linux" != 1 ] && {
+    if [ "$arch_linux" != 1 ]; then
         info -w -1 'Nothing to be done.'
         return 0
-    }
+    fi
 
     cmd 'mkinitcpio' || ENOCMD 'mkinitcpio'
 
@@ -5976,10 +5976,10 @@ LOCALE_GEN
 }
 
 _makepkg_conf() {
-    [ "$arch_linux" != 1 ] && {
+    if [ "$arch_linux" != 1 ]; then
         info -w -1 'Nothing to be done.'
         return 0
-    }
+    fi
 
     FILE_PATH_fd1 \
 <<'MAKEPKG_CONF'
@@ -6147,11 +6147,11 @@ _nvram_clr() {
         fi
     fi
 
-    [ "$logging" = 1 ] && {
+    if [ "$logging" = 1 ]; then
         info -w -1 'Will delete:'
         info - - '/sys/firmware/efi/efivars'/BootOrder*
         info - - '/sys/firmware/efi/efivars'/Boot0*
-    }
+    fi
 
     if [ "$logging" = 1 ]; then
         if ! rm -f '/sys/firmware/efi/efivars'/BootOrder* \
@@ -6189,10 +6189,10 @@ ALSOFT_CONF
 }
 
 _pacman_conf() {
-    [ "$arch_linux" != 1 ] && {
+    if [ "$arch_linux" != 1 ]; then
         info -w -1 'Nothing to be done.'
         return 0
-    }
+    fi
 
     FILE_PATH_fd1 \
 <<'PACMAN_CONF'
@@ -6904,10 +6904,10 @@ RIFLE_CONF
 }
 
 _reflector() {
-    [ "$arch_linux" != 1 ] && {
+    if [ "$arch_linux" != 1 ]; then
         info -w -1 'Nothing to be done.'
         return 0
-    }
+    fi
 
     if [ "$bg" = 1 ]; then
         _reflector_bg;
