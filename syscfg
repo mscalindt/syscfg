@@ -3278,7 +3278,11 @@ _autostart() {
     # the specified units.
     if [ "$arch_linux" = 1 ]; then
         if [ "$init" = systemd ]; then
-            __systemd_service_enable 'dnsmasq'
+            if [ "$dns" = localhost ]; then
+                if [ "$dns0" = dnsmasq ]; then
+                    __systemd_service_enable 'dnsmasq'
+                fi
+            fi
             __systemd_service_enable 'iwd'
             __systemd_service_enable 'rtkit-daemon'
         fi
@@ -7001,32 +7005,43 @@ MIRRORLIST
     __file_write_overwrite;
 }
 
-_resolv_conf_dnsmasq() {
+_resolv_conf() {
+    if [ "$dns" = localhost ] || [ "$dns" = none ]; then
+        :
+    else
+        info -w -1 'Nothing to be done.'
+        return 0
+    fi
+
     FILE_PATH_fd1 \
 <<'RESOLV_CONF'
 /etc/resolv.conf
 RESOLV_CONF
 
-    if [ "$ipv6" = 1 ]; then
-        FILE_fd1 \
+    if [ "$dns" = localhost ]; then
+        if [ "$ipv6" = 1 ]; then
+            FILE_fd1 \
 <<'RESOLV_CONF'
 nameserver ::1
 nameserver 127.0.0.1
 RESOLV_CONF
-    else
-        FILE_fd1 \
+        else
+            FILE_fd1 \
 <<'RESOLV_CONF'
 nameserver 127.0.0.1
 RESOLV_CONF
-    fi
+        fi
 
-    FILE_cont_fd1 \
+        FILE_cont_fd1 \
 <<'RESOLV_CONF'
 options trust-ad
 RESOLV_CONF
 
-    __file_write;
-    __loc_chattr 'i'
+        __file_write;
+        __loc_chattr 'i'
+    elif [ "$dns" = none ]; then
+        __loc_remove;
+    fi
 }
 
 _sdl_conf() {
@@ -9059,8 +9074,8 @@ main_util_env() {
 
 main_vars_lock() {
     readonly fatal TMP_DIR LOG avoid_write backup force logging m533ia \
-             arch_linux audio_hq init ipv6 server wm bg de user home efi_mnt \
-             arch_mirlist ops
+             arch_linux audio_hq dns init ipv6 server wm bg de user home \
+             efi_mnt arch_mirlist ops
 }
 
 main() {
@@ -9086,6 +9101,10 @@ main() {
     # Utility software switches
     # Configure audio configs for highest possible quality:
     audio_hq=0
+    # DNS; currently supported: localhost, none
+    dns='localhost'
+    # Dedicated DNS (stub) resolver; currently supported: dnsmasq
+    dns0='dnsmasq'
     # Init system; currently supported: systemd
     init='systemd'
     # Configure and prefer IPv6 over IPv4:
@@ -9153,7 +9172,7 @@ main() {
     ops="$ops qt-conf"
     ops="$ops ranger-conf"
     ops="$ops reflector"
-    ops="$ops resolv-conf-dnsmasq"
+    ops="$ops resolv-conf"
     ops="$ops sdl-conf"
     ops="$ops sh"
     ops="$ops sway-conf"
