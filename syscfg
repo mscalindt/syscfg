@@ -3227,44 +3227,19 @@ ASOUND_CONF
     __file_write;
 }
 
-# "bUt wHy ArE yOu NoT uSiNg ThE sYsTeMcTl CoMmAnD?" because that's not the
-# fucking way to programmatically set the configuration, dummy. This script is
-# not a fucking application launcher.
-#
-# On a side note, what follows is explanation for moc.service because systemd
-# documentation FUCKING SUCKS (not easy writing documentation for a thing that
-# does 69 things and most of them in a mediocre way, is it?) and I had to resort
-# to multiple posts on stackexchange and had the luck to land on one from a god
-# himself:
-#
 # "WantedBy", default.target, ensures systemd will try to start the service on
 # boot. Since no other services on the system specifies our, moc.service, we
 # essentially tell systemd that default.target "wants us" using WantedBy;
 # default.target is equal to runlevel 5 in sysvinit if it is an alias for
 # graphical.target, otherwise 3-5 if multi-user.target.
-# Symlink is created because systemd is fucking [REDACTED] and will not actually
-# try to start the service if there isn't a symlink under a directory with name
-# composed of the WantedBy string + '.wants' appended. Why? Ask fucking
-# Poettering because I don't know either. "mechanism to declare dependency" or
-# something... then what is the fucking WantedBy string for? Beautiness? 200 IQ
-# Poettering?!
+# Symlink is created because the service will not be started if there isn't a
+# symlink under a directory with name composed of the WantedBy string +
+# '.wants' appended. ¯\_(ツ)_/¯
 #
 # Sources:
 # https://unix.stackexchange.com/a/506374/431300
 #
-# Taking into account the above statements, a replacement to systemd shall be
-# considered. Since some Linux-based distributions worship systemd, a core
-# replacement shall take place; a good canditate appears to be Gentoo. Shall
-# one need a stable ground for a good reason to ditch systemd and its
-# increasing complexity, try having a race-free setup with dnsmasq + dhcpcd +
-# iwd, I dare you. If you succeed, congratulations -- systemd managed to do its
-# main job. But here, RNG in the system's stability is not something we like.
-# Heh, after all the debugging I tried, after all the units I edited and
-# created, after all the fucking "documentation" I have read, I can definitely
-# conclude that systemd is, at best, a mediocre workaround to something...
-# lackluster shell knowledge... a dread of the command line... something.
-# Whatever it is, Poettering should fucking try to fix it on himself rather
-# than try to bend the world to his views. ¯\_(ツ)_/¯
+# An alternative to systemd shall be considered.
 _autostart() {
     if [ "$init" = systemd ]; then
         :
@@ -6963,8 +6938,6 @@ MIRRORLIST
     __file_write_overwrite;
 }
 
-# someone teach developers stdout and stderr & warning and error difference,
-# it's getting tiresome at this point.
 _reflector_de() {
     cmd 'reflector' || ENOCMD 'reflector'
 
@@ -8835,7 +8808,7 @@ _XINITRC
 root_exec() {
     case :$(id -u) in
         :)
-            errF 127 - 'WHERE IS YOUR ID? Show me your ID NOW, CHUMMER!'
+            errF 127 - "'id' returned nothing."
         ;;
         :0)
             :
@@ -8850,10 +8823,7 @@ root_exec() {
 
             # It appears that, in zsh specifically, $0 is not a way to obtain
             # the script name, as $0 here would always print 'root_exec', i.e.
-            # the function name. Well, nothing much to worry about. Whoever
-            # symlinks zsh to /bin/sh needs something more than just an
-            # "integrity failed" message.
-            # ¯\_(ツ)_/¯
+            # the function name.
             if ! file "$MAIN_UTIL_PATH"; then
                 MAIN_UTIL_PATH=$(command -v "$0" 2> /dev/null)
             fi
@@ -8866,14 +8836,9 @@ root_exec() {
                 exec sudo -u root -- "$MAIN_UTIL_PATH" "$@"
             elif command -v su > /dev/null 2>&1; then
                 exec su root -- "$MAIN_UTIL_PATH" "$@"
-            # elif THERE IS SOME OTHER ROOT PLUGIN, PLS CONSIDER rm -rf AND
-            #      PKG_INSTALL doas. THANKS.
             fi
 
-            errF 1 - 'So, you are neither EUID 0, nor there is a root' \
-                     'plugin available. What is this, a broken LFS?' \
-                     'A shitty emulator? An experiment of stupidity?!' \
-                     'Or just an Android.'
+            errF 1 - 'Missing root rights.'
         ;;
     esac
 }
@@ -8988,12 +8953,10 @@ main_defs() {
     fi
 }
 
-# TODO: Refactor this ugly [REDACTED]
+# TODO: Refactor
 main_list_ops() {
     # this construct shall never be true or !POSIX
     if ! command -v sort > /dev/null 2>&1; then
-        # let's pretend ops are sorted then ¯\_(ツ)_/¯
-        # any ostrich algorithm enjoyers?!
         sort() { while IFS= read -r LINE; do printf "%s\n" "$LINE"; done; }
     fi
 
@@ -9086,8 +9049,7 @@ main() {
     backup=0
     # Force successful operation at all costs:
     force=0
-    # Logging recommended 1 because some utils are kind of off-offing of the
-    # recommended practices ye:
+    # Logging; recommended 1:
     logging=1
 
     # Utility device switches
@@ -9235,10 +9197,7 @@ main() {
         *) errF 2 - 'BAD: $LOG' ;;
     esac
 
-    # FOR DEPS:
-    # ONLY POSIX UTILS,
-    # WITH POSIX OPTIONS SCRIPT USAGE ONLY,
-    # or else ò_ó
+    # Only POSIX utilites with POSIX option usage shall be specified and used.
     if ! main_assert_deps 'awk' 'chmod' 'chown' 'cmp' 'cp' 'find' 'grep' 'id' \
                           'ln' 'mkdir' 'od' 'rm'; then
         errF 127 - "Missing utility: $_dep"
@@ -9255,7 +9214,6 @@ main() {
             :) errF 127 - "User does not exist: $user" ;;
         esac
 
-        # https://raw.githubusercontent.com/mscalindt/top-secret/root/6/2
         exist "$home" || errF 1 - "Home does not exist: $home"
         dir "$home" || errF 1 - "Home is not a directory: $home"
         readable "$home" || errF 1 - "Home is not readable: $home"
@@ -9273,7 +9231,6 @@ main() {
             _str="$1"
         fi
 
-        # we trappin' you baby, no chance to slip an error on your way out
         # use '|| :' to validate a command failure
         trap "err_handler \$?" INT TERM EXIT
         set -e
