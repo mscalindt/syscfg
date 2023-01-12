@@ -2003,7 +2003,7 @@ loc_backup() {
                 info -g -- 'D '; info - - "$1".bak"$_i"
             fi
         else
-            ln "$1" "$1".bak"$_i" 2> /dev/null || break
+            cp "$1" "$1".bak"$_i" 2> /dev/null || break
 
             if [ "$logging" = 1 ]; then
                 info -w - 'loc_backup(): Backup from/to:'
