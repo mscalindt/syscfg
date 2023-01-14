@@ -6624,7 +6624,7 @@ DEFAULT_PA
     __file_write_overwrite;
 }
 
-_pw_media_session_conf() {
+_pipewire_media_session_conf() {
     FILE_PATH_fd1 \
 <<'MEDIA_SESSION_CONF'
 /etc/pipewire/media-session.d/media-session.conf
@@ -9093,7 +9093,7 @@ main() {
     ops="$ops pam-conf"
     ops="$ops pipewire-conf"
     ops="$ops pulseaudio-conf"
-    ops="$ops pw-media-session-conf"
+    ops="$ops pipewire-media-session-conf"
     ops="$ops qt-conf"
     ops="$ops ranger-conf"
     ops="$ops reflector"
