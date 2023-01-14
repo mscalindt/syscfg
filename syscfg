@@ -9010,7 +9010,7 @@ main() {
     avoid_write=1
     # Backup locations before respective write/delete:
     backup=0
-    # Force successful operation at all costs:
+    # Force successful operation at all costs (file overwrite/removal):
     force=0
     # Logging; recommended 1:
     logging=1
