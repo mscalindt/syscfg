@@ -8944,60 +8944,23 @@ main_defs() {
 '
 
     binary_files;
-
-    # this construct shall never be true or !POSIX
-    if command -v date > /dev/null 2>&1; then
-        hash date
-    else
-        date() { printf "%s" '5:3666'; }
-    fi
 }
 
-# TODO: Refactor
-main_list_ops() {
-    # this construct shall never be true or !POSIX
-    if ! command -v sort > /dev/null 2>&1; then
-        sort() { while IFS= read -r LINE; do printf "%s\n" "$LINE"; done; }
-    fi
-
+main_list_ops() (
     ops=$(
-        IFS=' '
-        for op in $ops; do
+        IFS=' '; for op in $ops; do
             printf "%s\n" "$op"
         done | sort
     )
-    ops=$(
-        IFS="$LF"
-        for op in $ops; do
-            printf "%s " "$op"
-        done
-    )
-    ops="${ops%?}"
 
-    IFS=' '
-    set -- $ops
-    prev_char=; str=; iflag=0; while [ "$1" ]; do
-        char="${1%"${1#?}"}"
-        if [ "$char" = "$prev_char" ]; then
-            if [ "$iflag" = 2 ]; then
-                str="${str%?}"
-                info -w -1 "$str"
-                str="$1 "
-                iflag=0
-                shift && continue
-            fi
-            str="$str$1 "
-            iflag=$((iflag + 1))
+    IFS="$LF"; prev_op=; for op in $ops; do
+        if [ ! "$prev_op" ]; then
+            prev_op="$op" && continue
         else
-            iflag=0
-            prev_char="$char"
-            str="${str%?}"
-            [ "$str" ] && info -w -1 "$str"
-            str="$1 "
+            info -w -1 "$prev_op ^ $op"; prev_op=
         fi
-        shift
-    done; str="${str%?}"; info -w -1 "$str"
-}
+    done; [ ! "$prev_op" ] || info -w -1 "$prev_op"
+)
 
 main_tmpd() {
     if [ "$fatal" = 1 ]; then
