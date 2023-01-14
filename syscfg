@@ -4488,9 +4488,9 @@ _BASH_PROFILE
         __file_write;
 
         FILE_PATH_fd1 \
-<<'_BASH_PROFILE'
+<<'SWAY_LOG'
 /var/log/sway.log
-_BASH_PROFILE
+SWAY_LOG
 
         : > "$FILE_PATH"
 
