@@ -5066,7 +5066,7 @@ ipv6.disable=1 \
 GRUB
     fi
 
-        FILE_cont_fd1 \
+    FILE_cont_fd1 \
 <<'GRUB'
 "
 GRUB
