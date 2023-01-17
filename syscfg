@@ -5380,6 +5380,7 @@ hide_window_decorations yes
 background_opacity 0.5
 update_check_interval 0
 shell_integration disabled
+confirm_os_window_close 0
 color0 #767676
 color1 #f2201f
 color2 #23fd00
