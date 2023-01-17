@@ -2641,6 +2641,11 @@ __file_write() {
             EPERMS "$FILE_PATH"
         fi
     fi
+
+    if ! LOG_clear; then
+        err -r -1 'Log clear error.'
+        exit 201
+    fi
 }
 
 #! .desc:
@@ -2700,6 +2705,11 @@ __file_write_overwrite() {
         if ! loc_perms_user "$FILE_PATH"; then
             EPERMS "$FILE_PATH"
         fi
+    fi
+
+    if ! LOG_clear; then
+        err -r -1 'Log clear error.'
+        exit 201
     fi
 }
 
@@ -4779,7 +4789,6 @@ ENVIRONMENT
                 'MOZ_ENABLE_WAYLAND=1'
 
         __file_write_overwrite;
-        LOG_clear;
     fi
 
     FILE_PATH_fd1 \
@@ -5109,7 +5118,6 @@ ENVIRONMENT
                 'GTK_USE_PORTAL=1'
 
         __file_write_overwrite;
-        LOG_clear;
     fi
 
     FILE_PATH_fd1 \
@@ -5401,7 +5409,6 @@ ENVIRONMENT
             'QT_STYLE_OVERRIDE=kvantum'
 
     __file_write_overwrite;
-    LOG_clear;
 
     FILE_PATH_fd1 \
 <<KVANTUM_KVCONFIG
@@ -6308,7 +6315,6 @@ LOGIN_DEFS
             'FAIL_DELAY 0'
 
     __file_write_overwrite;
-    LOG_clear;
 
     FILE_PATH_fd1 \
 <<'SU'
@@ -6372,7 +6378,6 @@ EOF
     ); FILE="$FILE$LF"
 
     __file_write_overwrite;
-    LOG_clear;
 
     FILE_PATH_fd1 \
 <<'SYSTEM_AUTH'
@@ -7091,7 +7096,6 @@ ENVIRONMENT
                 'DESKTOP_SESSION=sway'
 
         __file_write_overwrite;
-        LOG_clear;
     fi
 
     FILE_PATH_fd1 \
@@ -8748,7 +8752,6 @@ ENVIRONMENT
                 'QT_QPA_PLATFORM=xcb'
 
         __file_write_overwrite;
-        LOG_clear;
     fi
 
     FILE_PATH_fd1 \
