@@ -2386,19 +2386,22 @@ __dir_target_write() {
                 info -w -- 'D '; info - - "$FILE_PATH"
                 info -w -- 'D '; info - - "$FILE_PATH_TARGET"
 
-                info -w -- ': ';
+                info -w -- '> '
                 find "$FILE_PATH"//. ! -name . | \
                     grep -c // 2> /dev/null | \
-                        while IFS= read -r _line; do
-                            printf "%s" "$_line"
+                        while IFS= read -r _line0; do
+                            printf "%s, " "$_line0"
+
+                            info -w -- 'D '
+                            find "$FILE_PATH"//. ! -name . -type d | \
+                                grep -c // 2> /dev/null | \
+                                    while IFS= read -r _line1; do
+                                        printf "%s, " "$_line1"
+
+                                        info -w -- 'F '
+                                        info - - "$((_line0 - _line1))"
+                                    done
                         done
-                info - -- ' total files, '
-                find "$FILE_PATH"//. ! -name . -type d | \
-                    grep -c // 2> /dev/null | \
-                        while IFS= read -r _line; do
-                            printf "%s" "$_line"
-                        done
-                info - - ' directories'
             fi
         fi
 
@@ -2474,19 +2477,22 @@ __dir_target_write_overwrite() {
                 info -w -- 'D '; info - - "$FILE_PATH"
                 info -w -- 'D '; info - - "$FILE_PATH_TARGET"
 
-                info -w -- ': ';
+                info -w -- '> '
                 find "$FILE_PATH"//. ! -name . | \
                     grep -c // 2> /dev/null | \
-                        while IFS= read -r _line; do
-                            printf "%s" "$_line"
+                        while IFS= read -r _line0; do
+                            printf "%s, " "$_line0"
+
+                            info -w -- 'D '
+                            find "$FILE_PATH"//. ! -name . -type d | \
+                                grep -c // 2> /dev/null | \
+                                    while IFS= read -r _line1; do
+                                        printf "%s, " "$_line1"
+
+                                        info -w -- 'F '
+                                        info - - "$((_line0 - _line1))"
+                                    done
                         done
-                info - -- ' total files, '
-                find "$FILE_PATH"//. ! -name . -type d | \
-                    grep -c // 2> /dev/null | \
-                        while IFS= read -r _line; do
-                            printf "%s" "$_line"
-                        done
-                info - - ' directories'
             fi
         fi
 
