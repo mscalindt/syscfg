@@ -3140,6 +3140,9 @@ __loc_remove() {
 __git_get() {
     args_eq 1 "$#" || return 255
 
+    info -w -1 '__git_get():'
+    info -w -- 'U '; info - - "$1"
+
     set -- "$@" '--depth' '1'
 
     if str '/' "$1"; then
