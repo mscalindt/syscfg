@@ -5012,6 +5012,36 @@ _grub() {
     cmd 'grub-install' || ENOCMD 'grub-install'
     cmd 'grub-mkconfig' || ENOCMD 'grub-mkconfig'
 
+    if [ "$force" = 1 ]; then
+        set -- "$efi_mnt"/*
+
+        if loc_exists "$1"; then
+            if [ "$logging" = 1 ]; then
+                info -w -1 'Will delete:'
+                for arg in "$@"; do
+                    if [ -d "$arg" ]; then
+                        info -w -- 'D '
+                    elif [ -f "$arg" ]; then
+                        info -w -- 'F '
+                    else
+                        info -w -- '> '
+                    fi
+                    info - - "$arg"
+                done
+            fi
+
+            if [ "$logging" = 1 ]; then
+                if ! rm -rf "$@"; then
+                    errF 235 - 'rm: Failed.'
+                fi
+            else
+                if ! rm -rf "$@" > /dev/null 2>&1; then
+                    errF 235 - 'rm: Failed.'
+                fi
+            fi
+        fi
+    fi
+
     if [ "$logging" = 1 ]; then
         info -w - 'grub-install:'
 
