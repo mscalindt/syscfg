@@ -6145,8 +6145,8 @@ _nvram_clr() {
 
     if [ "$logging" = 1 ]; then
         info -w -1 'Will delete:'
-        info - - '/sys/firmware/efi/efivars'/BootOrder*
-        info - - '/sys/firmware/efi/efivars'/Boot0*
+        printf "%s\n" '/sys/firmware/efi/efivars'/BootOrder*
+        printf "%s\n" '/sys/firmware/efi/efivars'/Boot0*
     fi
 
     if [ "$logging" = 1 ]; then
