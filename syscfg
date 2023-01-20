@@ -9154,7 +9154,7 @@ main() {
     ipv6=0
     # Display server; currently supported: wayland, x11
     server='wayland'
-    # Desktop environment / window manager; currently supported: sway, xfce
+    # Desktop environment / window manager; currently supported: sway, xfce4
     wm='sway'
 
     # Utility location switches
