@@ -4811,6 +4811,81 @@ PROFILES_INI
         exit 202
     fi
 
+    __git_get 'https://github.com/mscalindt/firefox-profile-private'
+
+    FILE_PATH_fd1 \
+<<IRA5808S_MSCALINDT
+$TMP_DIR/firefox-profile-private/ira5808s.mscalindt
+IRA5808S_MSCALINDT
+
+    FILE_PATH_TARGET_fd1 \
+<<IRA5808S_MSCALINDT
+$home/.mozilla/firefox/ira5808s.mscalindt
+IRA5808S_MSCALINDT
+
+    __dir_target_write;
+
+    FILE_PATH_fd1 \
+<<PROFILES_INI
+$home/.mozilla/firefox/profiles.ini
+PROFILES_INI
+
+    __FILE_PATH_preload;
+
+    FILE=$(
+        line_add() {
+            while IFS= read -r line; do
+                i=$((i + 1))
+
+                if [ "$logging" = 1 ]; then
+                    LOG_write 1 "$i" "$line"
+                fi
+
+                printf "%s\n" "$line"
+            done <<EOF
+$1
+EOF
+        }
+
+        case "${FILE#"${FILE%??}"}" in
+            "$LF$LF") : ;;
+            *"$LF") FILE="$FILE$LF" ;;
+            *) FILE="$FILE$LF$LF" ;;
+        esac
+
+        FLAG_PROFILE=0
+
+        i=0; j=0; printf "%s" "$FILE" | { while IFS= read -r LINE; do
+            i=$((i + 1))
+
+            case "$LINE" in
+                'Path=ira5808s.mscalindt')
+                    FLAG_PROFILE=1
+                ;;
+                '[Profile'*']')
+                    j=$((j + 1))
+                ;;
+            esac
+
+            printf "%s\n" "$LINE"
+        done
+
+        while :; do
+            if [ "$FLAG_PROFILE" = 0 ]; then
+                FLAG_PROFILE=1
+
+                line_add "[Profile${j}]"
+                line_add 'Name=mscalindt'
+                line_add 'IsRelative=1'
+                line_add 'Path=ira5808s.mscalindt'
+            else
+                break
+            fi
+        done; }
+    ); FILE="$FILE$LF"
+
+    __file_write_overwrite;
+
     __git_get 'https://github.com/mscalindt/firefox-profiles'
 
     FILE_PATH_fd1 \
