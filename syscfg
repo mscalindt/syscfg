@@ -7971,7 +7971,7 @@ HELPERS_RC
 <<'HELPERS_RC'
 WebBrowser=firefox
 HELPERS_RC
-    else
+    elif [ "$browser" = none ] || [ ! "$browser" ]; then
         FILE_cont_fd1 \
 <<'HELPERS_RC'
 WebBrowser=
