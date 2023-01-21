@@ -4493,7 +4493,8 @@ _BASHRC
 }
 
 _bash_init() {
-    if [ "$wm" = sway ] || [ "$wm" = xfce4 ]; then
+    if [ "$wm" = sway ] || [ "$wm" = xfce4 ] || [ "$wm" = none ] || \
+       [ ! "$wm" ]; then
         :
     else
         info -w -1 'Nothing to be done.'
@@ -4538,6 +4539,13 @@ fi
 _BASH_PROFILE
 
         __file_write;
+    elif [ "$wm" = none ] || [ ! "$wm" ]; then
+        FILE_PATH_fd1 \
+<<_BASH_PROFILE
+$home/.bash_profile
+_BASH_PROFILE
+
+        __loc_remove;
     fi
 }
 
@@ -9191,7 +9199,8 @@ main() {
     qt_theme='kvantum'
     # Display server; currently supported: wayland, x11, none
     server='wayland'
-    # Desktop environment / window manager; currently supported: sway, xfce4
+    # Desktop environment / window manager; currently supported: sway, xfce4,
+    # none
     wm='sway'
 
     # Utility location switches
