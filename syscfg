@@ -4789,6 +4789,35 @@ ENVIRONMENT
                 'GTK_USE_PORTAL='
     fi
 
+    if [ "$wm" = sway ]; then
+        libfile ~~1 \
+                'XDG_CURRENT_DESKTOP=' \
+                'XDG_CURRENT_DESKTOP=sway' \
+                ~~1 \
+                'XDG_SESSION_DESKTOP=' \
+                'XDG_SESSION_DESKTOP=sway' \
+                ~~1 \
+                'DESKTOP_SESSION=' \
+                'DESKTOP_SESSION=sway'
+    elif [ "$wm" = xfce4 ]; then
+        libfile ~~1 \
+                'XDG_CURRENT_DESKTOP=' \
+                'XDG_CURRENT_DESKTOP=XFCE' \
+                ~~1 \
+                'XDG_SESSION_DESKTOP=' \
+                'XDG_SESSION_DESKTOP=xfce' \
+                ~~1 \
+                'DESKTOP_SESSION=' \
+                'DESKTOP_SESSION=xfce'
+    elif [ "$wm" = none ] || [ ! "$wm" ]; then
+        libfile -1 \
+                'XDG_CURRENT_DESKTOP=' \
+                -1 \
+                'XDG_SESSION_DESKTOP=' \
+                -1 \
+                'DESKTOP_SESSION='
+    fi
+
     __file_write_overwrite;
 }
 
@@ -7210,25 +7239,6 @@ DASHBINSH_HOOK
 }
 
 _sway_conf() {
-    if [ "$wm" = sway ]; then
-        FILE_PATH_fd1 \
-<<'ENVIRONMENT'
-/etc/environment
-ENVIRONMENT
-
-        libfile ~~1 \
-                'XDG_CURRENT_DESKTOP=' \
-                'XDG_CURRENT_DESKTOP=sway' \
-                ~~1 \
-                'XDG_SESSION_DESKTOP=' \
-                'XDG_SESSION_DESKTOP=sway' \
-                ~~1 \
-                'DESKTOP_SESSION=' \
-                'DESKTOP_SESSION=sway'
-
-        __file_write_overwrite;
-    fi
-
     FILE_PATH_fd1 \
 <<CONFIG
 $home/.config/sway/config
