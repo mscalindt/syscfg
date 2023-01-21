@@ -7113,7 +7113,7 @@ MIRRORLIST
 }
 
 _resolv_conf() {
-    if [ "$dns" = localhost ] || [ "$dns" = none ]; then
+    if [ "$dns" = localhost ] || [ "$dns" = none ] || [ ! "$dns" ]; then
         :
     else
         info -w -1 'Nothing to be done.'
@@ -7146,7 +7146,7 @@ RESOLV_CONF
 
         __file_write;
         __loc_chattr 'i'
-    elif [ "$dns" = none ]; then
+    elif [ "$dns" = none ] || [ ! "$dns" ]; then
         __loc_remove;
     fi
 }
