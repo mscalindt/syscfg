@@ -8894,8 +8894,8 @@ _XINITRC
 <<'_XINITRC'
     xinput set-prop 'ELAN1300:00 04F3:3104 Touchpad' \
                     'libinput Tapping Enabled' 1; \
-    xrandr --output eDP --set vrr_capable 1; \
-    xrandr --output eDP --set 'scaling mode' 'Full aspect'; \
+    xrandr --output eDP-1 --set vrr_capable 1; \
+    xrandr --output eDP-1 --set 'scaling mode' 'Full aspect'; \
 _XINITRC
     fi
 
