@@ -4493,20 +4493,12 @@ _BASHRC
 }
 
 _bash_init() {
-    if [ "$wm" = sway ] || [ "$wm" = xfce4 ] || [ "$wm" = none ] || \
-       [ ! "$wm" ]; then
-        :
-    else
-        info -w -1 'Nothing to be done.'
-        return 0
-    fi
-
-    if [ "$wm" = sway ]; then
-        FILE_PATH_fd1 \
+    FILE_PATH_fd1 \
 <<_BASH_PROFILE
 $home/.bash_profile
 _BASH_PROFILE
 
+    if [ "$wm" = sway ]; then
         FILE_fd1 \
 <<'_BASH_PROFILE'
 if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
@@ -4526,25 +4518,15 @@ SWAY_LOG
         __loc_chmod '0644'
         __loc_chown 'mscalindt'
     elif [ "$wm" = xfce4 ]; then
-        FILE_PATH_fd1 \
-<<_BASH_PROFILE
-$home/.bash_profile
-_BASH_PROFILE
-
         FILE_fd1 \
 <<'_BASH_PROFILE'
 if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
-    exec startx xfce4
+    exec startx
 fi
 _BASH_PROFILE
 
         __file_write;
     elif [ "$wm" = none ] || [ ! "$wm" ]; then
-        FILE_PATH_fd1 \
-<<_BASH_PROFILE
-$home/.bash_profile
-_BASH_PROFILE
-
         __loc_remove;
     fi
 }
