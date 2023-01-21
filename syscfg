@@ -7954,8 +7954,19 @@ HELPERS_RC
     FILE_fd1 \
 <<'HELPERS_RC'
 TerminalEmulator=custom-TerminalEmulator
+HELPERS_RC
+
+    if [ "$browser" = firefox ]; then
+        FILE_cont_fd1 \
+<<'HELPERS_RC'
 WebBrowser=firefox
 HELPERS_RC
+    else
+        FILE_cont_fd1 \
+<<'HELPERS_RC'
+WebBrowser=
+HELPERS_RC
+    fi
 
     __file_write;
 
@@ -9122,8 +9133,8 @@ main_util_env() {
 
 main_vars_lock() {
     readonly fatal TMP_DIR LOG avoid_write backup force logging m533ia \
-             arch_linux audio_hq dns init ipv6 server wm bg de user home \
-             efi_mnt arch_mirlist ops
+             arch_linux audio_hq browser dns init ipv6 server wm bg de user \
+             home efi_mnt arch_mirlist ops
 }
 
 main() {
@@ -9148,6 +9159,8 @@ main() {
     # Utility software switches
     # Configure audio configs for highest possible quality:
     audio_hq=0
+    # Web browser; currently supported: firefox, none
+    browser='firefox'
     # DNS; currently supported: localhost, none
     dns='localhost'
     # Dedicated DNS (stub) resolver; currently supported: dnsmasq
