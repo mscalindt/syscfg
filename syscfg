@@ -8769,7 +8769,7 @@ XFWM4_XML
         <property name="snap_to_windows" type="bool" value="false"/>
         <property name="snap_width" type="int" value="10"/>
         <property name="vblank_mode" type="string" value="auto"/>
-        <property name="theme" type="string" value="Arc-Dark"/>
+        <property name="theme" type="string" value="Arc-Dark-solid"/>
         <property name="tile_on_move" type="bool" value="true"/>
         <property name="title_alignment" type="string" value="center"/>
         <property name="title_font" type="string" value="Sans Bold 9"/>
@@ -8815,7 +8815,7 @@ XSETTINGS_XML
 
 <channel name="xsettings" version="1.0">
     <property name="Net" type="empty">
-        <property name="ThemeName" type="string" value="Arc-Dark"/>
+        <property name="ThemeName" type="string" value="Arc-Dark-solid"/>
         <property name="IconThemeName" type="string" value="Papirus-Dark"/>
         <property name="DoubleClickTime" type="empty"/>
         <property name="DoubleClickDistance" type="empty"/>
