@@ -9145,8 +9145,8 @@ main_util_env() {
 
 main_vars_lock() {
     readonly fatal TMP_DIR LOG avoid_write backup force logging m533ia \
-             arch_linux audio_hq browser dns init ipv6 server wm bg de user \
-             home efi_mnt arch_mirlist ops
+             arch_linux audio_hq browser dns init ipv6 qt_theme server wm bg \
+             de user home efi_mnt arch_mirlist ops
 }
 
 main() {
@@ -9181,6 +9181,8 @@ main() {
     init='systemd'
     # Configure and prefer IPv6 over IPv4:
     ipv6=0
+    # QT theme engine; currently supported: kvantum, none
+    qt_theme='kvantum'
     # Display server; currently supported: wayland, x11
     server='wayland'
     # Desktop environment / window manager; currently supported: sway, xfce4
