@@ -9037,7 +9037,11 @@ main_defs() {
         # exit has already been invoked. (pre-func)
         # Executed cleanup above, no more fuss needed here.
         case $1 in
-            201|202|217|220|221|222|230|231|232|233|234|235) return 0 ;;
+            201|202|217|220|221|222|230|231|232|233|234|235)
+                err -r -1 "_$_str(): Failed. (RC = $1)"
+
+                return 0
+            ;;
         esac
 
         if [ "$1" -eq 130 ]; then
