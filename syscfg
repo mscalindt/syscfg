@@ -4701,7 +4701,24 @@ DOAS_CONF
 }
 
 _env() {
-    :
+    FILE_PATH_fd1 \
+<<'ENVIRONMENT'
+/etc/environment
+ENVIRONMENT
+
+    if [ "$browser" = firefox ]; then
+        if [ "$server" = wayland ]; then
+            libfile ~~1 \
+                    'MOZ_ENABLE_WAYLAND=' \
+                    'MOZ_ENABLE_WAYLAND=1'
+        else
+            libfile ~~1 \
+                    'MOZ_ENABLE_WAYLAND=' \
+                    'MOZ_ENABLE_WAYLAND=0'
+        fi
+    fi
+
+    __file_write_overwrite;
 }
 
 # .face png in $home (user $HOME); some applications use this file.
@@ -4790,19 +4807,6 @@ FP_CONF
 
 _firefox_conf() {
     cmd 'git' || ENOCMD 'git'
-
-    if [ "$server" = wayland ]; then
-        FILE_PATH_fd1 \
-<<'ENVIRONMENT'
-/etc/environment
-ENVIRONMENT
-
-        libfile ~~1 \
-                'MOZ_ENABLE_WAYLAND=' \
-                'MOZ_ENABLE_WAYLAND=1'
-
-        __file_write_overwrite;
-    fi
 
     FILE_PATH_fd1 \
 <<PROFILES_INI
