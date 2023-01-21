@@ -4720,10 +4720,13 @@ ENVIRONMENT
             libfile ~~1 \
                     'MOZ_ENABLE_WAYLAND=' \
                     'MOZ_ENABLE_WAYLAND=1'
-        else
+        elif [ "$server" = x11 ]; then
             libfile ~~1 \
                     'MOZ_ENABLE_WAYLAND=' \
                     'MOZ_ENABLE_WAYLAND=0'
+        elif [ "$server" = none ] || [ ! "$server" ]; then
+            libfile -1 \
+                    'MOZ_ENABLE_WAYLAND='
         fi
     fi
 
@@ -4747,6 +4750,11 @@ ENVIRONMENT
         libfile ~~1 \
                 'GDK_BACKEND=' \
                 'GDK_BACKEND=x11' \
+                -1 \
+                'GTK_USE_PORTAL='
+    elif [ "$server" = none ] || [ ! "$server" ]; then
+        libfile -1 \
+                'GDK_BACKEND=' \
                 -1 \
                 'GTK_USE_PORTAL='
     fi
@@ -9181,7 +9189,7 @@ main() {
     ipv6=0
     # QT theme engine; currently supported: kvantum, none
     qt_theme='kvantum'
-    # Display server; currently supported: wayland, x11
+    # Display server; currently supported: wayland, x11, none
     server='wayland'
     # Desktop environment / window manager; currently supported: sway, xfce4
     wm='sway'
