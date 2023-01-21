@@ -4749,6 +4749,10 @@ ENVIRONMENT
 
     if [ "$server" = wayland ]; then
         libfile ~~1 \
+                'QT_QPA_PLATFORM=' \
+                'QT_QPA_PLATFORM=wayland'
+
+        libfile ~~1 \
                 'GDK_BACKEND=' \
                 'GDK_BACKEND=wayland' \
                 ~~1 \
@@ -4756,11 +4760,18 @@ ENVIRONMENT
                 'GTK_USE_PORTAL=1'
     elif [ "$server" = x11 ]; then
         libfile ~~1 \
+                'QT_QPA_PLATFORM=' \
+                'QT_QPA_PLATFORM=xcb'
+
+        libfile ~~1 \
                 'GDK_BACKEND=' \
                 'GDK_BACKEND=x11' \
                 -1 \
                 'GTK_USE_PORTAL='
     elif [ "$server" = none ] || [ ! "$server" ]; then
+        libfile -1 \
+                'QT_QPA_PLATFORM='
+
         libfile -1 \
                 'GDK_BACKEND=' \
                 -1 \
@@ -6896,24 +6907,6 @@ session.modules = {
 MEDIA_SESSION_CONF
 
     __file_write;
-}
-
-_qt_conf() {
-    if [ "$server" != wayland ]; then
-        info -w -1 'Nothing to be done.'
-        return 0
-    fi
-
-    FILE_PATH_fd1 \
-<<'ENVIRONMENT'
-/etc/environment
-ENVIRONMENT
-
-    libfile ~~1 \
-            'QT_QPA_PLATFORM=' \
-            'QT_QPA_PLATFORM=wayland' \
-
-    __file_write_overwrite;
 }
 
 _ranger_conf() {
@@ -9259,7 +9252,6 @@ main() {
     ops="$ops pipewire-conf"
     ops="$ops pulseaudio-conf"
     ops="$ops pipewire-media-session-conf"
-    ops="$ops qt-conf"
     ops="$ops ranger-conf"
     ops="$ops reflector"
     ops="$ops resolv-conf"
