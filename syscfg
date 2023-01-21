@@ -4700,6 +4700,10 @@ DOAS_CONF
     __loc_chmod '0400'
 }
 
+_env() {
+    :
+}
+
 # .face png in $home (user $HOME); some applications use this file.
 _face_bin() {
     FILE_PATH_fd1 \
@@ -9182,6 +9186,7 @@ main() {
     ops="$ops dhcpcd-conf"
     ops="$ops dnsmasq-conf"
     ops="$ops doas-conf"
+    ops="$ops env"
     ops="$ops face-bin"
     ops="$ops featherpad-conf"
     ops="$ops firefox-conf"
