@@ -4727,6 +4727,15 @@ ENVIRONMENT
         fi
     fi
 
+    if [ "$qt_theme" = kvantum ]; then
+        libfile ~~1 \
+                'QT_STYLE_OVERRIDE=' \
+                'QT_STYLE_OVERRIDE=kvantum'
+    elif [ "qt_theme" = none ] || [ ! "$qt_theme" ]; then
+        libfile -1 \
+                'QT_STYLE_OVERRIDE='
+    fi
+
     if [ "$server" = wayland ]; then
         libfile ~~1 \
                 'GDK_BACKEND=' \
@@ -5530,17 +5539,6 @@ KITTY_CONF
 }
 
 _kvantum_conf() {
-    FILE_PATH_fd1 \
-<<'ENVIRONMENT'
-/etc/environment
-ENVIRONMENT
-
-    libfile ~~1 \
-            'QT_STYLE_OVERRIDE=' \
-            'QT_STYLE_OVERRIDE=kvantum'
-
-    __file_write_overwrite;
-
     FILE_PATH_fd1 \
 <<KVANTUM_KVCONFIG
 $home/.config/Kvantum/kvantum.kvconfig
