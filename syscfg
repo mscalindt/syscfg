@@ -8920,14 +8920,15 @@ _XINITRC
     FILE_cont_fd1 \
 <<'_XINITRC'
     " &
-
-if [ "$2" ]; then
-    case "$2" in
-        xfce4) exec startxfce4 ;;
-        *) echo "xinit: No DE/WM has been specified."; exit 2 ;;
-    esac
-fi
 _XINITRC
+
+    if [ "$wm" = xfce4 ]; then
+        FILE_cont_fd1 \
+<<'_XINITRC'
+
+exec startxfce4
+_XINITRC
+    fi
 
     __file_write;
 }
