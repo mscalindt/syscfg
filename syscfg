@@ -8882,19 +8882,6 @@ XSETTINGS_XML
 }
 
 _xorg_conf() {
-    if [ "$server" = x11 ]; then
-        FILE_PATH_fd1 \
-<<'ENVIRONMENT'
-/etc/environment
-ENVIRONMENT
-
-        libfile ~~1 \
-                'QT_QPA_PLATFORM=' \
-                'QT_QPA_PLATFORM=xcb'
-
-        __file_write_overwrite;
-    fi
-
     FILE_PATH_fd1 \
 <<_XINITRC
 $home/.xinitrc
