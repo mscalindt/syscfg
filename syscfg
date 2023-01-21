@@ -8881,7 +8881,7 @@ XSETTINGS_XML
     __file_write;
 }
 
-_xorg_conf() {
+_xorg_init() {
     FILE_PATH_fd1 \
 <<_XINITRC
 $home/.xinitrc
@@ -9244,7 +9244,7 @@ main() {
     ops="$ops wireplumber-conf"
     ops="$ops xdg-conf"
     ops="$ops xfce4-conf"
-    ops="$ops xorg-conf"
+    ops="$ops xorg-init"
     ops="${ops# }"
 
     # Enable avoid_write from cmdline: ^AE as $1
