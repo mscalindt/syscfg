@@ -4727,6 +4727,21 @@ ENVIRONMENT
         fi
     fi
 
+    if [ "$server" = wayland ]; then
+        libfile ~~1 \
+                'GDK_BACKEND=' \
+                'GDK_BACKEND=wayland' \
+                ~~1 \
+                'GTK_USE_PORTAL=' \
+                'GTK_USE_PORTAL=1'
+    elif [ "$server" = x11 ]; then
+        libfile ~~1 \
+                'GDK_BACKEND=' \
+                'GDK_BACKEND=x11' \
+                -1 \
+                'GTK_USE_PORTAL='
+    fi
+
     __file_write_overwrite;
 }
 
@@ -5235,22 +5250,6 @@ GRUB
 }
 
 _gtk_conf() {
-    if [ "$server" = wayland ]; then
-        FILE_PATH_fd1 \
-<<'ENVIRONMENT'
-/etc/environment
-ENVIRONMENT
-
-        libfile ~~1 \
-                'GDK_BACKEND=' \
-                'GDK_BACKEND=wayland' \
-                ~~1 \
-                'GTK_USE_PORTAL=' \
-                'GTK_USE_PORTAL=1'
-
-        __file_write_overwrite;
-    fi
-
     FILE_PATH_fd1 \
 <<_GTKRC_2_0
 $home/.gtkrc-2.0
