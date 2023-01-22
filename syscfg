@@ -5360,6 +5360,38 @@ _GITCONFIG
     __file_write;
 }
 
+_gov_performance() {
+    FILE_PATH_fd1 \
+<<'CPU'
+/sys/devices/system/cpu
+CPU
+
+    if ! loc_exists "$FILE_PATH"/cpu0/cpufreq/scaling_governor; then
+        ENOENT;
+        err -r -- 'F '; err - - "$FILE_PATH"/cpu0/cpufreq/scaling_governor
+        exit 202
+    fi
+
+    for core in "$FILE_PATH"/cpu*/cpufreq/scaling_governor; do
+        FILE_PATH_fd1 \
+<<SCALING_GOVERNOR
+$core
+SCALING_GOVERNOR
+
+        FILE_fd1 \
+<<'SCALING_GOVERNOR'
+performance
+SCALING_GOVERNOR
+
+        __file_write_overwrite;
+
+        if ! file_equiv "$FILE_PATH" "$FILE"; then
+            EERROR 'Failed to set the governor:'
+            err -r -- 'F '; err - - "$FILE_PATH"
+        fi
+    done
+}
+
 # "Removable" GRUB UEFI installation (NVRAM-less... when no NVRAM entries)
 _grub() {
     is_uefi || EERROR 'Not in UEFI mode.'
@@ -9385,6 +9417,7 @@ main() {
     ops="$ops fuse-conf"
     ops="$ops gai-conf"
     ops="$ops git-conf"
+    ops="$ops gov-performance"
     ops="$ops grub grub-conf"
     ops="$ops gtk-conf"
     ops="$ops hostname"
