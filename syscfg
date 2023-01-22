@@ -7438,6 +7438,8 @@ input type:pointer {
     bindsym $mod+F3 exec brightnessctl s 5%-
     bindsym $mod+F4 exec brightnessctl s 5%+
     bindsym print exec grim -l 9 $(date +'SS_%Y-%m-%d_%H%M%S.png')
+    bindsym $mod+print exec grim -l 9 -g "$(slurp)" \
+                                         $(date +'SS_%Y-%m-%d_%H%M%S.png')
 
     # Extended functions
     bindsym $mod+Shift+p exec grim -g "$(slurp -p)" -t ppm - | \
@@ -7798,6 +7800,8 @@ input type:pointer {
     bindsym $mod+F3 exec brightnessctl s 5%-
     bindsym $mod+F4 exec brightnessctl s 5%+
     bindsym print exec grim -l 9 $(date +'SS_%Y-%m-%d_%H%M%S.png')
+    bindsym $mod+print exec grim -l 9 -g "$(slurp)" \
+                                         $(date +'SS_%Y-%m-%d_%H%M%S.png')
 
     # Extended functions
     bindsym $mod+Shift+p exec grim -g "$(slurp -p)" -t ppm - | \
