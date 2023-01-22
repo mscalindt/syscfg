@@ -6374,7 +6374,7 @@ _modprobe_conf() {
 
     FILE_fd1 \
 <<'99_SND_POWERSAVE_CONF'
-options snd_hda_intel power_save=0
+options snd_hda_intel power_save=0 power_save_controller=N
 99_SND_POWERSAVE_CONF
 
     __file_write;
