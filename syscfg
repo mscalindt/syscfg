@@ -4716,6 +4716,50 @@ _conf_3() {
     fi
 }
 
+# Software configuration - stage 4
+# Config might overwrite or be overwritten.
+# Config might depend on installed and ever-executed software.
+# Config is influenced by utility switches.
+# Function might require: $force
+_conf_4() {
+    _alsa_conf;
+    _autostart;
+    _bash_init;
+    _env;
+    _gai_conf;
+    _hosts;
+    _iwd_conf;
+    _pipewire_conf;
+    _reflector;
+    _resolv_conf;
+    _sh;
+    _sway_conf;
+    _tz;
+    _wireplumber_conf;
+    _xfce4_conf;
+    _xorg_init;
+
+    if file '/etc/dhcpcd.conf'; then
+        _dhcpcd_conf;
+    fi
+
+    if file '/etc/dnsmasq.conf'; then
+        _dnsmasq_conf;
+    fi
+
+    if cmd 'grub-mkconfig' && file '/etc/default/grub'; then
+        _grub_conf;
+    fi
+
+    if file '/etc/mkinitcpio.conf'; then
+        _initramfs_conf;
+    fi
+
+    if file '/etc/pulse/default.pa'; then
+        _pulseaudio_conf;
+    fi
+}
+
 _dhcpcd_conf() {
     FILE_PATH_fd1 \
 <<'DHCPCD_CONF'
@@ -9328,6 +9372,7 @@ main() {
     ops="$ops conf-1"
     ops="$ops conf-2"
     ops="$ops conf-3"
+    ops="$ops conf-4"
     ops="$ops dhcpcd-conf"
     ops="$ops dnsmasq-conf"
     ops="$ops doas-conf"
