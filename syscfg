@@ -4617,6 +4617,7 @@ _conf_1() {
 # Function might require: $force
 _conf_2() {
     _autostart;
+    _env;
     _featherpad_conf;
     _hostname;
     _hosts;
