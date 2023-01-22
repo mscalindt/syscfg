@@ -4579,6 +4579,143 @@ _clk_sync() {
     fi
 }
 
+# Software configuration - stage 1
+# State-of-the-art config; never overwrites or overwritten.
+_conf_1() {
+    _alsa_conf;
+    _bash_conf;
+    _bash_init;
+    _doas_conf;
+    _face_bin;
+    _fontconfig_conf;
+    _git_conf;
+    _gtk_conf;
+    _imv_conf;
+    _iwd_conf;
+    _kitty_conf;
+    _kvantum_conf;
+    _moc_conf;
+    _modprobe_conf;
+    _mpv_conf;
+    _mutt_conf;
+    _nano_conf;
+    _openal_conf;
+    _pipewire_conf;
+    _pipewire_media_session_conf;
+    _ranger_conf;
+    _sway_conf;
+    _swaylock_conf;
+    _sysctl_conf;
+    _wireplumber_conf;
+    _xdg_conf;
+    _xorg_init;
+}
+
+# Software configuration - stage 2
+# Config might overwrite or be overwritten.
+# Config might depend on installed software.
+# Function might require: $force
+_conf_2() {
+    _autostart;
+    _featherpad_conf;
+    _hostname;
+    _hosts;
+    _locale;
+    _reflector;
+    _resolv_conf;
+    _sh;
+    _tz;
+    _xfce4_conf;
+
+    if file '/etc/dhcpcd.conf'; then
+        _dhcpcd_conf;
+    else
+        info -y -1 'Skipped _dhcpcd_conf()'
+    fi
+
+    if file '/etc/dnsmasq.conf'; then
+        _dnsmasq_conf;
+    else
+        info -y -1 'Skipped _dnsmasq_conf()'
+    fi
+
+    if file '/etc/gai.conf'; then
+        _gai_conf;
+    else
+        info -y -1 'Skipped _gai_conf()'
+    fi
+
+    if cmd 'grub-install' && cmd 'grub-mkconfig'; then
+        _grub;
+
+        if file '/etc/default/grub'; then
+            _grub_conf;
+        else
+            info -y -1 'Skipped _grub_conf()'
+        fi
+    else
+        info -y -1 'Skipped _grub()'
+        info -y -1 'Skipped _grub_conf()'
+    fi
+
+    if file '/etc/mkinitcpio.conf'; then
+        _initramfs_conf;
+    else
+        info -y -1 'Skipped _initramfs_conf()'
+    fi
+
+    if file '/etc/makepkg.conf'; then
+        _makepkg_conf;
+    else
+        info -y -1 'Skipped _makepkg_conf()'
+    fi
+
+    if file '/etc/pacman.conf'; then
+        _pacman_conf;
+    else
+        info -y -1 'Skipped _pacman_conf()'
+    fi
+
+    if file '/etc/security/faillock.conf' && \
+       file '/etc/login.defs' && \
+       file '/etc/pam.d/su' && \
+       file '/etc/pam.d/system-auth'; then
+        _pam_conf;
+    else
+        info -y -1 'Skipped _pam_conf()'
+    fi
+}
+
+# Software configuration - stage 3
+# Config might overwrite or be overwritten.
+# Config might depend on installed and ever-executed software.
+# Function might require: $force
+_conf_3() {
+    if file '/etc/bluetooth/main.conf'; then
+        _bluez_conf;
+    else
+        info -y -1 'Skipped _bluez_conf()'
+    fi
+
+    if file "$home"/'.mozilla/firefox/profiles.ini'; then
+        _firefox_conf;
+    else
+        info -y -1 'Skipped _firefox_conf()'
+    fi
+
+    if file '/etc/fuse.conf'; then
+        _fuse_conf;
+    else
+        info -y -1 'Skipped _fuse_conf()'
+    fi
+
+    if file '/etc/pulse/default.pa'; then
+        _pulseaudio_conf;
+    else
+        info -y -1 'Skipped _pulseaudio_conf()'
+    fi
+}
+
 _dhcpcd_conf() {
     FILE_PATH_fd1 \
 <<'DHCPCD_CONF'
@@ -9184,6 +9321,9 @@ main() {
     ops="$ops bash-init"
     ops="$ops bluez-conf"
     ops="$ops clk-sync"
+    ops="$ops conf-1"
+    ops="$ops conf-2"
+    ops="$ops conf-3"
     ops="$ops dhcpcd-conf"
     ops="$ops dnsmasq-conf"
     ops="$ops doas-conf"
