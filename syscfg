@@ -7579,7 +7579,7 @@ bindsym $mod+Shift+Escape mode "nointercept"
 
 bar {
     position top
-    status_command while /home/$USER/.config/sway/status; do sleep 0.5; done
+    status_command while /home/$USER/.config/sway/status; do sleep 0.1; done
     font pango:Source Code Pro 10
 
     colors {
