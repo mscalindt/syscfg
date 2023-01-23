@@ -7825,10 +7825,23 @@ done < /sys/class/power_supply/BAT0/capacity; } 2> /dev/null
 
 VOLUME=$(pamixer --get-volume 2> /dev/null)
 
+KB_LAYOUT=$(
+    swaymsg -t get_inputs | \
+    jq 'map(select(has("xkb_active_layout_name")))[0].xkb_active_layout_name'
+)
+case "$KB_LAYOUT" in
+    *'English'*)
+        KB_LAYOUT=ENG
+    ;;
+    *'Bulgarian'*)
+        KB_LAYOUT=BG
+    ;;
+esac
+
 DATE=$(date "+%Y-%m-%d %H:%M:%S" 2> /dev/null)
 
-printf "%s | C: %s%% | M: %s | B: %s%% | V: %s%% | %s |" \
-       "$TITLE" "$CPU" "$MEMORY" "$BATTERY" "$VOLUME" "$DATE"
+printf "%s | C: %s%% | M: %s | B: %s%% | V: %s%% | %s | %s |" \
+       "$TITLE" "$CPU" "$MEMORY" "$BATTERY" "$VOLUME" "$KB_LAYOUT" "$DATE"
 STATUS
 
     __file_write;
