@@ -3105,21 +3105,21 @@ __loc_chown() {
 }
 
 #! .desc:
-# Remove a file/directory from the specified path
+# Delete a file/directory from the specified path
 #! .uses:
 # <FILE_PATH> $ - the file/directory
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad usage
-__loc_remove() {
+__loc_delete() {
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
         return 255
     fi
 
     if ! loc_exists "$FILE_PATH"; then
-        info -w -1 'Already removed:'
+        info -w -1 'Already deleted:'
         info -g -- '> '; info - - "$FILE_PATH"
         return 0
     fi
@@ -3131,7 +3131,7 @@ __loc_remove() {
     fi
 
     if [ "$logging" = 1 ]; then
-        info -w -1 'Will remove:'
+        info -w -1 'Will delete:'
         info -w -- '> '; info - - "$FILE_PATH"
 
         if ! loc_delete "$FILE_PATH"; then
@@ -4527,7 +4527,7 @@ _BASH_PROFILE
 
         __file_write;
     elif [ "$wm" = none ] || [ ! "$wm" ]; then
-        __loc_remove;
+        __loc_delete;
     fi
 }
 
@@ -5315,7 +5315,7 @@ _gai_conf() {
 GAI_CONF
 
     if [ "$ipv6" = 1 ]; then
-        __loc_remove;
+        __loc_delete;
     else
         FILE_fd1 \
 <<'GAI_CONF'
@@ -7431,7 +7431,7 @@ RESOLV_CONF
         __file_write;
         __loc_chattr 'i'
     elif [ "$dns" = none ] || [ ! "$dns" ]; then
-        __loc_remove;
+        __loc_delete;
     fi
 }
 
