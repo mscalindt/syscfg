@@ -7831,7 +7831,7 @@ KB_LAYOUT=$(
 )
 case "$KB_LAYOUT" in
     *'English'*)
-        KB_LAYOUT=ENG
+        KB_LAYOUT=EN
     ;;
     *'Bulgarian'*)
         KB_LAYOUT=BG
