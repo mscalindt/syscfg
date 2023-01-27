@@ -1738,22 +1738,6 @@ FILE_cont() {
 # (0) success
 # (*) error
 FILE_fd1() {
-    FILE=
-
-    { while IFS= read -r _line; do
-        FILE="$FILE$_line
-"
-    done; FILE="$FILE$_line"; } 2> /dev/null
-}
-
-#! .desc:
-# Read STDIN into existing $FILE
-#! .gives:
-# <FILE> $ - STDIN
-#! .rc:
-# (0) success
-# (*) error
-FILE_cont_fd1() {
     { while IFS= read -r _line; do
         FILE="$FILE$_line
 "
@@ -3245,7 +3229,7 @@ ASOUND_CONF
     fi
 
     if [ "$m533ia" = 1 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'ASOUND_CONF'
 defaults.pcm.card 1
 defaults.ctl.card 1
@@ -4788,7 +4772,7 @@ noipv6
 DHCPCD_CONF
     fi
 
-    FILE_cont_fd1 \
+    FILE_fd1 \
 <<'DHCPCD_CONF'
 option classless_static_routes
 option interface_mtu
@@ -4828,7 +4812,7 @@ all-servers
 DNSMASQ_CONF
 
     if [ "$ipv6" = 1 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'DNSMASQ_CONF'
 listen-address=::1,127.0.0.1
 server=2606:4700:4700::1111
@@ -4849,7 +4833,7 @@ server=9.9.9.9
 server=149.112.112.112
 DNSMASQ_CONF
     else
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'DNSMASQ_CONF'
 listen-address=127.0.0.1
 server=1.1.1.1
@@ -5526,19 +5510,19 @@ usbhid.mousepoll=1 tsc=unstable \
 GRUB
 
     if [ "$ipv6" != 1 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'GRUB'
 ipv6.disable=1 \
 GRUB
     fi
 
-    FILE_cont_fd1 \
+    FILE_fd1 \
 <<'GRUB'
 "
 GRUB
 
     if [ "$arch_linux" = 1 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'GRUB'
 GRUB_DISTRIBUTOR="Arch"
 GRUB
@@ -5682,7 +5666,7 @@ HOSTS
     fi
 
     if [ "$m533ia" = 1 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'HOSTS'
 127.0.1.1        m533ia
 HOSTS
@@ -5731,7 +5715,7 @@ MODULES=()
 MKINITCPIO_CONF
     fi
 
-    FILE_cont_fd1 \
+    FILE_fd1 \
 <<'MKINITCPIO_CONF'
 BINARIES=()
 FILES=()
@@ -5771,18 +5755,18 @@ AddressRandomizationRange=nic
 MAIN_CONF
 
     if [ "$ipv6" = 1 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'MAIN_CONF'
 EnableIPv6=true
 MAIN_CONF
     else
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'MAIN_CONF'
 EnableIPv6=false
 MAIN_CONF
     fi
 
-    FILE_cont_fd1 \
+    FILE_fd1 \
 <<'MAIN_CONF'
 NameResolvingService=none
 
@@ -6934,7 +6918,7 @@ context.properties = {
 MINIMAL_CONF
 
     if [ "$audio_hq" = 1 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'MINIMAL_CONF'
 context.objects = [
     { factory = adapter
@@ -6945,7 +6929,7 @@ context.objects = [
 ]
 MINIMAL_CONF
     else
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'MINIMAL_CONF'
 context.objects = [
     { factory = adapter
@@ -7035,12 +7019,12 @@ exit-idle-time = -1
 DAEMON_CONF
 
     if [ "$audio_hq" = 1 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'DAEMON_CONF'
 resample-method = soxr-vhq
 DAEMON_CONF
     else
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'DAEMON_CONF'
 resample-method = speex-float-8
 DAEMON_CONF
@@ -7423,7 +7407,7 @@ nameserver 127.0.0.1
 RESOLV_CONF
         fi
 
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'RESOLV_CONF'
 options trust-ad
 RESOLV_CONF
@@ -7503,18 +7487,18 @@ input type:keyboard {
 CONFIG
 
     if [ "$gaming" = 1 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'CONFIG'
     xkb_options grp:alt_shift_toggle
 CONFIG
     else
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'CONFIG'
     xkb_options grp:alt_shift_toggle,caps:super
 CONFIG
     fi
 
-    FILE_cont_fd1 \
+    FILE_fd1 \
 <<'CONFIG'
     repeat_delay 222
     repeat_rate 50
@@ -7597,18 +7581,18 @@ bar {
 CONFIG
 
     if [ "$gaming" = 1 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'CONFIG'
     status_command while true; do sleep 192000; done
 CONFIG
     else
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'CONFIG'
     status_command while /home/$USER/.config/sway/status; do sleep 0.1; done
 CONFIG
     fi
 
-    FILE_cont_fd1 \
+    FILE_fd1 \
 <<'CONFIG'
     position top
     font pango:Source Code Pro 10
@@ -7624,14 +7608,14 @@ include @sysconfdir@/sway/config.d/*
 CONFIG
 
     if [ "$polkit_agent" ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<CONFIG
 exec $polkit_agent
 CONFIG
     fi
 
     if [ "$arch_linux" = 1 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'CONFIG'
 exec systemctl --user import-environment SWAYSOCK WAYLAND_DISPLAY DISPLAY \
                                          XDG_CURRENT_DESKTOP \
@@ -8000,18 +7984,18 @@ table.insert (alsa_monitor.rules, {
 99_ALSA_LUA
 
     if [ "$audio_hq" = 1 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'99_ALSA_LUA'
         ["resample.quality"] = 15,
 99_ALSA_LUA
     else
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'99_ALSA_LUA'
         ["resample.quality"] = 11,
 99_ALSA_LUA
     fi
 
-    FILE_cont_fd1 \
+    FILE_fd1 \
 <<'99_ALSA_LUA'
     },
 })
@@ -8040,18 +8024,18 @@ table.insert (bluez_monitor.rules, {
 99_BLUEZ_LUA
 
     if [ "$audio_hq" = 1 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'99_BLUEZ_LUA'
         ["resample.quality"] = 15,
 99_BLUEZ_LUA
     else
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'99_BLUEZ_LUA'
         ["resample.quality"] = 11,
 99_BLUEZ_LUA
     fi
 
-    FILE_cont_fd1 \
+    FILE_fd1 \
 <<'99_BLUEZ_LUA'
     },
 })
@@ -8102,12 +8086,12 @@ TerminalEmulator=custom-TerminalEmulator
 HELPERS_RC
 
     if [ "$browser" = firefox ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'HELPERS_RC'
 WebBrowser=firefox
 HELPERS_RC
     elif [ "$browser" = none ] || [ ! "$browser" ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'HELPERS_RC'
 WebBrowser=
 HELPERS_RC
@@ -9042,7 +9026,7 @@ sh -c \
 _XINITRC
 
     if [ "$m533ia" = 1 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'_XINITRC'
     xinput set-prop 'ELAN1300:00 04F3:3104 Touchpad' \
                     'libinput Tapping Enabled' 1; \
@@ -9051,13 +9035,13 @@ _XINITRC
 _XINITRC
     fi
 
-    FILE_cont_fd1 \
+    FILE_fd1 \
 <<'_XINITRC'
     " &
 _XINITRC
 
     if [ "$wm" = xfce4 ]; then
-        FILE_cont_fd1 \
+        FILE_fd1 \
 <<'_XINITRC'
 
 exec startxfce4
