@@ -9254,8 +9254,8 @@ main_util_env() {
 
 main_vars_lock() {
     readonly fatal TMP_DIR LOG avoid_write backup force logging m533ia \
-             arch_linux audio_hq browser dns init ipv6 qt_theme server wm bg \
-             de user home efi_mnt arch_mirlist ops
+             arch_linux audio_hq browser dns gaming init ipv6 qt_theme server \
+             wm bg de user home efi_mnt arch_mirlist ops
 }
 
 main() {
@@ -9368,7 +9368,6 @@ main() {
     ops="$ops resolv-conf"
     ops="$ops sh"
     ops="$ops sway-conf"
-    ops="$ops sway-conf-gaming"
     ops="$ops swaylock-conf"
     ops="$ops sysctl-conf"
     ops="$ops tz"
@@ -9382,6 +9381,7 @@ main() {
     # Enable audio_hq from cmdline:    ^AQ as $1
     # Enable backup from cmdline:      ^BP as $1
     # Enable force from cmdline:       ^FE as $1
+    # Enable gaming from cmdline:      ^GG as $1
     # Enable ipv6 from cmdline:        ^I6 as $1
     # Enable logging from cmdline:     ^LG as $1
     while :; do case "$1" in
@@ -9389,6 +9389,7 @@ main() {
         '^AQ') audio_hq=1; shift && continue ;;
         '^BP') backup=1; shift && continue ;;
         '^FE') force=1; shift && continue ;;
+        '^GG') gaming=1; shift && continue ;;
         '^I6') ipv6=1; shift && continue ;;
         '^LG') logging=1; shift && continue ;;
         *) break ;;
