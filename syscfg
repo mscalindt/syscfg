@@ -7595,10 +7595,10 @@ bar {
 include @sysconfdir@/sway/config.d/*
 CONFIG
 
-    if file '/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1'; then
+    if [ "$polkit_agent" ]; then
         FILE_cont_fd1 \
-<<'CONFIG'
-exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+<<CONFIG
+exec $polkit_agent
 CONFIG
     fi
 
@@ -7972,10 +7972,10 @@ bar {
 include @sysconfdir@/sway/config.d/*
 CONFIG
 
-    if file '/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1'; then
+    if [ "$polkit_agent" ]; then
         FILE_cont_fd1 \
-<<'CONFIG'
-exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+<<CONFIG
+exec $polkit_agent
 CONFIG
     fi
 
@@ -9443,6 +9443,7 @@ main() {
     home='/home/mscalindt'
     efi_mnt='/efi'
     arch_mirlist='/etc/pacman.d/mirrorlist'
+    polkit_agent='/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1'
 
     # Operations
     ops=
