@@ -7533,6 +7533,7 @@ input type:pointer {
     bindsym $mod+4 workspace number 4
     bindsym $mod+5 workspace number 5
     bindsym $mod+6 workspace number 6
+    bindsym $mod+7 workspace number 7
 
     bindsym $mod+Left focus left
     bindsym $mod+Down focus down
