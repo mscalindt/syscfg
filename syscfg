@@ -7549,6 +7549,8 @@ input type:pointer {
     bindsym print exec grim -l 9 $(date +'SS_%Y-%m-%d_%H%M%S.png')
     bindsym $mod+print exec grim -l 9 -g "$(slurp)" \
                                          $(date +'SS_%Y-%m-%d_%H%M%S.png')
+    bindsym $mod+Shift+print exec grim -l 9 -g "$(slurp; sleep 2.5)" \
+                                       $(date +'SS_%Y-%m-%d_%H%M%S.png')
 
     # Extended functions
     bindsym $mod+Shift+p exec grim -g "$(slurp -p)" -t ppm - | \
