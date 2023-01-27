@@ -7873,7 +7873,6 @@ input type:touchpad {
 }
 
 # xkb_options: Switch between keyboard layouts with Alt+Shift
-# xkb_options: Change the Caps key to act as Mod4/Super key
 input type:keyboard {
     xkb_layout us,bg(phonetic)
     xkb_model pc86
