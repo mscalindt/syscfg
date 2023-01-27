@@ -4865,6 +4865,9 @@ DOAS_CONF
     __loc_chmod '0400'
 }
 
+# For full coverage of edge cases, line removal with libfile() alone will not
+# suffice. A solution must be devised, either within libfile() or in this
+# specific, unusual function.
 _env() {
     FILE_PATH_fd1 \
 <<'ENVIRONMENT'
