@@ -7840,7 +7840,7 @@ esac
 
 DATE=$(date "+%A %d,%l:%M %p" 2> /dev/null)
 
-printf "%s | C: %s%% | M: %s | B: %s%% | V: %s%% | %s | %s |" \
+printf "%s | C: %s%% | %s | B: %s%% | V: %s%% | %s | %s |" \
        "$TITLE" "$CPU" "$MEMORY" "$BATTERY" "$VOLUME" "$KB_LAYOUT" "$DATE"
 STATUS
 
