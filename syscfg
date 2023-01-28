@@ -9194,7 +9194,7 @@ main_defs() {
         # Executed cleanup above, no more fuss needed here.
         case $1 in
             201|202|217|220|221|222|230|231|232|233|234|235)
-                err -r -1 "_$_str(): Failed. (RC = $1)"
+                err -r -1 "${opd}(): Failed. (RC = $1)"
 
                 return 0
             ;;
@@ -9202,15 +9202,15 @@ main_defs() {
 
         if [ "$1" -eq 130 ]; then
             trap - TERM EXIT
-            info -y - "${LF}Operation cancelled: _$_str()"
+            info -y - "${LF}Operation cancelled: ${opd}()"
             exit 130
         fi
 
         if [ "$1" -eq 127 ]; then
-            errF 127 - "Operation unhandled: _$_str()"
+            errF 127 - "Operation unhandled: ${opd}()"
         fi
 
-        errF "$1" -1 "_$_str(): Unhandled error. (RC = $1)"
+        errF "$1" -1 "${opd}(): Unhandled error. (RC = $1)"
     }
 
     LC_ALL=C; export LC_ALL
@@ -9237,10 +9237,11 @@ main_list_ops() (
 )
 
 main_set_opd() {
+    opd="_$1"
+
     if str '-' "$1"; then
         replchars '-' '_' "$1"
-    else
-        _str="$1"
+        opd="_$_str"
     fi
 }
 
@@ -9483,7 +9484,7 @@ main() {
         trap "err_handler \$?" INT TERM EXIT
         set -e
 
-        eval "info -be -1 \"$1 -> _${_str}()\"; _$_str"
+        eval "info -be -1 \"$1 -> ${opd}()\"; $opd"
         RC=$?
 
         # func env cleanup
