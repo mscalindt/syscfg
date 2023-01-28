@@ -9173,6 +9173,12 @@ main_chk_home() {
     writable "$home" || errF 1 - "Home is not writable: $home"
 }
 
+main_chk_user() {
+    case :$(id -u) in
+        :) errF 127 - "User does not exist: $user" ;;
+    esac
+}
+
 main_defs() {
     err_handler() {
         if dir "$TMP_DIR" || file "$LOG"; then
@@ -9450,10 +9456,7 @@ main() {
     fi
 
     if [ "$fatal" = 1 ]; then
-        case :$(id -u) in
-            :) errF 127 - "User does not exist: $user" ;;
-        esac
-
+        main_chk_user;
         main_chk_home;
     fi
 
