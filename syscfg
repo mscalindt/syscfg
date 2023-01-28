@@ -9236,6 +9236,14 @@ main_list_ops() (
     done; [ ! "$prev_op" ] || info -w -1 "$prev_op"
 )
 
+main_set_opd() {
+    if str '-' "$1"; then
+        replchars '-' '_' "$1"
+    else
+        _str="$1"
+    fi
+}
+
 main_tmpd() {
     if [ "$fatal" = 1 ]; then
         if ! mkdir -p "$TMP_DIR" 2> /dev/null; then
@@ -9469,11 +9477,7 @@ main() {
     main_vars_lock;
 
     while [ "$1" ]; do
-        if str '-' "$1"; then
-            replchars '-' '_' "$1"
-        else
-            _str="$1"
-        fi
+        main_set_opd "$1"
 
         # use '|| :' to validate a command failure
         trap "err_handler \$?" INT TERM EXIT
