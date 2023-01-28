@@ -7859,8 +7859,7 @@ esac
 DATE=$(date "+%A %d,%l:%M %p" 2> /dev/null)
 case "$DATE" in
     *[0123456789]','[0123456789]*)
-        DATE0="${DATE%\,*}"
-        DATE="$DATE0, ${DATE#*\,}"
+        DATE="${DATE%\,*}, ${DATE#*\,}"
     ;;
 esac
 
