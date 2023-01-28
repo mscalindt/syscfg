@@ -9166,6 +9166,13 @@ main_assert_ops() {
     done
 }
 
+main_chk_home() {
+    exist "$home" || errF 1 - "Home does not exist: $home"
+    dir "$home" || errF 1 - "Home is not a directory: $home"
+    readable "$home" || errF 1 - "Home is not readable: $home"
+    writable "$home" || errF 1 - "Home is not writable: $home"
+}
+
 main_defs() {
     err_handler() {
         if dir "$TMP_DIR" || file "$LOG"; then
@@ -9447,10 +9454,7 @@ main() {
             :) errF 127 - "User does not exist: $user" ;;
         esac
 
-        exist "$home" || errF 1 - "Home does not exist: $home"
-        dir "$home" || errF 1 - "Home is not a directory: $home"
-        readable "$home" || errF 1 - "Home is not readable: $home"
-        writable "$home" || errF 1 - "Home is not writable: $home"
+        main_chk_home;
     fi
 
     main_tmpd;
