@@ -9179,11 +9179,15 @@ main_chk_user() {
     esac
 }
 
+main_rm_tmp() {
+    if dir "$TMP_DIR" || file "$LOG"; then
+        rm -rf "$TMP_DIR" "$LOG"
+    fi
+}
+
 main_defs() {
     err_handler() {
-        if dir "$TMP_DIR" || file "$LOG"; then
-            rm -rf "$TMP_DIR" "$LOG"
-        fi
+        main_rm_tmp;
 
         # These return codes signify that output has already been written and
         # exit has already been invoked. (pre-func)
@@ -9490,9 +9494,7 @@ main() {
         shift
     done
 
-    if dir "$TMP_DIR" || file "$LOG"; then
-        rm -rf "$TMP_DIR" "$LOG"
-    fi
+    main_rm_tmp;
 
     return "$RC"
 }
