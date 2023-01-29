@@ -7837,9 +7837,7 @@ CPU=$(((1000 * (DIFF_TOTAL - DIFF_IDLE) / DIFF_TOTAL + 5) / 10))
     esac
 done < /proc/meminfo; } 2> /dev/null
 
-{ while read -r LINE; do
-    BATTERY="$LINE"
-done < /sys/class/power_supply/BAT0/capacity; } 2> /dev/null
+{ read -r BATTERY < /sys/class/power_supply/BAT0/capacity; } 2> /dev/null
 
 VOLUME=$(pamixer --get-volume 2> /dev/null)
 
