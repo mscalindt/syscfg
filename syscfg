@@ -7583,12 +7583,7 @@ bindsym $mod+Shift+Escape mode "nointercept"
 bar {
 CONFIG
 
-    if [ "$gaming" = 1 ]; then
-        FILE_fd1 \
-<<'CONFIG'
-    status_command while true; do sleep 192000; done
-CONFIG
-    else
+    if [ ! "$gaming" = 1 ]; then
         FILE_fd1 \
 <<'CONFIG'
     status_command while /home/$USER/.config/sway/status; do sleep 0.1; done
