@@ -7697,6 +7697,8 @@ STATUS
 <<'STATUS'
 #!/bin/sh
 
+NET_INTERFACE=wlan0
+
 replchars() {
     replchar() {
         IFS="$1"; _chars="$2"
@@ -7731,6 +7733,68 @@ if [ "$TITLE" ]; then
     TITLE="${TITLE%?}"
     replchars '&' '&amp;' "$TITLE"; TITLE="$_str";
 fi
+
+while :; do
+NET_USAGE=
+if [ -h /sys/class/net/"$NET_INTERFACE" ]; then
+    PREV_TX=0
+    PREV_RX=0
+    if [ -f "${TMPDIR:-/tmp}"/netprevtx ]; then
+        read -r PREV_TX < "${TMPDIR:-/tmp}"/netprevtx
+    fi
+    if [ -f "${TMPDIR:-/tmp}"/netprevrx ]; then
+        read -r PREV_RX < "${TMPDIR:-/tmp}"/netprevrx
+    fi
+    read -r TX < /sys/class/net/"$NET_INTERFACE"/statistics/tx_bytes
+    read -r RX < /sys/class/net/"$NET_INTERFACE"/statistics/rx_bytes
+    [ "$TX" ] || break
+    [ "$RX" ] || break
+
+    if [ "$PREV_TX" = 0 ]; then
+        printf "%s\n" "$TX" > "${TMPDIR:-/tmp}"/netprevtx; TX=0
+    else
+        CUR_TX=$((TX - PREV_TX))
+    fi
+
+    if [ "$PREV_RX" = 0 ]; then
+        printf "%s\n" "$RX" > "${TMPDIR:-/tmp}"/netprevrx; RX=0
+    else
+        CUR_RX=$((RX - PREV_RX))
+    fi
+
+    if [ "$TX" = 0 ] || [ "$RX" = 0 ]; then
+        break
+    fi
+
+    printf "%s\n" "$TX" > "${TMPDIR:-/tmp}"/netprevtx
+    printf "%s\n" "$RX" > "${TMPDIR:-/tmp}"/netprevrx
+
+    NET_USAGE=$(awk -v 'bytes_tx'="$CUR_TX" -v 'bytes_rx'="$CUR_RX" '
+	function hsize(x, base) {
+		basesuf = (base == "1024") ? "iB" : "B"
+
+		s = "BKMGTEPYZ"
+		while (x >= base && length(s) > 1)
+			{x /= base; s = substr(s, 2)}
+		s = substr(s, 1, 1)
+
+		xf = (s == "B") ? "%d" : "%.2f"
+
+		if (s != "B")
+			s = s basesuf
+
+		printf((xf " %s"), x, s)
+	}
+
+	BEGIN {
+		printf "TX/RX: "
+		printf hsize(bytes_tx, 1000)
+		printf " / "
+		printf hsize(bytes_rx, 1000)
+	}
+    ' 2> /dev/null)
+fi
+break; done
 
 PREV_IDLE=0
 PREV_TOTAL=0
@@ -7861,8 +7925,14 @@ case "$DATE" in
     ;;
 esac
 
-printf "%s | C: %s%% | %s | B: %s%% | V: %s%% | %s | %s |" \
-       "$TITLE" "$CPU" "$MEMORY" "$BATTERY" "$VOLUME" "$KB_LAYOUT" "$DATE"
+if [ "$NET_USAGE" ]; then
+    printf "%s | %s | C: %s%% | %s | B: %s%% | V: %s%% | %s | %s |" \
+           "$TITLE" "$NET_USAGE" "$CPU" "$MEMORY" "$BATTERY" "$VOLUME" \
+           "$KB_LAYOUT" "$DATE"
+else
+    printf "%s | C: %s%% | %s | B: %s%% | V: %s%% | %s | %s |" \
+           "$TITLE" "$CPU" "$MEMORY" "$BATTERY" "$VOLUME" "$KB_LAYOUT" "$DATE"
+fi
 STATUS
 
     __file_write;
