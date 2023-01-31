@@ -9247,6 +9247,28 @@ main_chk_user() {
     esac
 }
 
+main_chk_vars() {
+    [ "$fatal" ] || errF 2 - 'BAD: $fatal'
+    case "$fatal" in
+        0|1) : ;;
+        *) errF 2 - 'BAD: $fatal' ;;
+    esac
+
+    [ "$TMP_DIR" ] || errF 2 - 'BAD: $TMP_DIR'
+    case "$TMP_DIR" in
+        *'/' | *'//'*) errF 2 - 'BAD: $TMP_DIR' ;;
+        '/'*) : ;;
+        *) errF 2 - 'BAD: $TMP_DIR' ;;
+    esac
+
+    [ "$LOG" ] || errF 2 - 'BAD: $LOG'
+    case "$LOG" in
+        *'/' | *'//'*) errF 2 - 'BAD: $LOG' ;;
+        '/'*) : ;;
+        *) errF 2 - 'BAD: $LOG' ;;
+    esac
+}
+
 main_defs() {
     err_handler() {
         main_rm_tmp;
@@ -9509,25 +9531,7 @@ main() {
         exit 2
     fi
 
-    [ "$fatal" ] || errF 2 - 'BAD: $fatal'
-    case "$fatal" in
-        0|1) : ;;
-        *) errF 2 - 'BAD: $fatal' ;;
-    esac
-
-    [ "$TMP_DIR" ] || errF 2 - 'BAD: $TMP_DIR'
-    case "$TMP_DIR" in
-        *'/' | *'//'*) errF 2 - 'BAD: $TMP_DIR' ;;
-        '/'*) : ;;
-        *) errF 2 - 'BAD: $TMP_DIR' ;;
-    esac
-
-    [ "$LOG" ] || errF 2 - 'BAD: $LOG'
-    case "$LOG" in
-        *'/' | *'//'*) errF 2 - 'BAD: $LOG' ;;
-        '/'*) : ;;
-        *) errF 2 - 'BAD: $LOG' ;;
-    esac
+    main_chk_vars;
 
     # Only POSIX utilites with POSIX option usage shall be specified and used.
     if ! main_assert_deps 'awk' 'chmod' 'chown' 'cmp' 'cp' 'find' 'grep' 'id' \
