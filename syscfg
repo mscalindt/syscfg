@@ -9282,6 +9282,11 @@ main_defs() {
     binary_files;
 }
 
+main_func_env_cleanup() {
+    FILE=; FILE_PATH_TARGET=; umask 022
+    LOG_clear; rm -rf "${TMP_DIR:?}"/*
+}
+
 main_list_ops() (
     ops=$(
         IFS=' '; for op in $ops; do
@@ -9555,9 +9560,7 @@ main() {
         eval "info -be -1 \"$1 -> ${opd}()\"; $opd"
         RC=$?
 
-        # func env cleanup
-        FILE=; FILE_PATH_TARGET=; umask 022
-        LOG_clear; rm -rf "${TMP_DIR:?}"/*
+        main_func_env_cleanup;
 
         trap - INT TERM EXIT
         set +e
