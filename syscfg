@@ -9247,12 +9247,6 @@ main_chk_user() {
     esac
 }
 
-main_rm_tmp() {
-    if dir "$TMP_DIR" || file "$LOG"; then
-        rm -rf "$TMP_DIR" "$LOG"
-    fi
-}
-
 main_defs() {
     err_handler() {
         main_rm_tmp;
@@ -9303,6 +9297,12 @@ main_list_ops() (
         fi
     done; [ ! "$prev_op" ] || info -w -1 "$prev_op"
 )
+
+main_rm_tmp() {
+    if dir "$TMP_DIR" || file "$LOG"; then
+        rm -rf "$TMP_DIR" "$LOG"
+    fi
+}
 
 main_set_opd() {
     opd="_$1"
