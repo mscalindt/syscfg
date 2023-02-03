@@ -7622,6 +7622,7 @@ exec systemctl --user restart xdg-desktop-portal xdg-desktop-portal-wlr \
                               xdg-desktop-portal-gtk
 exec sleep 2 && \
      systemctl --user restart pipewire pipewire-media-session
+exec_always sh -c 'rm -f "${TMPDIR:-/tmp}"/nettotal'
 CONFIG
     fi
 
@@ -7734,11 +7735,15 @@ NET_USAGE=
 if [ -h /sys/class/net/"$NET_INTERFACE" ]; then
     PREV_TX=0
     PREV_RX=0
+    TOTAL=0
     if [ -f "${TMPDIR:-/tmp}"/netprevtx ]; then
         read -r PREV_TX < "${TMPDIR:-/tmp}"/netprevtx
     fi
     if [ -f "${TMPDIR:-/tmp}"/netprevrx ]; then
         read -r PREV_RX < "${TMPDIR:-/tmp}"/netprevrx
+    fi
+    if [ -f "${TMPDIR:-/tmp}"/nettotal ]; then
+        read -r TOTAL < "${TMPDIR:-/tmp}"/nettotal
     fi
     read -r TX < /sys/class/net/"$NET_INTERFACE"/statistics/tx_bytes
     read -r RX < /sys/class/net/"$NET_INTERFACE"/statistics/rx_bytes
@@ -7761,10 +7766,14 @@ if [ -h /sys/class/net/"$NET_INTERFACE" ]; then
         break
     fi
 
+    TOTAL=$((TOTAL + (CUR_TX + CUR_RX)))
+
     printf "%s\n" "$TX" > "${TMPDIR:-/tmp}"/netprevtx
     printf "%s\n" "$RX" > "${TMPDIR:-/tmp}"/netprevrx
+    printf "%s\n" "$TOTAL" > "${TMPDIR:-/tmp}"/nettotal
 
-    NET_USAGE=$(awk -v 'bytes_tx'="$CUR_TX" -v 'bytes_rx'="$CUR_RX" '
+    NET_USAGE=$(awk -v 'bytes_tx'="$CUR_TX" -v 'bytes_rx'="$CUR_RX" \
+                    -v 'bytes_total'="$TOTAL" '
 	function hsize(x, base) {
 		basesuf = (base == "1024") ? "iB" : "B"
 
@@ -7782,10 +7791,12 @@ if [ -h /sys/class/net/"$NET_INTERFACE" ]; then
 	}
 
 	BEGIN {
-		printf "TX/RX: "
+		printf "TX/RX/TL: "
 		printf hsize(bytes_tx, 1000)
 		printf " / "
 		printf hsize(bytes_rx, 1000)
+		printf " / "
+		printf hsize(bytes_total, 1000)
 	}
     ' 2> /dev/null)
 fi
