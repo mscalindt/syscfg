@@ -3254,28 +3254,115 @@ ASOUND_CONF
 # An alternative to systemd shall be considered.
 _autostart() {
     if [ "$init" = systemd ]; then
-        :
-    else
-        info -w -1 'Nothing to be done.'
-        return 0
-    fi
+        if [ "$dns" = localhost ]; then
+            if [ "$dns0" = dnsmasq ]; then
+                FILE_PATH_fd1 \
+<<DNSMASQ_SERVICE
+/etc/systemd/system/dnsmasq.service
+DNSMASQ_SERVICE
 
-    # The presence of such unit files is distribution-specific.
-    # __systemd_service_enable() only checks the default location and enables
-    # the specified units.
-    if [ "$arch_linux" = 1 ]; then
-        if [ "$init" = systemd ]; then
-            if [ "$dns" = localhost ]; then
-                if [ "$dns0" = dnsmasq ]; then
-                    __systemd_service_enable 'dnsmasq'
-                fi
+                FILE_fd1 \
+<<DNSMASQ_SERVICE
+[Unit]
+Description=Caching DNS server
+ConditionPathExists=/usr/bin/dnsmasq
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/dnsmasq -k --user=dnsmasq
+
+[Install]
+WantedBy=multi-user.target
+DNSMASQ_SERVICE
+
+                __file_write;
+
+                FILE_PATH_fd1 \
+<<DNSMASQ_SERVICE
+/etc/systemd/system/dnsmasq.service
+DNSMASQ_SERVICE
+
+                FILE_PATH_TARGET_fd1 \
+<<DNSMASQ_SERVICE
+/etc/systemd/system/multi-user.target.wants/dnsmasq.service
+DNSMASQ_SERVICE
+
+                __file_target_write 'SYMLINK'
             fi
-            __systemd_service_enable 'iwd'
-            __systemd_service_enable 'rtkit-daemon'
         fi
-    fi
 
-    if [ "$init" = systemd ]; then
+        FILE_PATH_fd1 \
+<<IWD_SERVICE
+/etc/systemd/system/iwd.service
+IWD_SERVICE
+
+        FILE_fd1 \
+<<IWD_SERVICE
+[Unit]
+Description=Wireless service
+
+[Service]
+ExecStart=/usr/lib/iwd/iwd
+PrivateTmp=true
+DeviceAllow=/dev/rfkill rw
+ConfigurationDirectory=iwd
+StateDirectory=iwd
+StateDirectoryMode=0700
+
+[Install]
+WantedBy=multi-user.target
+IWD_SERVICE
+
+        __file_write;
+
+        FILE_PATH_fd1 \
+<<IWD_SERVICE
+/etc/systemd/system/iwd.service
+IWD_SERVICE
+
+        FILE_PATH_TARGET_fd1 \
+<<IWD_SERVICE
+/etc/systemd/system/multi-user.target.wants/iwd.service
+IWD_SERVICE
+
+        __file_target_write 'SYMLINK'
+
+        FILE_PATH_fd1 \
+<<RTKIT_DAEMON_SERVICE
+/etc/systemd/system/rtkit-daemon.service
+RTKIT_DAEMON_SERVICE
+
+        FILE_fd1 \
+<<RTKIT_DAEMON_SERVICE
+[Unit]
+Description=RealtimeKit Scheduling Policy Service
+
+[Service]
+ExecStart=/usr/lib/rtkit-daemon
+Type=dbus
+BusName=org.freedesktop.RealtimeKit1
+NotifyAccess=main
+CapabilityBoundingSet=CAP_SYS_NICE CAP_DAC_READ_SEARCH CAP_SYS_CHROOT CAP_SETGID CAP_SETUID
+PrivateNetwork=yes
+
+[Install]
+WantedBy=multi-user.target
+RTKIT_DAEMON_SERVICE
+
+        __file_write;
+
+        FILE_PATH_fd1 \
+<<RTKIT_DAEMON_SERVICE
+/etc/systemd/system/rtkit-daemon.service
+RTKIT_DAEMON_SERVICE
+
+        FILE_PATH_TARGET_fd1 \
+<<RTKIT_DAEMON_SERVICE
+/etc/systemd/system/multi-user.target.wants/rtkit-daemon.service
+RTKIT_DAEMON_SERVICE
+
+        __file_target_write 'SYMLINK'
+
         FILE_PATH_fd1 \
 <<MOC_SERVICE
 $home/.config/systemd/user/moc.service
