@@ -4797,6 +4797,7 @@ DNSMASQ_CONF
 
     FILE_fd1 \
 <<'DNSMASQ_CONF'
+bind-interfaces
 cache-size=2048
 domain-needed
 bogus-priv
