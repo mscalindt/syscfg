@@ -4500,7 +4500,7 @@ SWAY_LOG
         : > "$FILE_PATH"
 
         __loc_chmod '0644'
-        __loc_chown 'mscalindt'
+        __loc_chown "$user"
     elif [ "$wm" = xfce4 ]; then
         FILE_fd1 \
 <<'_BASH_PROFILE'
