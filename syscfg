@@ -3293,7 +3293,7 @@ SWAY_LOG
         FILE_fd1 \
 <<'_BASH_PROFILE'
 if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
-    exec startx && startxfce4
+    exec startx
 fi
 _BASH_PROFILE
 
@@ -9217,6 +9217,14 @@ _XINITRC
 <<'_XINITRC'
     " &
 _XINITRC
+
+    if [ "$wm" = xfce4 ]; then
+        FILE_fd1 \
+<<'_XINITRC'
+
+exec startxfce4
+_XINITRC
+    fi
 
     __file_write;
 }
