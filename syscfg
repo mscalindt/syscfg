@@ -3265,6 +3265,43 @@ ASOUND_CONF
 #
 # An alternative to systemd shall be considered.
 _autostart() {
+    FILE_PATH_fd1 \
+<<_BASH_PROFILE
+$home/.bash_profile
+_BASH_PROFILE
+
+    if [ "$wm" = sway ]; then
+        FILE_fd1 \
+<<'_BASH_PROFILE'
+if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
+    exec sway > /var/log/sway.log 2>&1
+fi
+_BASH_PROFILE
+
+        __file_write;
+
+        FILE_PATH_fd1 \
+<<'SWAY_LOG'
+/var/log/sway.log
+SWAY_LOG
+
+        : > "$FILE_PATH"
+
+        __loc_chmod '0644'
+        __loc_chown "$user"
+    elif [ "$wm" = xfce4 ]; then
+        FILE_fd1 \
+<<'_BASH_PROFILE'
+if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
+    exec startx && startxfce4
+fi
+_BASH_PROFILE
+
+        __file_write;
+    elif [ "$wm" = none ] || [ ! "$wm" ]; then
+        __loc_delete;
+    fi
+
     if [ "$init" = systemd ]; then
         if [ "$dns" = localhost ]; then
             if [ "$dns0" = dnsmasq ]; then
@@ -4575,45 +4612,6 @@ _BASHRC
     __file_write;
 }
 
-_bash_init() {
-    FILE_PATH_fd1 \
-<<_BASH_PROFILE
-$home/.bash_profile
-_BASH_PROFILE
-
-    if [ "$wm" = sway ]; then
-        FILE_fd1 \
-<<'_BASH_PROFILE'
-if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
-    exec sway > /var/log/sway.log 2>&1
-fi
-_BASH_PROFILE
-
-        __file_write;
-
-        FILE_PATH_fd1 \
-<<'SWAY_LOG'
-/var/log/sway.log
-SWAY_LOG
-
-        : > "$FILE_PATH"
-
-        __loc_chmod '0644'
-        __loc_chown "$user"
-    elif [ "$wm" = xfce4 ]; then
-        FILE_fd1 \
-<<'_BASH_PROFILE'
-if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
-    exec startx
-fi
-_BASH_PROFILE
-
-        __file_write;
-    elif [ "$wm" = none ] || [ ! "$wm" ]; then
-        __loc_delete;
-    fi
-}
-
 _bluez_conf() {
     FILE_PATH_fd1 \
 <<'MAIN_CONF'
@@ -4667,7 +4665,6 @@ _clk_sync() {
 _conf_1() {
     _alsa_conf;
     _bash_conf;
-    _bash_init;
     _doas_conf;
     _face_bin;
     _fontconfig_conf;
@@ -4691,7 +4688,7 @@ _conf_1() {
     _sysctl_conf;
     _wireplumber_conf;
     _xdg_conf;
-    _xorg_init;
+    _xorg_conf;
 }
 
 # Software configuration - stage 2
@@ -4808,7 +4805,6 @@ _conf_3() {
 _conf_4() {
     _alsa_conf;
     _autostart;
-    _bash_init;
     _env;
     _gai_conf;
     _hosts;
@@ -4821,7 +4817,7 @@ _conf_4() {
     _tz;
     _wireplumber_conf;
     _xfce4_conf;
-    _xorg_init;
+    _xorg_conf;
 
     if file '/etc/dhcpcd.conf'; then
         _dhcpcd_conf;
@@ -9181,7 +9177,7 @@ XSETTINGS_XML
     __file_write;
 }
 
-_xorg_init() {
+_xorg_conf() {
     FILE_PATH_fd1 \
 <<_XINITRC
 $home/.xinitrc
@@ -9221,14 +9217,6 @@ _XINITRC
 <<'_XINITRC'
     " &
 _XINITRC
-
-    if [ "$wm" = xfce4 ]; then
-        FILE_fd1 \
-<<'_XINITRC'
-
-exec startxfce4
-_XINITRC
-    fi
 
     __file_write;
 }
@@ -9555,7 +9543,6 @@ main() {
     ops="$ops alsa-conf"
     ops="$ops autostart"
     ops="$ops bash-conf"
-    ops="$ops bash-init"
     ops="$ops bluez-conf"
     ops="$ops clk-sync"
     ops="$ops conf-1"
@@ -9609,7 +9596,7 @@ main() {
     ops="$ops wireplumber-conf"
     ops="$ops xdg-conf"
     ops="$ops xfce4-conf"
-    ops="$ops xorg-init"
+    ops="$ops xorg-conf"
     ops="${ops# }"
 
     # Enable avoid_write from cmdline: ^AE as $1
