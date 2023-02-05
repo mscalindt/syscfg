@@ -2750,9 +2750,15 @@ __file_target_write() {
     while :; do
         if [ "$avoid_write" = 1 ]; then
             if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
-                info -w -1 'Write avoided:'
-                info -g -- 'F '; info - - "$FILE_PATH_TARGET"
-                break
+                if [ "$1" != 'SYMLINK' ]; then
+                    info -w -1 'Write avoided:'
+                    info -g -- 'F '; info - - "$FILE_PATH_TARGET"
+                    break
+                elif [ "$1" = 'SYMLINK' ] && [ -h "$FILE_PATH_TARGET" ]; then
+                    info -w -1 'Write avoided:'
+                    info -g -- 'L '; info - - "$FILE_PATH_TARGET"
+                    break
+                fi
             fi
         fi
 
@@ -2846,9 +2852,15 @@ __file_target_write_overwrite() {
     while :; do
         if [ "$avoid_write" = 1 ]; then
             if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
-                info -w -1 'Write avoided:'
-                info -g -- 'F '; info - - "$FILE_PATH_TARGET"
-                break
+                if [ "$1" != 'SYMLINK' ]; then
+                    info -w -1 'Write avoided:'
+                    info -g -- 'F '; info - - "$FILE_PATH_TARGET"
+                    break
+                elif [ "$1" = 'SYMLINK' ] && [ -h "$FILE_PATH_TARGET" ]; then
+                    info -w -1 'Write avoided:'
+                    info -g -- 'L '; info - - "$FILE_PATH_TARGET"
+                    break
+                fi
             fi
         fi
 
