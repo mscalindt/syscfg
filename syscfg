@@ -3160,6 +3160,94 @@ __loc_delete() {
 }
 
 #! .desc:
+# Truncate/empty a file/directory on the specified path
+#! .uses:
+# <FILE_PATH> $ - the file/directory
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+__loc_empty() {
+    if [ ! "$FILE_PATH" ]; then
+        err -r -1 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if dir "$FILE_PATH"; then
+        :
+    elif file "$FILE_PATH"; then
+        :
+    else
+        EINVAL;
+        if [ -b "$FILE_PATH" ]; then
+            err -r -- 'B ' # block file
+        elif [ -c "$FILE_PATH" ]; then
+            err -r -- 'C ' # character file
+        elif [ -h "$FILE_PATH" ]; then
+            err -r -- 'L ' # symbolic link
+        elif [ -p "$FILE_PATH" ]; then
+            err -r -- 'P ' # named pipe
+        elif [ -S "$FILE_PATH" ]; then
+            err -r -- 'S ' # socket
+        elif [ -t "$FILE_PATH" ]; then
+            err -r -- 'FD ' # open file descriptor
+        elif [ -e "$FILE_PATH" ]; then
+            err -r -- '> '
+        fi
+        err - - "$FILE_PATH"
+        exit 222
+    fi
+
+    if [ "$backup" = 1 ]; then
+        loc_backup "$FILE_PATH"
+    fi
+
+    if dir "$FILE_PATH"; then
+        if [ "$logging" = 1 ]; then
+            info -w -1 'Will empty:'
+            info -w -- 'D '; info - - "$FILE_PATH"
+
+            if ! rm -rf "$FILE_PATH"/*; then
+                errF 235 - 'rm: Failed.'
+            fi
+        else
+            if ! rm -rf "$FILE_PATH"/* > /dev/null 2>&1; then
+                errF 235 - 'rm: Failed.'
+            fi
+        fi
+    else
+        if [ "$logging" = 1 ]; then
+            if exist "$FILE_PATH"; then
+                info -w -1 'Will truncate:'
+            else
+                info -w -1 'Will create:'
+            fi
+            info -w -- 'F '; info - - "$FILE_PATH"
+
+            if ! { : > "$FILE_PATH"; }; then
+                if exist "$FILE_PATH"; then
+                    err -r -1 'Truncation error:'
+                else
+                    err -r -1 'Creation error:'
+                fi
+                err -r -- 'F '; err - - "$FILE_PATH"
+                exit 201
+            fi
+        else
+            if ! { : > "$FILE_PATH"; } > /dev/null 2>&1; then
+                if exist "$FILE_PATH"; then
+                    err -r -1 'Truncation error:'
+                else
+                    err -r -1 'Creation error:'
+                fi
+                err -r -- 'F '; err - - "$FILE_PATH"
+                exit 201
+            fi
+        fi
+    fi
+}
+
+#! .desc:
 # Clone a git repository to $TMP_DIR
 #! .params:
 # <"$1"> - URL
@@ -3304,8 +3392,7 @@ _BASH_PROFILE
 /var/log/sway.log
 SWAY_LOG
 
-        : > "$FILE_PATH"
-
+        __loc_empty;
         __loc_chmod '0644'
         __loc_chown "$user"
     elif [ "$wm" = xfce4 ]; then
