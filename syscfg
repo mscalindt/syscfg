@@ -814,7 +814,7 @@ unmount() {
 
     cmd 'umount' || return 0
 
-    if ! loc_exists "$1"; then
+    if ! exist "$1"; then
         return 0
     fi
 
@@ -2040,19 +2040,6 @@ loc_delete() {
 }
 
 #! .desc:
-# Check if a file/directory exists
-#! .params:
-# <"$1"> - absolute path
-#! .rc:
-# (0) yes
-# (1) no
-loc_exists() {
-    args_eq 1 "$#" || return 255
-
-    exist "$1"
-}
-
-#! .desc:
 # Create a symbolic link of a file/directory
 #! .params:
 # <"$1"> - absolute path of the file/directory
@@ -2214,7 +2201,7 @@ __bin_write() {
             loc_delete "$FILE_PATH"
         fi
 
-        if loc_exists "$FILE_PATH"; then
+        if exist "$FILE_PATH"; then
             EEXIST "$FILE_PATH"
         fi
 
@@ -2340,7 +2327,7 @@ __dir_target_write() {
         return 255
     fi
 
-    if ! loc_exists "$FILE_PATH"; then
+    if ! exist "$FILE_PATH"; then
         ENOENT;
         err -r -- 'D '; err - - "$FILE_PATH"
         exit 202
@@ -2359,7 +2346,7 @@ __dir_target_write() {
             loc_delete "$FILE_PATH_TARGET"
         fi
 
-        if loc_exists "$FILE_PATH_TARGET"; then
+        if exist "$FILE_PATH_TARGET"; then
             EEXIST "$FILE_PATH_TARGET"
         fi
 
@@ -2445,7 +2432,7 @@ __dir_target_write_overwrite() {
         return 255
     fi
 
-    if ! loc_exists "$FILE_PATH"; then
+    if ! exist "$FILE_PATH"; then
         ENOENT;
         err -r -- 'D '; err - - "$FILE_PATH"
         exit 202
@@ -2526,7 +2513,7 @@ __FILE_PATH_preload() {
         return 255
     fi
 
-    if ! loc_exists "$FILE_PATH"; then
+    if ! exist "$FILE_PATH"; then
         ENOENT;
         err -r -- 'F '; err - - "$FILE_PATH"
         exit 202
@@ -2549,7 +2536,7 @@ __file_executable() {
         return 255
     fi
 
-    if ! loc_exists "$FILE_PATH"; then
+    if ! exist "$FILE_PATH"; then
         ENOENT;
         err -r -- 'F '; err - - "$FILE_PATH"
         exit 202
@@ -2606,7 +2593,7 @@ __file_write() {
             loc_delete "$FILE_PATH"
         fi
 
-        if loc_exists "$FILE_PATH"; then
+        if exist "$FILE_PATH"; then
             EEXIST "$FILE_PATH"
         fi
 
@@ -2737,7 +2724,7 @@ __file_target_write() {
         return 255
     fi
 
-    if ! loc_exists "$FILE_PATH"; then
+    if ! exist "$FILE_PATH"; then
         ENOENT;
         err -r -- 'F '; err - - "$FILE_PATH"
         exit 202
@@ -2770,7 +2757,7 @@ __file_target_write() {
             loc_delete "$FILE_PATH_TARGET"
         fi
 
-        if loc_exists "$FILE_PATH_TARGET"; then
+        if exist "$FILE_PATH_TARGET"; then
             EEXIST "$FILE_PATH_TARGET"
         fi
 
@@ -2839,7 +2826,7 @@ __file_target_write_overwrite() {
         return 255
     fi
 
-    if ! loc_exists "$FILE_PATH"; then
+    if ! exist "$FILE_PATH"; then
         ENOENT;
         err -r -- 'F '; err - - "$FILE_PATH"
         exit 202
@@ -2922,7 +2909,7 @@ __loc_chattr() {
         return 255
     fi
 
-    if ! loc_exists "$FILE_PATH"; then
+    if ! exist "$FILE_PATH"; then
         ENOENT;
         err -r -- 'F/D '; err - - "$FILE_PATH"
         exit 202
@@ -2982,7 +2969,7 @@ __loc_chmod() {
         return 255
     fi
 
-    if ! loc_exists "$FILE_PATH"; then
+    if ! exist "$FILE_PATH"; then
         ENOENT;
         err -r -- 'F/D '; err - - "$FILE_PATH"
         exit 202
@@ -3044,7 +3031,7 @@ __loc_chown() {
         return 255
     fi
 
-    if ! loc_exists "$FILE_PATH"; then
+    if ! exist "$FILE_PATH"; then
         ENOENT;
         err -r -- 'F/D '; err - - "$FILE_PATH"
         exit 202
@@ -3114,7 +3101,7 @@ __loc_delete() {
         return 255
     fi
 
-    if ! loc_exists "$FILE_PATH"; then
+    if ! exist "$FILE_PATH"; then
         info -w -1 'Already deleted:'
         info -g -- '> '; info - - "$FILE_PATH"
         return 0
@@ -5273,7 +5260,7 @@ _firefox_conf() {
 $home/.mozilla/firefox/profiles.ini
 PROFILES_INI
 
-    if ! loc_exists "$FILE_PATH"; then
+    if ! exist "$FILE_PATH"; then
         ENOENT;
         err -r -- 'F '; err - - "$FILE_PATH"
         exit 202
@@ -5555,7 +5542,7 @@ _gov_performance() {
 /sys/devices/system/cpu
 CPU
 
-    if ! loc_exists "$FILE_PATH"/cpu0/cpufreq/scaling_governor; then
+    if ! exist "$FILE_PATH"/cpu0/cpufreq/scaling_governor; then
         ENOENT;
         err -r -- 'F '; err - - "$FILE_PATH"/cpu0/cpufreq/scaling_governor
         exit 202
@@ -5587,7 +5574,7 @@ _gov_schedutil() {
 /sys/devices/system/cpu
 CPU
 
-    if ! loc_exists "$FILE_PATH"/cpu0/cpufreq/scaling_governor; then
+    if ! exist "$FILE_PATH"/cpu0/cpufreq/scaling_governor; then
         ENOENT;
         err -r -- 'F '; err - - "$FILE_PATH"/cpu0/cpufreq/scaling_governor
         exit 202
@@ -5622,7 +5609,7 @@ _grub() {
     if [ "$force" = 1 ]; then
         set -- "$efi_mnt"/*
 
-        if loc_exists "$1"; then
+        if exist "$1"; then
             if [ "$logging" = 1 ]; then
                 info -w -1 'Will delete:'
                 for arg in "$@"; do
@@ -6734,7 +6721,7 @@ _nvram_clr() {
 
     set -- '/sys/firmware/efi/efivars'/Boot0*
 
-    if ! loc_exists "$1"; then
+    if ! exist "$1"; then
         info -w -1 'No valid entries have been found.'
         return 0
     fi
@@ -6773,7 +6760,7 @@ _nvram_clr() {
 
     set -- '/sys/firmware/efi/efivars'/Boot0*
 
-    if loc_exists "$1"; then
+    if exist "$1"; then
         EERROR 'Entry removal failed.'
     fi
 
