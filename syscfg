@@ -3128,7 +3128,26 @@ __loc_delete() {
 
     if [ "$logging" = 1 ]; then
         info -w -1 'Will delete:'
-        info -w -- '> '; info - - "$FILE_PATH"
+        if [ -b "$FILE_PATH" ]; then
+            info -w -- 'B ' # block file
+        elif [ -c "$FILE_PATH" ]; then
+            info -w -- 'C ' # character file
+        elif [ -d "$FILE_PATH" ]; then
+            info -w -- 'D ' # directory
+        elif [ -f "$FILE_PATH" ]; then
+            info -w -- 'F ' # regular file
+        elif [ -h "$FILE_PATH" ]; then
+            info -w -- 'L ' # symbolic link
+        elif [ -p "$FILE_PATH" ]; then
+            info -w -- 'P ' # named pipe
+        elif [ -S "$FILE_PATH" ]; then
+            info -w -- 'S ' # socket
+        elif [ -t "$FILE_PATH" ]; then
+            info -w -- 'FD ' # open file descriptor
+        else
+            info -w -- '> '
+        fi
+        info - - "$FILE_PATH"
 
         if ! loc_delete "$FILE_PATH"; then
             err -r -1 'Removal error:'
