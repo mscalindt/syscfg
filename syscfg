@@ -8230,6 +8230,41 @@ table.insert (bluez_monitor.rules, {
 
 _xdg_conf() {
     FILE_PATH_fd1 \
+<<MIMEAPPS_LIST
+$home/.config/mimeapps.list
+MIMEAPPS_LIST
+
+    FILE_fd1 \
+<<'MIMEAPPS_LIST'
+[Added Associations]
+application/x-shellscript=featherpad.desktop;
+
+[Default Applications]
+application/xhtml+xml=firefox.desktop
+application/xml=firefox.desktop
+application/rss+xml=firefox.desktop
+application/json=firefox.desktop
+application/pdf=firefox.desktop
+application/x-xpinstall=firefox.desktop
+application/smil+xml=firefox.desktop
+application/rdf+xml=firefox.desktop
+text/html=firefox.desktop
+x-scheme-handler/http=firefox.desktop
+x-scheme-handler/https=firefox.desktop
+x-scheme-handler/about=firefox.desktop
+x-scheme-handler/unknown=firefox.desktop
+MIMEAPPS_LIST
+
+    __file_write;
+
+    FILE_PATH_TARGET_fd1 \
+<<MIMEAPPS_LIST
+$home/.local/share/applications/mimeapps.list
+MIMEAPPS_LIST
+
+    __file_target_write 'SYMLINK'
+
+    FILE_PATH_fd1 \
 <<INDEX_THEME
 $home/.icons/default/index.theme
 INDEX_THEME
@@ -8241,6 +8276,13 @@ Inherits=Breeze
 INDEX_THEME
 
     __file_write;
+
+    FILE_PATH_fd1 \
+<<'AUTOSTART'
+/etc/xdg/autostart
+AUTOSTART
+
+    __loc_delete;
 }
 
 # Reproducible simple XFCE4 setup.
