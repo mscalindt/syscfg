@@ -8020,12 +8020,18 @@ case "$KB_LAYOUT" in
     ;;
 esac
 
-DATE=$(date "+%A %d,%l:%M %p" 2> /dev/null)
-case "$DATE" in
+DATE=$(date "+%A%_d,%_I:%M %p" 2> /dev/null)
+while :; do case "$DATE" in
     *[0123456789]','[0123456789]*)
         DATE="${DATE%\,*}, ${DATE#*\,}"
     ;;
-esac
+    *'day'[0123456789]*)
+        DATE="${DATE%day*}day ${DATE#*day}"
+    ;;
+    *)
+        break
+    ;;
+esac done
 
 if [ "$NET_USAGE" ]; then
     printf "%s | %s | C: %s%% | %s | B: %s%% | V: %s%% | %s | %s |" \
