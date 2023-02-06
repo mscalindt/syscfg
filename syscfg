@@ -1763,7 +1763,7 @@ FILE_PATH_fd1() {
 #! .desc:
 # Read STDIN into $FILE_PATH_TARGET
 #! .gives:
-# <FILE_PATH> $ - STDIN
+# <FILE_PATH_TARGET> $ - STDIN
 #! .rc:
 # (0) success
 # (*) error
