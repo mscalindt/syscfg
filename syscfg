@@ -4693,6 +4693,11 @@ export EDITOR=nano
 alias ls='ls --color'
 alias grep='grep --color=always'
 alias ip='ip --color'
+alias clr='tput reset'
+alias GO='git commit -s'
+alias FIX='git commit --amend --date="now" -s'
+alias FLY='git push'
+alias SS='git status'
 
 # Source useful custom functions
 [ -f "$HOME"/.bash_functions ] && . "$HOME"/.bash_functions
