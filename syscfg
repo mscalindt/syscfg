@@ -1737,7 +1737,7 @@ FILE_cont() {
 #! .rc:
 # (0) success
 # (*) error
-FILE_fd1() {
+FILE() {
     { while IFS= read -r _line; do
         FILE="$FILE$_line
 "
@@ -1751,7 +1751,7 @@ FILE_fd1() {
 #! .rc:
 # (0) success
 # (*) error
-FILE_PATH_fd1() {
+FILE_PATH() {
     FILE=; FILE_PATH=; FILE_PATH_TARGET=
 
     { while IFS= read -r _line; do
@@ -1767,7 +1767,7 @@ FILE_PATH_fd1() {
 #! .rc:
 # (0) success
 # (*) error
-FILE_PATH_TARGET_fd1() {
+FILE_PATH_TARGET() {
     FILE_PATH_TARGET=
 
     { while IFS= read -r _line; do
@@ -3189,20 +3189,20 @@ __systemd_service_enable() {
             return 255
         ;;
         *'@'*)
-            FILE_PATH_fd1 \
+            FILE_PATH \
 <<UNIT_SERVICE
 /usr/lib/systemd/system/${1%@*}@.service
 UNIT_SERVICE
         ;;
         *)
-            FILE_PATH_fd1 \
+            FILE_PATH \
 <<UNIT_SERVICE
 /usr/lib/systemd/system/$1
 UNIT_SERVICE
         ;;
     esac
 
-    FILE_PATH_TARGET_fd1 \
+    FILE_PATH_TARGET \
 <<UNIT_SERVICE_TARGET
 /etc/systemd/system/multi-user.target.wants/$1
 UNIT_SERVICE_TARGET
@@ -3223,25 +3223,25 @@ UNIT_SERVICE_TARGET
 #   Subdevices: 1/1
 #   Subdevice #0: subdevice #0
 _alsa_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'ASOUND_CONF'
 /etc/asound.conf
 ASOUND_CONF
 
     if [ "$audio_hq" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'ASOUND_CONF'
 defaults.pcm.rate_converter "speexrate_best"
 ASOUND_CONF
     else
-        FILE_fd1 \
+        FILE \
 <<'ASOUND_CONF'
 defaults.pcm.rate_converter "speexrate_medium"
 ASOUND_CONF
     fi
 
     if [ "$m533ia" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'ASOUND_CONF'
 defaults.pcm.card 1
 defaults.ctl.card 1
@@ -3265,13 +3265,13 @@ ASOUND_CONF
 #
 # An alternative to systemd shall be considered.
 _autostart() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<_BASH_PROFILE
 $home/.bash_profile
 _BASH_PROFILE
 
     if [ "$wm" = sway ]; then
-        FILE_fd1 \
+        FILE \
 <<'_BASH_PROFILE'
 if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
     exec sway > /var/log/sway.log 2>&1
@@ -3280,7 +3280,7 @@ _BASH_PROFILE
 
         __file_write;
 
-        FILE_PATH_fd1 \
+        FILE_PATH \
 <<'SWAY_LOG'
 /var/log/sway.log
 SWAY_LOG
@@ -3290,7 +3290,7 @@ SWAY_LOG
         __loc_chmod '0644'
         __loc_chown "$user"
     elif [ "$wm" = xfce4 ]; then
-        FILE_fd1 \
+        FILE \
 <<'_BASH_PROFILE'
 if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
     exec startx
@@ -3305,12 +3305,12 @@ _BASH_PROFILE
     if [ "$init" = systemd ]; then
         if [ "$dns" = localhost ]; then
             if [ "$dns0" = dnsmasq ]; then
-                FILE_PATH_fd1 \
+                FILE_PATH \
 <<DNSMASQ_SERVICE
 /etc/systemd/system/dnsmasq.service
 DNSMASQ_SERVICE
 
-                FILE_fd1 \
+                FILE \
 <<DNSMASQ_SERVICE
 [Unit]
 Description=Caching DNS server
@@ -3326,12 +3326,12 @@ DNSMASQ_SERVICE
 
                 __file_write;
 
-                FILE_PATH_fd1 \
+                FILE_PATH \
 <<DNSMASQ_SERVICE
 /etc/systemd/system/dnsmasq.service
 DNSMASQ_SERVICE
 
-                FILE_PATH_TARGET_fd1 \
+                FILE_PATH_TARGET \
 <<DNSMASQ_SERVICE
 /etc/systemd/system/multi-user.target.wants/dnsmasq.service
 DNSMASQ_SERVICE
@@ -3340,12 +3340,12 @@ DNSMASQ_SERVICE
             fi
         fi
 
-        FILE_PATH_fd1 \
+        FILE_PATH \
 <<IWD_SERVICE
 /etc/systemd/system/iwd.service
 IWD_SERVICE
 
-        FILE_fd1 \
+        FILE \
 <<IWD_SERVICE
 [Unit]
 Description=Wireless service
@@ -3364,24 +3364,24 @@ IWD_SERVICE
 
         __file_write;
 
-        FILE_PATH_fd1 \
+        FILE_PATH \
 <<IWD_SERVICE
 /etc/systemd/system/iwd.service
 IWD_SERVICE
 
-        FILE_PATH_TARGET_fd1 \
+        FILE_PATH_TARGET \
 <<IWD_SERVICE
 /etc/systemd/system/multi-user.target.wants/iwd.service
 IWD_SERVICE
 
         __file_target_write 'SYMLINK'
 
-        FILE_PATH_fd1 \
+        FILE_PATH \
 <<RTKIT_DAEMON_SERVICE
 /etc/systemd/system/rtkit-daemon.service
 RTKIT_DAEMON_SERVICE
 
-        FILE_fd1 \
+        FILE \
 <<RTKIT_DAEMON_SERVICE
 [Unit]
 Description=RealtimeKit Scheduling Policy Service
@@ -3400,24 +3400,24 @@ RTKIT_DAEMON_SERVICE
 
         __file_write;
 
-        FILE_PATH_fd1 \
+        FILE_PATH \
 <<RTKIT_DAEMON_SERVICE
 /etc/systemd/system/rtkit-daemon.service
 RTKIT_DAEMON_SERVICE
 
-        FILE_PATH_TARGET_fd1 \
+        FILE_PATH_TARGET \
 <<RTKIT_DAEMON_SERVICE
 /etc/systemd/system/multi-user.target.wants/rtkit-daemon.service
 RTKIT_DAEMON_SERVICE
 
         __file_target_write 'SYMLINK'
 
-        FILE_PATH_fd1 \
+        FILE_PATH \
 <<MOC_SERVICE
 $home/.config/systemd/user/moc.service
 MOC_SERVICE
 
-        FILE_fd1 \
+        FILE \
 <<'MOC_SERVICE'
 [Unit]
 Description=MOC server
@@ -3434,12 +3434,12 @@ MOC_SERVICE
 
         __file_write;
 
-        FILE_PATH_fd1 \
+        FILE_PATH \
 <<MOC_SERVICE
 $home/.config/systemd/user/moc.service
 MOC_SERVICE
 
-        FILE_PATH_TARGET_fd1 \
+        FILE_PATH_TARGET \
 <<MOC_SERVICE
 $home/.config/systemd/user/default.target.wants/moc.service
 MOC_SERVICE
@@ -3449,12 +3449,12 @@ MOC_SERVICE
 }
 
 _bash_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<_BASH_FUNCTIONS
 $home/.bash_functions
 _BASH_FUNCTIONS
 
-    FILE_fd1 \
+    FILE \
 <<'_BASH_FUNCTIONS'
 # System management
 sys_pwr_fw() { pwr_fw; }
@@ -4572,12 +4572,12 @@ _BASH_FUNCTIONS
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<_BASHRC
 $home/.bashrc
 _BASHRC
 
-    FILE_fd1 \
+    FILE \
 <<'_BASHRC'
 # Don't parse .bashrc if not running interactively
 [[ $- != *i* ]] && return
@@ -4613,12 +4613,12 @@ _BASHRC
 }
 
 _bluez_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'MAIN_CONF'
 /etc/bluetooth/main.conf
 MAIN_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'MAIN_CONF'
 [General]
 Name = gUcciestBlueZ420
@@ -4841,13 +4841,13 @@ _conf_4() {
 }
 
 _dhcpcd_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'DHCPCD_CONF'
 /etc/dhcpcd.conf
 DHCPCD_CONF
 
     if [ "$ipv6" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'DHCPCD_CONF'
 static domain_name_servers=::1 127.0.0.1
 slaac private
@@ -4856,7 +4856,7 @@ noipv4ll
 
 DHCPCD_CONF
     else
-        FILE_fd1 \
+        FILE \
 <<'DHCPCD_CONF'
 static domain_name_servers=127.0.0.1
 slaac hwaddr
@@ -4867,7 +4867,7 @@ noipv6
 DHCPCD_CONF
     fi
 
-    FILE_fd1 \
+    FILE \
 <<'DHCPCD_CONF'
 option classless_static_routes
 option interface_mtu
@@ -4885,12 +4885,12 @@ DHCPCD_CONF
 
 # DNS stub resolver configuration
 _dnsmasq_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'DNSMASQ_CONF'
 /etc/dnsmasq.conf
 DNSMASQ_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'DNSMASQ_CONF'
 bind-interfaces
 cache-size=2048
@@ -4908,7 +4908,7 @@ all-servers
 DNSMASQ_CONF
 
     if [ "$ipv6" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'DNSMASQ_CONF'
 listen-address=::1,127.0.0.1
 server=2606:4700:4700::1111
@@ -4929,7 +4929,7 @@ server=9.9.9.9
 server=149.112.112.112
 DNSMASQ_CONF
     else
-        FILE_fd1 \
+        FILE \
 <<'DNSMASQ_CONF'
 listen-address=127.0.0.1
 server=1.1.1.1
@@ -4947,12 +4947,12 @@ DNSMASQ_CONF
 }
 
 _doas_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'DOAS_CONF'
 /etc/doas.conf
 DOAS_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'DOAS_CONF'
 permit persist :wheel as root
 DOAS_CONF
@@ -4965,7 +4965,7 @@ DOAS_CONF
 # suffice. A solution must be devised, either within libfile() or in this
 # specific, unusual function.
 _env() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'ENVIRONMENT'
 /etc/environment
 ENVIRONMENT
@@ -5077,7 +5077,7 @@ ENVIRONMENT
 
 # .face png in $home (user $HOME); some applications use this file.
 _face_bin() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<_FACE
 $home/.face
 _FACE
@@ -5088,12 +5088,12 @@ _FACE
 }
 
 _featherpad_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<FP_CONF
 $home/.config/featherpad/fp.conf
 FP_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'FP_CONF'
 [text]
 appendEmptyLine=true
@@ -5162,7 +5162,7 @@ FP_CONF
 _firefox_conf() {
     cmd 'git' || ENOCMD 'git'
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<PROFILES_INI
 $home/.mozilla/firefox/profiles.ini
 PROFILES_INI
@@ -5175,19 +5175,19 @@ PROFILES_INI
 
     __git_get 'https://github.com/mscalindt/firefox-profile-private'
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<IRA5808S_MSCALINDT
 $TMP_DIR/firefox-profile-private/ira5808s.mscalindt
 IRA5808S_MSCALINDT
 
-    FILE_PATH_TARGET_fd1 \
+    FILE_PATH_TARGET \
 <<IRA5808S_MSCALINDT
 $home/.mozilla/firefox/ira5808s.mscalindt
 IRA5808S_MSCALINDT
 
     __dir_target_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<PROFILES_INI
 $home/.mozilla/firefox/profiles.ini
 PROFILES_INI
@@ -5250,19 +5250,19 @@ EOF
 
     __git_get 'https://github.com/mscalindt/firefox-profiles'
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<499SH1EV_HARDENED
 $TMP_DIR/firefox-profiles/499sh1ev.HARDENED
 499SH1EV_HARDENED
 
-    FILE_PATH_TARGET_fd1 \
+    FILE_PATH_TARGET \
 <<499SH1EV_HARDENED
 $home/.mozilla/firefox/499sh1ev.HARDENED
 499SH1EV_HARDENED
 
     __dir_target_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<PROFILES_INI
 $home/.mozilla/firefox/profiles.ini
 PROFILES_INI
@@ -5325,12 +5325,12 @@ EOF
 }
 
 _fontconfig_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<01_FONT_CONF
 $home/.config/fontconfig/conf.d/01-font.conf
 01_FONT_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'01_FONT_CONF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
@@ -5378,12 +5378,12 @@ $home/.config/fontconfig/conf.d/01-font.conf
 }
 
 _fuse_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'FUSE_CONF'
 /etc/fuse.conf
 FUSE_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'FUSE_CONF'
 user_allow_other
 FUSE_CONF
@@ -5392,7 +5392,7 @@ FUSE_CONF
 }
 
 _gai_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'GAI_CONF'
 /etc/gai.conf
 GAI_CONF
@@ -5400,7 +5400,7 @@ GAI_CONF
     if [ "$ipv6" = 1 ]; then
         __loc_delete;
     else
-        FILE_fd1 \
+        FILE \
 <<'GAI_CONF'
 precedence ::ffff:0:0/96  100
 GAI_CONF
@@ -5410,12 +5410,12 @@ GAI_CONF
 }
 
 _git_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<_GITCONFIG
 $home/.gitconfig
 _GITCONFIG
 
-    FILE_fd1 \
+    FILE \
 <<'_GITCONFIG'
 [core]
 	editor = nano
@@ -5444,7 +5444,7 @@ _GITCONFIG
 }
 
 _gov_performance() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'CPU'
 /sys/devices/system/cpu
 CPU
@@ -5456,12 +5456,12 @@ CPU
     fi
 
     for core in "$FILE_PATH"/cpu*/cpufreq/scaling_governor; do
-        FILE_PATH_fd1 \
+        FILE_PATH \
 <<SCALING_GOVERNOR
 $core
 SCALING_GOVERNOR
 
-        FILE_fd1 \
+        FILE \
 <<'SCALING_GOVERNOR'
 performance
 SCALING_GOVERNOR
@@ -5476,7 +5476,7 @@ SCALING_GOVERNOR
 }
 
 _gov_schedutil() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'CPU'
 /sys/devices/system/cpu
 CPU
@@ -5488,12 +5488,12 @@ CPU
     fi
 
     for core in "$FILE_PATH"/cpu*/cpufreq/scaling_governor; do
-        FILE_PATH_fd1 \
+        FILE_PATH \
 <<SCALING_GOVERNOR
 $core
 SCALING_GOVERNOR
 
-        FILE_fd1 \
+        FILE \
 <<'SCALING_GOVERNOR'
 schedutil
 SCALING_GOVERNOR
@@ -5587,12 +5587,12 @@ _grub_conf() {
     is_uefi || EERROR 'Not in UEFI mode.'
     cmd 'grub-mkconfig' || ENOCMD 'grub-mkconfig'
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'GRUB'
 /etc/default/grub
 GRUB
 
-    FILE_fd1 \
+    FILE \
 <<'GRUB'
 GRUB_PRELOAD_MODULES="part_gpt"
 GRUB_TIMEOUT_STYLE=menu
@@ -5609,19 +5609,19 @@ usbhid.mousepoll=1 tsc=unstable \
 GRUB
 
     if [ "$ipv6" != 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'GRUB'
 ipv6.disable=1 \
 GRUB
     fi
 
-    FILE_fd1 \
+    FILE \
 <<'GRUB'
 "
 GRUB
 
     if [ "$arch_linux" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'GRUB'
 GRUB_DISTRIBUTOR="Arch"
 GRUB
@@ -5644,12 +5644,12 @@ GRUB
 }
 
 _gtk_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<_GTKRC_2_0
 $home/.gtkrc-2.0
 _GTKRC_2_0
 
-    FILE_fd1 \
+    FILE \
 <<'_GTKRC_2_0'
 gtk-cursor-theme-name="Breeze"
 gtk-icon-theme-name="Papirus-Dark"
@@ -5672,12 +5672,12 @@ _GTKRC_2_0
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<GTK_CSS
 $home/.config/gtk-3.0/gtk.css
 GTK_CSS
 
-    FILE_fd1 \
+    FILE \
 <<'GTK_CSS'
 .titlebar,
 window {
@@ -5696,12 +5696,12 @@ GTK_CSS
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<SETTINGS_INI
 $home/.config/gtk-3.0/settings.ini
 SETTINGS_INI
 
-    FILE_fd1 \
+    FILE \
 <<'SETTINGS_INI'
 [Settings]
 gtk-cursor-theme-name="Breeze"
@@ -5732,12 +5732,12 @@ _hostname() {
         return 0
     fi
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'HOSTNAME'
 /etc/hostname
 HOSTNAME
 
-    FILE_fd1 \
+    FILE \
 <<'HOSTNAME'
 m533ia
 HOSTNAME
@@ -5746,26 +5746,26 @@ HOSTNAME
 }
 
 _hosts() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'HOSTS'
 /etc/hosts
 HOSTS
 
     if [ "$ipv6" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'HOSTS'
 ::1              localhost
 127.0.0.1        localhost
 HOSTS
     else
-        FILE_fd1 \
+        FILE \
 <<'HOSTS'
 127.0.0.1        localhost
 HOSTS
     fi
 
     if [ "$m533ia" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'HOSTS'
 127.0.1.1        m533ia
 HOSTS
@@ -5775,12 +5775,12 @@ HOSTS
 }
 
 _imv_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<CONFIG
 $home/.config/imv/config
 CONFIG
 
-    FILE_fd1 \
+    FILE \
 <<'CONFIG'
 [options]
 background = 696969
@@ -5797,24 +5797,24 @@ _initramfs_conf() {
 
     cmd 'mkinitcpio' || ENOCMD 'mkinitcpio'
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'MKINITCPIO_CONF'
 /etc/mkinitcpio.conf
 MKINITCPIO_CONF
 
     if [ "$m533ia" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'MKINITCPIO_CONF'
 MODULES=(amdgpu pinctrl-amd)
 MKINITCPIO_CONF
     else
-        FILE_fd1 \
+        FILE \
 <<'MKINITCPIO_CONF'
 MODULES=()
 MKINITCPIO_CONF
     fi
 
-    FILE_fd1 \
+    FILE \
 <<'MKINITCPIO_CONF'
 BINARIES=()
 FILES=()
@@ -5838,12 +5838,12 @@ MKINITCPIO_CONF
 }
 
 _iwd_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'MAIN_CONF'
 /etc/iwd/main.conf
 MAIN_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'MAIN_CONF'
 [General]
 EnableNetworkConfiguration=true
@@ -5854,18 +5854,18 @@ AddressRandomizationRange=nic
 MAIN_CONF
 
     if [ "$ipv6" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'MAIN_CONF'
 EnableIPv6=true
 MAIN_CONF
     else
-        FILE_fd1 \
+        FILE \
 <<'MAIN_CONF'
 EnableIPv6=false
 MAIN_CONF
     fi
 
-    FILE_fd1 \
+    FILE \
 <<'MAIN_CONF'
 NameResolvingService=none
 
@@ -5877,12 +5877,12 @@ MAIN_CONF
 }
 
 _kitty_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<KITTY_CONF
 $home/.config/kitty/kitty.conf
 KITTY_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'KITTY_CONF'
 font_family Source Code Pro
 font_size 10.0
@@ -5924,12 +5924,12 @@ KITTY_CONF
 }
 
 _kvantum_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<KVANTUM_KVCONFIG
 $home/.config/Kvantum/kvantum.kvconfig
 KVANTUM_KVCONFIG
 
-    FILE_fd1 \
+    FILE \
 <<'KVANTUM_KVCONFIG'
 [General]
 theme=KvArcDark#
@@ -5937,12 +5937,12 @@ KVANTUM_KVCONFIG
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<KVARCDARK__KVCONFIG
 $home/.config/Kvantum/KvArcDark#/KvArcDark#.kvconfig
 KVARCDARK__KVCONFIG
 
-    FILE_fd1 \
+    FILE \
 <<'KVARCDARK__KVCONFIG'
 [%General]
 author=Tsu Jan
@@ -6437,24 +6437,24 @@ KVARCDARK__KVCONFIG
 _locale() {
     cmd 'locale-gen' || ENOCMD 'locale-gen'
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'LOCALE_CONF'
 /etc/locale.conf
 LOCALE_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'LOCALE_CONF'
 LANG=en_US.UTF-8
 LOCALE_CONF
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'LOCALE_GEN'
 /etc/locale.gen
 LOCALE_GEN
 
-    FILE_fd1 \
+    FILE \
 <<'LOCALE_GEN'
 bg_BG.UTF-8 UTF-8
 en_US.UTF-8 UTF-8
@@ -6481,7 +6481,7 @@ _makepkg_conf() {
         return 0
     fi
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'MAKEPKG_CONF'
 /etc/makepkg.conf
 MAKEPKG_CONF
@@ -6498,12 +6498,12 @@ MAKEPKG_CONF
 }
 
 _moc_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<CONFIG
 $home/.moc/config
 CONFIG
 
-    FILE_fd1 \
+    FILE \
 <<'CONFIG'
 SoundDriver = ALSA
 Theme = transparent-background
@@ -6514,12 +6514,12 @@ CONFIG
 
 # Fix pop on idle resume
 _modprobe_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'99_SND_POWERSAVE_CONF'
 /etc/modprobe.d/99-snd_powersave.conf
 99_SND_POWERSAVE_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'99_SND_POWERSAVE_CONF'
 options snd_hda_intel power_save=0 power_save_controller=N
 99_SND_POWERSAVE_CONF
@@ -6528,12 +6528,12 @@ options snd_hda_intel power_save=0 power_save_controller=N
 }
 
 _mpv_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<MPV_CONF
 $home/.config/mpv/mpv.conf
 MPV_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'MPV_CONF'
 profile=gpu-hq
 scale=ewa_lanczossharp
@@ -6558,12 +6558,12 @@ MPV_CONF
 }
 
 _mutt_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<MUTTRC
 $home/.mutt/muttrc
 MUTTRC
 
-    FILE_fd1 \
+    FILE \
 <<'MUTTRC'
 # Personal
 set realname = "Dimitar Yurukov"
@@ -6593,12 +6593,12 @@ MUTTRC
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<MUTTSIG
 $home/.mutt/muttsig
 MUTTSIG
 
-    FILE_fd1 \
+    FILE \
 <<'MUTTSIG'
 PGP: https://github.com/mscalindt.gpg
 Email: mscalindt@gmail.com
@@ -6608,12 +6608,12 @@ MUTTSIG
 }
 
 _nano_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<_NANORC
 $home/.nanorc
 _NANORC
 
-    FILE_fd1 \
+    FILE \
 <<'_NANORC'
 set fill 72
 set breaklonglines
@@ -6675,12 +6675,12 @@ _nvram_clr() {
 }
 
 _openal_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'ALSOFT_CONF'
 /etc/openal/alsoft.conf
 ALSOFT_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'ALSOFT_CONF'
 frequency = 48000
 ALSOFT_CONF
@@ -6694,7 +6694,7 @@ _pacman_conf() {
         return 0
     fi
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'PACMAN_CONF'
 /etc/pacman.conf
 PACMAN_CONF
@@ -6803,12 +6803,12 @@ EOF
 }
 
 _pam_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'FAILLOCK_CONF'
 /etc/security/faillock.conf
 FAILLOCK_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'FAILLOCK_CONF'
 deny=7
 even_deny_root
@@ -6819,7 +6819,7 @@ FAILLOCK_CONF
 
     __file_write_overwrite;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'LOGIN_DEFS'
 /etc/login.defs
 LOGIN_DEFS
@@ -6830,7 +6830,7 @@ LOGIN_DEFS
 
     __file_write_overwrite;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'SU'
 /etc/pam.d/su
 SU
@@ -6893,7 +6893,7 @@ EOF
 
     __file_write_overwrite;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'SYSTEM_AUTH'
 /etc/pam.d/system-auth
 SYSTEM_AUTH
@@ -6958,20 +6958,20 @@ EOF
 }
 
 _pipewire_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'CLIENT_CONF'
 /etc/pipewire/client.conf.d/client.conf
 CLIENT_CONF
 
     if [ "$audio_hq" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'CLIENT_CONF'
 stream.properties = {
     resample.quality = 15
 }
 CLIENT_CONF
     else
-        FILE_fd1 \
+        FILE \
 <<'CLIENT_CONF'
 stream.properties = {
     resample.quality = 11
@@ -6981,20 +6981,20 @@ CLIENT_CONF
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'CLIENT_RT_CONF'
 /etc/pipewire/client-rt.conf.d/client-rt.conf
 CLIENT_RT_CONF
 
     if [ "$audio_hq" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'CLIENT_RT_CONF'
 stream.properties = {
     resample.quality = 15
 }
 CLIENT_RT_CONF
     else
-        FILE_fd1 \
+        FILE \
 <<'CLIENT_RT_CONF'
 stream.properties = {
     resample.quality = 11
@@ -7004,12 +7004,12 @@ CLIENT_RT_CONF
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'MINIMAL_CONF'
 /etc/pipewire/minimal.conf.d/minimal.conf
 MINIMAL_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'MINIMAL_CONF'
 context.properties = {
     default.clock.allowed-rates = [ 44100 48000 96000 192000 ]
@@ -7017,7 +7017,7 @@ context.properties = {
 MINIMAL_CONF
 
     if [ "$audio_hq" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'MINIMAL_CONF'
 context.objects = [
     { factory = adapter
@@ -7028,7 +7028,7 @@ context.objects = [
 ]
 MINIMAL_CONF
     else
-        FILE_fd1 \
+        FILE \
 <<'MINIMAL_CONF'
 context.objects = [
     { factory = adapter
@@ -7042,12 +7042,12 @@ MINIMAL_CONF
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'PIPEWIRE_CONF'
 /etc/pipewire/pipewire.conf.d/pipewire.conf
 PIPEWIRE_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'PIPEWIRE_CONF'
 context.properties = {
     default.clock.allowed-rates = [ 44100 48000 96000 192000 ]
@@ -7056,20 +7056,20 @@ PIPEWIRE_CONF
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'PIPEWIRE_AVB_CONF'
 /etc/pipewire/pipewire-pulse.conf.d/pipewire-avb.conf
 PIPEWIRE_AVB_CONF
 
     if [ "$audio_hq" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'PIPEWIRE_AVB_CONF'
 stream.properties = {
     resample.quality = 15
 }
 PIPEWIRE_AVB_CONF
     else
-        FILE_fd1 \
+        FILE \
 <<'PIPEWIRE_AVB_CONF'
 stream.properties = {
     resample.quality = 11
@@ -7079,20 +7079,20 @@ PIPEWIRE_AVB_CONF
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'PIPEWIRE_PULSE_CONF'
 /etc/pipewire/pipewire-pulse.conf.d/pipewire-pulse.conf
 PIPEWIRE_PULSE_CONF
 
     if [ "$audio_hq" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'PIPEWIRE_PULSE_CONF'
 stream.properties = {
     resample.quality = 15
 }
 PIPEWIRE_PULSE_CONF
     else
-        FILE_fd1 \
+        FILE \
 <<'PIPEWIRE_PULSE_CONF'
 stream.properties = {
     resample.quality = 11
@@ -7104,12 +7104,12 @@ PIPEWIRE_PULSE_CONF
 }
 
 _pulseaudio_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'DAEMON_CONF'
 /etc/pulse/daemon.conf
 DAEMON_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'DAEMON_CONF'
 avoid-resampling = true
 default-sample-format = s24le
@@ -7118,12 +7118,12 @@ exit-idle-time = -1
 DAEMON_CONF
 
     if [ "$audio_hq" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'DAEMON_CONF'
 resample-method = soxr-vhq
 DAEMON_CONF
     else
-        FILE_fd1 \
+        FILE \
 <<'DAEMON_CONF'
 resample-method = speex-float-8
 DAEMON_CONF
@@ -7131,7 +7131,7 @@ DAEMON_CONF
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'DEFAULT_PA'
 /etc/pulse/default.pa
 DEFAULT_PA
@@ -7144,12 +7144,12 @@ DEFAULT_PA
 }
 
 _pipewire_media_session_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'MEDIA_SESSION_CONF'
 /etc/pipewire/media-session.d/media-session.conf
 MEDIA_SESSION_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'MEDIA_SESSION_CONF'
 context.properties = {
     # Properties to configure the session and some
@@ -7268,12 +7268,12 @@ MEDIA_SESSION_CONF
 }
 
 _ranger_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<RC_CONF
 $home/.config/ranger/rc.conf
 RC_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'RC_CONF'
 copymap J <C-z>
 copymap K <C-x>
@@ -7292,12 +7292,12 @@ RC_CONF
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<RIFLE_CONF
 $home/.config/ranger/rifle.conf
 RIFLE_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'RIFLE_CONF'
 # Video
 mime ^video, has mpv,       X,  flag f = mpv -- "$@"
@@ -7402,7 +7402,7 @@ _reflector() {
 _reflector_bg() {
     cmd 'reflector' || ENOCMD 'reflector'
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<MIRRORLIST
 $arch_mirlist
 MIRRORLIST
@@ -7442,7 +7442,7 @@ MIRRORLIST
 _reflector_de() {
     cmd 'reflector' || ENOCMD 'reflector'
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<MIRRORLIST
 $arch_mirlist
 MIRRORLIST
@@ -7487,26 +7487,26 @@ _resolv_conf() {
         return 0
     fi
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'RESOLV_CONF'
 /etc/resolv.conf
 RESOLV_CONF
 
     if [ "$dns" = localhost ]; then
         if [ "$ipv6" = 1 ]; then
-            FILE_fd1 \
+            FILE \
 <<'RESOLV_CONF'
 nameserver ::1
 nameserver 127.0.0.1
 RESOLV_CONF
         else
-            FILE_fd1 \
+            FILE \
 <<'RESOLV_CONF'
 nameserver 127.0.0.1
 RESOLV_CONF
         fi
 
-        FILE_fd1 \
+        FILE \
 <<'RESOLV_CONF'
 options trust-ad
 RESOLV_CONF
@@ -7519,12 +7519,12 @@ RESOLV_CONF
 }
 
 _sh() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'DASH'
 /usr/bin/dash
 DASH
 
-    FILE_PATH_TARGET_fd1 \
+    FILE_PATH_TARGET \
 <<'SH'
 /usr/bin/sh
 SH
@@ -7532,12 +7532,12 @@ SH
     __file_target_write_overwrite 'SYMLINK'
 
     if [ "$arch_linux" = 1 ]; then
-        FILE_PATH_fd1 \
+        FILE_PATH \
 <<'DASHBINSH_HOOK'
 /usr/share/libalpm/hooks/dashbinsh.hook
 DASHBINSH_HOOK
 
-        FILE_fd1 \
+        FILE \
 <<'DASHBINSH_HOOK'
 [Trigger]
 Type = Package
@@ -7557,12 +7557,12 @@ DASHBINSH_HOOK
 }
 
 _sway_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<CONFIG
 $home/.config/sway/config
 CONFIG
 
-    FILE_fd1 \
+    FILE \
 <<'CONFIG'
 # Mod4 = Super key
 set $mod Mod4
@@ -7586,18 +7586,18 @@ input type:keyboard {
 CONFIG
 
     if [ "$gaming" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'CONFIG'
     xkb_options grp:alt_shift_toggle
 CONFIG
     else
-        FILE_fd1 \
+        FILE \
 <<'CONFIG'
     xkb_options grp:alt_shift_toggle,caps:super
 CONFIG
     fi
 
-    FILE_fd1 \
+    FILE \
 <<'CONFIG'
     repeat_delay 222
     repeat_rate 50
@@ -7680,13 +7680,13 @@ bar {
 CONFIG
 
     if [ "$gaming" != 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'CONFIG'
     status_command while /home/$USER/.config/sway/status; do sleep 0.1; done
 CONFIG
     fi
 
-    FILE_fd1 \
+    FILE \
 <<'CONFIG'
     position top
     font pango:Source Code Pro 10
@@ -7702,14 +7702,14 @@ include @sysconfdir@/sway/config.d/*
 CONFIG
 
     if [ "$polkit_agent" ]; then
-        FILE_fd1 \
+        FILE \
 <<CONFIG
 exec $polkit_agent
 CONFIG
     fi
 
     if [ "$arch_linux" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'CONFIG'
 exec systemctl --user import-environment SWAYSOCK WAYLAND_DISPLAY DISPLAY \
                                          XDG_CURRENT_DESKTOP \
@@ -7724,12 +7724,12 @@ CONFIG
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<FKILL
 $home/.config/sway/fkill
 FKILL
 
-    FILE_fd1 \
+    FILE \
 <<'FKILL'
 #!/bin/sh
 
@@ -7744,12 +7744,12 @@ FKILL
     __file_write;
     __file_executable;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<IMPORT_GSETTINGS
 $home/.config/sway/import-gsettings
 IMPORT_GSETTINGS
 
-    FILE_fd1 \
+    FILE \
 <<'IMPORT_GSETTINGS'
 #!/bin/sh
 
@@ -7780,12 +7780,12 @@ IMPORT_GSETTINGS
     __file_write;
     __file_executable;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<STATUS
 $home/.config/sway/status
 STATUS
 
-    FILE_fd1 \
+    FILE \
 <<'STATUS'
 #!/bin/sh
 
@@ -8048,12 +8048,12 @@ STATUS
 }
 
 _swaylock_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<CONFIG
 $home/.swaylock/config
 CONFIG
 
-    FILE_fd1 \
+    FILE \
 <<'CONFIG'
 color=2b2e37
 indicator-idle-visible
@@ -8067,12 +8067,12 @@ CONFIG
 }
 
 _sysctl_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'99_SYSCTL_CONF'
 /etc/sysctl.d/99-sysctl.conf
 99_SYSCTL_CONF
 
-    FILE_fd1 \
+    FILE \
 <<'99_SYSCTL_CONF'
 kernel.sysrq = 1
 99_SYSCTL_CONF
@@ -8095,12 +8095,12 @@ _tz() {
 _tz_bg() {
     cmd 'hwclock' || ENOCMD 'hwclock'
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'SOFIA'
 /usr/share/zoneinfo/Europe/Sofia
 SOFIA
 
-    FILE_PATH_TARGET_fd1 \
+    FILE_PATH_TARGET \
 <<'LOCALTIME'
 /etc/localtime
 LOCALTIME
@@ -8122,12 +8122,12 @@ LOCALTIME
 _tz_de() {
     cmd 'hwclock' || ENOCMD 'hwclock'
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'BERLIN'
 /usr/share/zoneinfo/Europe/Berlin
 BERLIN
 
-    FILE_PATH_TARGET_fd1 \
+    FILE_PATH_TARGET \
 <<'LOCALTIME'
 /etc/localtime
 LOCALTIME
@@ -8146,12 +8146,12 @@ LOCALTIME
 }
 
 _wireplumber_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'99_ALSA_LUA'
 /etc/wireplumber/main.lua.d/99-alsa.lua
 99_ALSA_LUA
 
-    FILE_fd1 \
+    FILE \
 <<'99_ALSA_LUA'
 table.insert (alsa_monitor.rules, {
     matches = {
@@ -8168,18 +8168,18 @@ table.insert (alsa_monitor.rules, {
 99_ALSA_LUA
 
     if [ "$audio_hq" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'99_ALSA_LUA'
         ["resample.quality"] = 15,
 99_ALSA_LUA
     else
-        FILE_fd1 \
+        FILE \
 <<'99_ALSA_LUA'
         ["resample.quality"] = 11,
 99_ALSA_LUA
     fi
 
-    FILE_fd1 \
+    FILE \
 <<'99_ALSA_LUA'
     },
 })
@@ -8187,12 +8187,12 @@ table.insert (alsa_monitor.rules, {
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'99_BLUEZ_LUA'
 /etc/wireplumber/bluetooth.lua.d/99-bluez.lua
 99_BLUEZ_LUA
 
-    FILE_fd1 \
+    FILE \
 <<'99_BLUEZ_LUA'
 table.insert (bluez_monitor.rules, {
     matches = {
@@ -8208,18 +8208,18 @@ table.insert (bluez_monitor.rules, {
 99_BLUEZ_LUA
 
     if [ "$audio_hq" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'99_BLUEZ_LUA'
         ["resample.quality"] = 15,
 99_BLUEZ_LUA
     else
-        FILE_fd1 \
+        FILE \
 <<'99_BLUEZ_LUA'
         ["resample.quality"] = 11,
 99_BLUEZ_LUA
     fi
 
-    FILE_fd1 \
+    FILE \
 <<'99_BLUEZ_LUA'
     },
 })
@@ -8229,12 +8229,12 @@ table.insert (bluez_monitor.rules, {
 }
 
 _xdg_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<MIMEAPPS_LIST
 $home/.config/mimeapps.list
 MIMEAPPS_LIST
 
-    FILE_fd1 \
+    FILE \
 <<'MIMEAPPS_LIST'
 [Added Associations]
 application/x-shellscript=featherpad.desktop;
@@ -8257,19 +8257,19 @@ MIMEAPPS_LIST
 
     __file_write;
 
-    FILE_PATH_TARGET_fd1 \
+    FILE_PATH_TARGET \
 <<MIMEAPPS_LIST
 $home/.local/share/applications/mimeapps.list
 MIMEAPPS_LIST
 
     __file_target_write 'SYMLINK'
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<INDEX_THEME
 $home/.icons/default/index.theme
 INDEX_THEME
 
-    FILE_fd1 \
+    FILE \
 <<'INDEX_THEME'
 [icon theme]
 Inherits=Breeze
@@ -8277,7 +8277,7 @@ INDEX_THEME
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<'AUTOSTART'
 /etc/xdg/autostart
 AUTOSTART
@@ -8289,35 +8289,35 @@ AUTOSTART
 # The numbers in the filenames of .../xfce4/panel directory are in relation to
 # the plugin IDs in xfce4-panel.xml
 _xfce4_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<HELP_RC
 $home/.config/xfce4/help.rc
 HELP_RC
 
-    FILE_fd1 \
+    FILE \
 <<'HELP_RC'
 auto-online=false
 HELP_RC
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<HELPERS_RC
 $home/.config/xfce4/helpers.rc
 HELPERS_RC
 
-    FILE_fd1 \
+    FILE \
 <<'HELPERS_RC'
 TerminalEmulator=custom-TerminalEmulator
 HELPERS_RC
 
     if [ "$browser" = firefox ]; then
-        FILE_fd1 \
+        FILE \
 <<'HELPERS_RC'
 WebBrowser=firefox
 HELPERS_RC
     elif [ "$browser" = none ] || [ ! "$browser" ]; then
-        FILE_fd1 \
+        FILE \
 <<'HELPERS_RC'
 WebBrowser=
 HELPERS_RC
@@ -8325,12 +8325,12 @@ HELPERS_RC
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<XFCE4_SCREENSHOOTER
 $home/.config/xfce4/xfce4-screenshooter
 XFCE4_SCREENSHOOTER
 
-    FILE_fd1 \
+    FILE \
 <<'XFCE4_SCREENSHOOTER'
 app=imv
 last_user=
@@ -8348,12 +8348,12 @@ XFCE4_SCREENSHOOTER
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<15990473633_DESKTOP
 $home/.config/xfce4/panel/launcher-2/15990473633.desktop
 15990473633_DESKTOP
 
-    FILE_fd1 \
+    FILE \
 <<'15990473633_DESKTOP'
 [Desktop Entry]
 Version=1.0
@@ -8381,12 +8381,12 @@ Exec=/usr/lib/firefox/firefox --private-window %u
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<15990556735_DESKTOP
 $home/.config/xfce4/panel/launcher-3/15990556735.desktop
 15990556735_DESKTOP
 
-    FILE_fd1 \
+    FILE \
 <<'15990556735_DESKTOP'
 [Desktop Entry]
 Name=FeatherPad
@@ -8404,12 +8404,12 @@ X-XFCE-Source=file:///usr/share/applications/featherpad.desktop
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<WHISKERMENU_12_RC
 $home/.config/xfce4/panel/whiskermenu-12.rc
 WHISKERMENU_12_RC
 
-    FILE_fd1 \
+    FILE \
 <<'WHISKERMENU_12_RC'
 favorites=steam-native.desktop,telegramdesktop.desktop
 recent=
@@ -8466,12 +8466,12 @@ WHISKERMENU_12_RC
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<ACCESSIBILITY_XML
 $home/.config/xfce4/xfconf/xfce-perchannel-xml/accessibility.xml
 ACCESSIBILITY_XML
 
-    FILE_fd1 \
+    FILE \
 <<'ACCESSIBILITY_XML'
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -8484,12 +8484,12 @@ ACCESSIBILITY_XML
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<KEYBOARD_LAYOUT_XML
 $home/.config/xfce4/xfconf/xfce-perchannel-xml/keyboard-layout.xml
 KEYBOARD_LAYOUT_XML
 
-    FILE_fd1 \
+    FILE \
 <<'KEYBOARD_LAYOUT_XML'
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -8508,12 +8508,12 @@ KEYBOARD_LAYOUT_XML
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<KEYBOARDS_XML
 $home/.config/xfce4/xfconf/xfce-perchannel-xml/keyboards.xml
 KEYBOARDS_XML
 
-    FILE_fd1 \
+    FILE \
 <<'KEYBOARDS_XML'
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -8530,12 +8530,12 @@ KEYBOARDS_XML
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<THUNAR_XML
 $home/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml
 THUNAR_XML
 
-    FILE_fd1 \
+    FILE \
 <<'THUNAR_XML'
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -8567,12 +8567,12 @@ THUNAR_XML
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<XFCE4_DESKTOP_XML
 $home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
 XFCE4_DESKTOP_XML
 
-    FILE_fd1 \
+    FILE \
 <<'XFCE4_DESKTOP_XML'
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -8665,12 +8665,12 @@ XFCE4_DESKTOP_XML
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<XFCE4_KEYBOARD_SHORTCUTS_XML
 $home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml
 XFCE4_KEYBOARD_SHORTCUTS_XML
 
-    FILE_fd1 \
+    FILE \
 <<'XFCE4_KEYBOARD_SHORTCUTS_XML'
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -8804,12 +8804,12 @@ XFCE4_KEYBOARD_SHORTCUTS_XML
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<XFCE4_NOTIFYD_XML
 $home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-notifyd.xml
 XFCE4_NOTIFYD_XML
 
-    FILE_fd1 \
+    FILE \
 <<'XFCE4_NOTIFYD_XML'
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -8830,12 +8830,12 @@ XFCE4_NOTIFYD_XML
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<XFCE4_PANEL_XML
 $home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
 XFCE4_PANEL_XML
 
-    FILE_fd1 \
+    FILE \
 <<'XFCE4_PANEL_XML'
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -8928,12 +8928,12 @@ XFCE4_PANEL_XML
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<XFCE4_POWER_MANAGER_XML
 $home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-power-manager.xml
 XFCE4_POWER_MANAGER_XML
 
-    FILE_fd1 \
+    FILE \
 <<'XFCE4_POWER_MANAGER_XML'
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -8970,12 +8970,12 @@ XFCE4_POWER_MANAGER_XML
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<XFCE4_SCREENSAVER_XML
 $home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-screensaver.xml
 XFCE4_SCREENSAVER_XML
 
-    FILE_fd1 \
+    FILE \
 <<'XFCE4_SCREENSAVER_XML'
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -9001,12 +9001,12 @@ XFCE4_SCREENSAVER_XML
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<XFCE4_SCREENSHOOTER_XML
 $home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-screenshooter.xml
 XFCE4_SCREENSHOOTER_XML
 
-    FILE_fd1 \
+    FILE \
 <<'XFCE4_SCREENSHOOTER_XML'
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -9019,12 +9019,12 @@ XFCE4_SCREENSHOOTER_XML
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<XFCE4_SESSION_XML
 $home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-session.xml
 XFCE4_SESSION_XML
 
-    FILE_fd1 \
+    FILE \
 <<'XFCE4_SESSION_XML'
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -9064,12 +9064,12 @@ XFCE4_SESSION_XML
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<XFWM4_XML
 $home/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
 XFWM4_XML
 
-    FILE_fd1 \
+    FILE \
 <<'XFWM4_XML'
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -9166,12 +9166,12 @@ XFWM4_XML
 
     __file_write;
 
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<XSETTINGS_XML
 $home/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
 XSETTINGS_XML
 
-    FILE_fd1 \
+    FILE \
 <<'XSETTINGS_XML'
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -9226,12 +9226,12 @@ XSETTINGS_XML
 }
 
 _xorg_conf() {
-    FILE_PATH_fd1 \
+    FILE_PATH \
 <<_XINITRC
 $home/.xinitrc
 _XINITRC
 
-    FILE_fd1 \
+    FILE \
 <<'_XINITRC'
 #!/bin/sh
 
@@ -9252,7 +9252,7 @@ sh -c \
 _XINITRC
 
     if [ "$m533ia" = 1 ]; then
-        FILE_fd1 \
+        FILE \
 <<'_XINITRC'
     xinput set-prop 'ELAN1300:00 04F3:3104 Touchpad' \
                     'libinput Tapping Enabled' 1; \
@@ -9261,13 +9261,13 @@ _XINITRC
 _XINITRC
     fi
 
-    FILE_fd1 \
+    FILE \
 <<'_XINITRC'
     " &
 _XINITRC
 
     if [ "$wm" = xfce4 ]; then
-        FILE_fd1 \
+        FILE \
 <<'_XINITRC'
 
 exec startxfce4
