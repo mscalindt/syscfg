@@ -7449,6 +7449,8 @@ ext xz,     has tar = tar vvtf "$1" | "$PAGER"
 ext xz,     has tar = for file in "$@"; do tar vvxf "$file"; done
 ext zip,    has unzip = unzip -l "$1" | less
 ext zip,    has unzip = for file in "$@"; do unzip -d "${file%.*}" "$file"; done
+ext zst,    has tar = tar vvtf "$1" | "$PAGER"
+ext zst,    has tar = for file in "$@"; do tar vvxf "$file"; done
 
 # HTML
 ext x?html?, has firefox,     X, flag f = firefox -- "$@"
