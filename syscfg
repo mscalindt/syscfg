@@ -4694,7 +4694,7 @@ alias ls='ls --color'
 alias grep='grep --color=always'
 alias ip='ip --color'
 alias clr='tput reset'
-alias GFIX='git commit --amend --date="now" -s'
+alias gfix='git commit --amend --date="now" -s'
 
 # Source useful custom functions
 [ -f "$HOME"/.bash_functions ] && . "$HOME"/.bash_functions
