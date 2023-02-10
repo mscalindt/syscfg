@@ -1520,47 +1520,47 @@ EOF
 }
 
 #! .desc:
-# Clear the log file ($LOG)
+# Clear the log file ($tmpf)
 #! .uses:
-# <LOG> $ - the absolute path of the log file
+# <tmpf> $ - the absolute path of the log file
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad call
 LOG_clear() {
     if [ "$fatal" = 1 ]; then
-        file "$LOG" || return 255
-        writable "$LOG" || return 255
+        file "$tmpf" || return 255
+        writable "$tmpf" || return 255
     else
-        file "$LOG" || return 0
-        writable "$LOG" || return 0
+        file "$tmpf" || return 0
+        writable "$tmpf" || return 0
     fi
 
-    { : > "$LOG"; } 2> /dev/null
+    { : > "$tmpf"; } 2> /dev/null
 }
 
 #! .desc:
-# Print the log file ($LOG)
+# Print the log file ($tmpf)
 #! .uses:
-# <LOG> $ - the absolute path of the log file
+# <tmpf> $ - the absolute path of the log file
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad call
 LOG_print() {
     if [ "$fatal" = 1 ]; then
-        file "$LOG" || return 255
-        readable "$LOG" || return 255
+        file "$tmpf" || return 255
+        readable "$tmpf" || return 255
     else
-        file "$LOG" || return 0
-        readable "$LOG" || return 0
+        file "$tmpf" || return 0
+        readable "$tmpf" || return 0
     fi
 
-    ( . "$LOG"; ) 2> /dev/null
+    ( . "$tmpf"; ) 2> /dev/null
 }
 
 #! .desc:
-# Write to the log file ($LOG)
+# Write to the log file ($tmpf)
 #! .params:
 # <$1> - type(
 #     '0' - raw string
@@ -1586,7 +1586,7 @@ LOG_print() {
 #     .
 # )
 #! .uses:
-# <LOG> $ - the absolute path of the log file
+# <tmpf> $ - the absolute path of the log file
 #! .rc:
 # (0) success
 # (*) error
@@ -1615,11 +1615,11 @@ LOG_write() {
     fi
 
     if [ "$fatal" = 1 ]; then
-        file "$LOG" || return 255
-        writable "$LOG" || return 255
+        file "$tmpf" || return 255
+        writable "$tmpf" || return 255
     else
-        file "$LOG" || return 0
-        writable "$LOG" || return 0
+        file "$tmpf" || return 0
+        writable "$tmpf" || return 0
     fi
 
     case $1 in
@@ -1629,7 +1629,7 @@ LOG_write() {
             printf "'printf' %s %s\n" \
                    "'%s\n'" \
                    "'$1'" \
-                   >> "$LOG"
+                   >> "$tmpf"
         ;;
         1)
             replchars "'" "'\\''" "$3"; set -- "$2" "$_str"
@@ -1638,7 +1638,7 @@ LOG_write() {
                    "'%b%s%b%s\n'" \
                    "'\033[1;32m' '${1}+ ' '\033[0m'" \
                    "'$2'" \
-                   >> "$LOG"
+                   >> "$tmpf"
         ;;
         2)
             replchars "'" "'\\''" "$3"; set -- "$2" "$_str"
@@ -1647,7 +1647,7 @@ LOG_write() {
                    "'%b%s%b%s\n'" \
                    "'\033[1;31m' '${1}- ' '\033[0m'" \
                    "'$2'" \
-                   >> "$LOG"
+                   >> "$tmpf"
         ;;
         3)
             replchars "'" "'\\''" "$3"; set -- "$2" "$_str" "$4"
@@ -1662,20 +1662,20 @@ LOG_write() {
                        "'%b%s%b%s\n'" \
                        "'\033[1;32m' '${1}+ ' '\033[0m'" \
                        "'$3'"
-            } >> "$LOG"
+            } >> "$tmpf"
         ;;
     esac
 }
 
 #! .desc:
-# Check if the log file ($LOG) contains stuff 
+# Check if the log file ($tmpf) contains stuff
 #! .uses:
-# <LOG> $ - the absolute path of the log file
+# <tmpf> $ - the absolute path of the log file
 #! .rc:
 # (0) yes
 # (1) no
 LOG_written() {
-    [ -s "$LOG" ]
+    [ -s "$tmpf" ]
 }
 
 #! .desc:
@@ -3235,7 +3235,7 @@ __loc_empty() {
 }
 
 #! .desc:
-# Clone a git repository to $TMP_DIR
+# Clone a git repository to $tmpd
 #! .params:
 # <"$1"> - URL
 #! .rc:
@@ -3251,9 +3251,9 @@ __git_get() {
     set -- "$@" '--depth' '1'
 
     if str '/' "$1"; then
-        set -- "$@" "$TMP_DIR/${1#"${1%/*}"?}"
+        set -- "$@" "$tmpd/${1#"${1%/*}"?}"
     else
-        set -- "$@" "$TMP_DIR/$1"
+        set -- "$@" "$tmpd/$1"
     fi
 
     if ! git clone "$@"; then
@@ -5273,7 +5273,7 @@ PROFILES_INI
 
     FILE_PATH \
 <<IRA5808S_MSCALINDT
-$TMP_DIR/firefox-profile-private/ira5808s.mscalindt
+$tmpd/firefox-profile-private/ira5808s.mscalindt
 IRA5808S_MSCALINDT
 
     FILE_PATH_TARGET \
@@ -5348,7 +5348,7 @@ EOF
 
     FILE_PATH \
 <<499SH1EV_HARDENED
-$TMP_DIR/firefox-profiles/499sh1ev.HARDENED
+$tmpd/firefox-profiles/499sh1ev.HARDENED
 499SH1EV_HARDENED
 
     FILE_PATH_TARGET \
@@ -9507,18 +9507,18 @@ main_chk_vars() {
         *) errF 2 - 'BAD: $fatal' ;;
     esac
 
-    [ "$TMP_DIR" ] || errF 2 - 'BAD: $TMP_DIR'
-    case "$TMP_DIR" in
-        *'/' | *'//'*) errF 2 - 'BAD: $TMP_DIR' ;;
+    [ "$tmpd" ] || errF 2 - 'BAD: $tmpd'
+    case "$tmpd" in
+        *'/' | *'//'*) errF 2 - 'BAD: $tmpd' ;;
         '/'*) : ;;
-        *) errF 2 - 'BAD: $TMP_DIR' ;;
+        *) errF 2 - 'BAD: $tmpd' ;;
     esac
 
-    [ "$LOG" ] || errF 2 - 'BAD: $LOG'
-    case "$LOG" in
-        *'/' | *'//'*) errF 2 - 'BAD: $LOG' ;;
+    [ "$tmpf" ] || errF 2 - 'BAD: $tmpf'
+    case "$tmpf" in
+        *'/' | *'//'*) errF 2 - 'BAD: $tmpf' ;;
         '/'*) : ;;
-        *) errF 2 - 'BAD: $LOG' ;;
+        *) errF 2 - 'BAD: $tmpf' ;;
     esac
 }
 
@@ -9559,7 +9559,7 @@ main_defs() {
 
 main_func_env_cleanup() {
     FILE=; FILE_PATH_TARGET=; umask 022
-    LOG_clear; rm -rf "${TMP_DIR:?}"/*
+    LOG_clear; rm -rf "${tmpd:?}"/*
 }
 
 main_list_ops() (
@@ -9579,8 +9579,8 @@ main_list_ops() (
 )
 
 main_rm_tmp() {
-    if dir "$TMP_DIR" || file "$LOG"; then
-        rm -rf "$TMP_DIR" "$LOG"
+    if dir "$tmpd" || file "$tmpf"; then
+        rm -rf "$tmpd" "$tmpf"
     fi
 }
 
@@ -9595,25 +9595,25 @@ main_set_opd() {
 
 main_tmpd() {
     if [ "$fatal" = 1 ]; then
-        if ! mkdir -p "$TMP_DIR" 2> /dev/null; then
-            errF "$?" - "Cannot create TMP_DIR: $TMP_DIR"
+        if ! mkdir -p "$tmpd" 2> /dev/null; then
+            errF "$?" - "Cannot create tmpd: $tmpd"
         fi
     else
-        mkdir -p "$TMP_DIR" 2> /dev/null
+        mkdir -p "$tmpd" 2> /dev/null
     fi
 }
 
 main_tmpf() {
     if [ "$fatal" = 1 ]; then
-        if ! { : > "$LOG"; } 2> /dev/null; then
-            errF "$?" - "Cannot create LOG: $LOG"
+        if ! { : > "$tmpf"; } 2> /dev/null; then
+            errF "$?" - "Cannot create tmpf: $tmpf"
         fi
 
-        if ! chmod 0600 "$LOG" 2> /dev/null; then
-            errF "$?" - "Permissions error on LOG: $LOG"
+        if ! chmod 0600 "$tmpf" 2> /dev/null; then
+            errF "$?" - "Permissions error on tmpf: $tmpf"
         fi
     else
-        { : > "$LOG"; chmod 0600 "$LOG"; } 2> /dev/null
+        { : > "$tmpf"; chmod 0600 "$tmpf"; } 2> /dev/null
     fi
 }
 
@@ -9624,13 +9624,13 @@ main_util_env() {
 
     # Utility internal locations
     # Temporary per-function dir (cleared on func exit):
-    TMP_DIR="${TMP:-/tmp}/syscfg_tmpd"
+    tmpd="${TMP:-/tmp}/syscfg_tmpd"
     # Temporary per-function file (cleared on func exit):
-    LOG="${TMP:-/tmp}/syscfg_tmpf"
+    tmpf="${TMP:-/tmp}/syscfg_tmpf"
 }
 
 main_vars_lock() {
-    readonly fatal TMP_DIR LOG avoid_write backup force logging m533ia \
+    readonly fatal tmpd tmpf avoid_write backup force logging m533ia \
              arch_linux audio_hq browser dns gaming init ipv6 qt_theme server \
              wm bg de user home efi_mnt arch_mirlist ops
 }
