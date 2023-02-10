@@ -4694,7 +4694,7 @@ alias ls='ls --color'
 alias grep='grep --color=always'
 alias ip='ip --color'
 alias clr='tput reset'
-alias gfix='git commit --amend --date="now" -s'
+alias gfix='git add .; git commit --amend --date="now" -s'
 alias gchk='git diff --check HEAD~10'
 
 # Source useful custom functions
