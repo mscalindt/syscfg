@@ -3364,9 +3364,17 @@ _autostart() {
 $home/.bash_profile
 _BASH_PROFILE
 
+        FILE \
+<<'_BASH_PROFILE'
+set -a; for file in "$HOME"/.syscfg_env/*; do
+    . "$file"
+done; set +a
+_BASH_PROFILE
+
     if [ "$wm" = sway ]; then
         FILE \
 <<'_BASH_PROFILE'
+
 if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
     exec sway > /var/log/sway.log 2>&1
 fi
@@ -3385,6 +3393,7 @@ SWAY_LOG
     elif [ "$wm" = xfce4 ]; then
         FILE \
 <<'_BASH_PROFILE'
+
 if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
     exec startx
 fi
@@ -5057,118 +5066,103 @@ DOAS_CONF
     __loc_chmod '0400'
 }
 
-# For full coverage of edge cases, line removal with libfile() alone will not
-# suffice. A solution must be devised, either within libfile() or in this
-# specific, unusual function.
 _env() {
     FILE_PATH \
-<<'ENVIRONMENT'
-/etc/environment
-ENVIRONMENT
+<<BROWSER
+$home/.syscfg_env/browser
+BROWSER
 
     if [ "$browser" = firefox ]; then
         if [ "$server" = wayland ]; then
-            libfile ~~1 \
-                    'MOZ_ENABLE_WAYLAND=' \
-                    'MOZ_ENABLE_WAYLAND=1'
+            FILE \
+<<'BROWSER'
+MOZ_ENABLE_WAYLAND=1
+BROWSER
+
+            __file_write_overwrite;
         elif [ "$server" = x11 ]; then
-            libfile ~~1 \
-                    'MOZ_ENABLE_WAYLAND=' \
-                    'MOZ_ENABLE_WAYLAND=0'
+            FILE \
+<<'BROWSER'
+MOZ_ENABLE_WAYLAND=0
+BROWSER
+
+            __file_write_overwrite;
         elif [ "$server" = none ] || [ ! "$server" ]; then
-            libfile -1 \
-                    'MOZ_ENABLE_WAYLAND='
+            __loc_delete;
         fi
     fi
 
+    FILE_PATH \
+<<QT_THEME
+$home/.syscfg_env/qt_theme
+QT_THEME
+
     if [ "$qt_theme" = kvantum ]; then
-        libfile ~~1 \
-                'QT_STYLE_OVERRIDE=' \
-                'QT_STYLE_OVERRIDE=kvantum'
+        FILE \
+<<'QT_THEME'
+QT_STYLE_OVERRIDE=kvantum
+QT_THEME
+
+        __file_write_overwrite;
     elif [ "qt_theme" = none ] || [ ! "$qt_theme" ]; then
-        libfile -1 \
-                'QT_STYLE_OVERRIDE='
+        __loc_delete;
     fi
+
+    FILE_PATH \
+<<SERVER
+$home/.syscfg_env/server
+SERVER
 
     if [ "$server" = wayland ]; then
-        libfile ~~1 \
-                'QT_QPA_PLATFORM=' \
-                'QT_QPA_PLATFORM=wayland' \
-                ~~1 \
-                'QT_WAYLAND_DISABLE_WINDOWDECORATION=' \
-                'QT_WAYLAND_DISABLE_WINDOWDECORATION=1'
+        FILE \
+<<'SERVER'
+QT_QPA_PLATFORM=wayland
+QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+SDL_VIDEODRIVER=wayland
+GDK_BACKEND=wayland
+GTK_USE_PORTAL=1
+SERVER
 
-        libfile ~~1 \
-                'SDL_VIDEODRIVER=' \
-                'SDL_VIDEODRIVER=wayland'
-
-        libfile ~~1 \
-                'GDK_BACKEND=' \
-                'GDK_BACKEND=wayland' \
-                ~~1 \
-                'GTK_USE_PORTAL=' \
-                'GTK_USE_PORTAL=1'
+        __file_write_overwrite;
     elif [ "$server" = x11 ]; then
-        libfile ~~1 \
-                'QT_QPA_PLATFORM=' \
-                'QT_QPA_PLATFORM=xcb' \
-                -1 \
-                'QT_WAYLAND_DISABLE_WINDOWDECORATION='
+        FILE \
+<<'SERVER'
+QT_QPA_PLATFORM=xcb
+SDL_VIDEODRIVER=x11
+GDK_BACKEND=x11
+SERVER
 
-        libfile ~~1 \
-                'SDL_VIDEODRIVER=' \
-                'SDL_VIDEODRIVER=x11'
-
-        libfile ~~1 \
-                'GDK_BACKEND=' \
-                'GDK_BACKEND=x11' \
-                -1 \
-                'GTK_USE_PORTAL='
+        __file_write_overwrite;
     elif [ "$server" = none ] || [ ! "$server" ]; then
-        libfile -1 \
-                'QT_QPA_PLATFORM=' \
-                -1 \
-                'QT_WAYLAND_DISABLE_WINDOWDECORATION='
-
-        libfile -1 \
-                'SDL_VIDEODRIVER='
-
-        libfile -1 \
-                'GDK_BACKEND=' \
-                -1 \
-                'GTK_USE_PORTAL='
+        __loc_delete;
     fi
+
+    FILE_PATH \
+<<WM
+$home/.syscfg_env/wm
+WM
 
     if [ "$wm" = sway ]; then
-        libfile ~~1 \
-                'XDG_CURRENT_DESKTOP=' \
-                'XDG_CURRENT_DESKTOP=sway' \
-                ~~1 \
-                'XDG_SESSION_DESKTOP=' \
-                'XDG_SESSION_DESKTOP=sway' \
-                ~~1 \
-                'DESKTOP_SESSION=' \
-                'DESKTOP_SESSION=sway'
-    elif [ "$wm" = xfce4 ]; then
-        libfile ~~1 \
-                'XDG_CURRENT_DESKTOP=' \
-                'XDG_CURRENT_DESKTOP=XFCE' \
-                ~~1 \
-                'XDG_SESSION_DESKTOP=' \
-                'XDG_SESSION_DESKTOP=xfce' \
-                ~~1 \
-                'DESKTOP_SESSION=' \
-                'DESKTOP_SESSION=xfce'
-    elif [ "$wm" = none ] || [ ! "$wm" ]; then
-        libfile -1 \
-                'XDG_CURRENT_DESKTOP=' \
-                -1 \
-                'XDG_SESSION_DESKTOP=' \
-                -1 \
-                'DESKTOP_SESSION='
-    fi
+        FILE \
+<<'WM'
+XDG_CURRENT_DESKTOP=sway
+XDG_SESSION_DESKTOP=sway
+DESKTOP_SESSION=sway
+WM
 
-    __file_write_overwrite;
+        __file_write_overwrite;
+    elif [ "$wm" = xfce4 ]; then
+        FILE \
+<<'WM'
+XDG_CURRENT_DESKTOP=XFCE
+XDG_SESSION_DESKTOP=xfce
+DESKTOP_SESSION=xfce
+WM
+
+        __file_write_overwrite;
+    elif [ "$wm" = none ] || [ ! "$wm" ]; then
+        __loc_delete;
+    fi
 }
 
 # .face png in $home (user $HOME); some applications use this file.
