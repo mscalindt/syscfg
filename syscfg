@@ -7790,7 +7790,6 @@ CONFIG
     }
 }
 
-include @sysconfdir@/sway/config.d/*
 CONFIG
 
     if [ "$polkit_agent" ]; then
@@ -7803,13 +7802,19 @@ CONFIG
     if [ "$arch_linux" = 1 ]; then
         FILE \
 <<'CONFIG'
-exec systemctl --user import-environment SWAYSOCK WAYLAND_DISPLAY DISPLAY \
-                                         XDG_CURRENT_DESKTOP \
-                                         XDG_SESSION_DESKTOP DESKTOP_SESSION
-exec systemctl --user restart xdg-desktop-portal xdg-desktop-portal-wlr \
-                              xdg-desktop-portal-gtk xdg-document-portal
+exec systemctl --user import-environment \
+     DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP \
+     DESKTOP_SESSION
+exec dbus-update-activation-environment && \
+     dbus-update-activation-environment --systemd \
+     DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP \
+     DESKTOP_SESSION
+exec systemctl --user restart \
+     xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk \
+     xdg-document-portal
 exec sleep 2 && \
-     systemctl --user restart pipewire pipewire-media-session
+     systemctl --user restart \
+     pipewire pipewire-media-session
 exec_always sh -c 'rm -f "${TMPDIR:-/tmp}"/nettotal'
 CONFIG
     fi
