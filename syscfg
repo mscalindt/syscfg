@@ -8133,11 +8133,11 @@ while :; do case "$DATE" in
 esac done
 
 if [ "$NET_USAGE" ]; then
-    printf "%s | %s | %s%% | %s | ~%s%% | V: %s%% | %s | %s |" \
+    printf "%s | %s | %s%% | %s | ~%s%% | %s%% | %s | %s |" \
            "$TITLE" "$NET_USAGE" "$CPU" "$MEMORY" "$BATTERY" "$VOLUME" \
            "$KB_LAYOUT" "$DATE"
 else
-    printf "%s | %s%% | %s | ~%s%% | V: %s%% | %s | %s |" \
+    printf "%s | %s%% | %s | ~%s%% | %s%% | %s | %s |" \
            "$TITLE" "$CPU" "$MEMORY" "$BATTERY" "$VOLUME" "$KB_LAYOUT" "$DATE"
 fi
 STATUS
