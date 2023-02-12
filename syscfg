@@ -8132,14 +8132,18 @@ while :; do case "$DATE" in
     ;;
 esac done
 
+STATUS="$TITLE"
 if [ "$NET_USAGE" ]; then
-    printf "%s | %s | %s%% | %s | ~%s%% | %s%% | %s | %s |" \
-           "$TITLE" "$NET_USAGE" "$CPU" "$MEMORY" "$BATTERY" "$VOLUME" \
-           "$KB_LAYOUT" "$DATE"
-else
-    printf "%s | %s%% | %s | ~%s%% | %s%% | %s | %s |" \
-           "$TITLE" "$CPU" "$MEMORY" "$BATTERY" "$VOLUME" "$KB_LAYOUT" "$DATE"
+    STATUS="$STATUS | $NET_USAGE"
 fi
+STATUS="$STATUS | ${CPU}% | $MEMORY"
+case "$BATTERY" in
+    100) : ;;
+    *) STATUS="$STATUS | ~${BATTERY}%" ;;
+esac
+STATUS="$STATUS | ${VOLUME}% | $KB_LAYOUT | $DATE |"
+
+printf "%s" "$STATUS"
 STATUS
 
     __file_write;
