@@ -7757,6 +7757,9 @@ input type:pointer {
     # Resize window by holding down $mod + RMB
     floating_modifier $mod normal
 
+    # Invoke swaylock
+    bindsym $mod+l exec swaylock
+
     # Reload the config
     bindsym $mod+Shift+c reload
 # }
