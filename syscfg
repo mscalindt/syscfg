@@ -4784,6 +4784,7 @@ _conf_1() {
     _fontconfig_conf;
     _git_conf;
     _gtk_conf;
+    _hostname;
     _imv_conf;
     _iwd_conf;
     _kitty_conf;
@@ -4824,7 +4825,6 @@ _conf_2() {
     _autostart;
     _env;
     _featherpad_conf;
-    _hostname;
     _hosts;
     _locale;
     _reflector;
