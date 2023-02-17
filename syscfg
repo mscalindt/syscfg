@@ -4831,7 +4831,6 @@ _conf_2() {
     _resolv_conf;
     _sh;
     _tz;
-    _xdg_conf;
     _xfce4_conf;
 
     if file '/etc/dhcpcd.conf'; then
@@ -4911,6 +4910,8 @@ _conf_2() {
 # are influenced by utility switches; never to be defined in any other _conf_*()
 # functions.
 _conf_3() {
+    _xdg_conf;
+
     if file '/etc/bluetooth/main.conf'; then
         _bluez_conf;
     else
