@@ -4766,7 +4766,16 @@ _clk_sync() {
 }
 
 # Software configuration - stage 1
-# State-of-the-art config; never overwrites or overwritten.
+#
+# State-of-the-art config:
+# > never overwrites or overwritten.
+#
+# Run stage 1 at any time of -- initial -- system configuration with:
+# > the full filesystem mounted and user dir provided ($home; $user).
+#
+# The following functions shall -- only -- be defined in _conf_4() if they
+# are influenced by utility switches; never to be defined in any other _conf_*()
+# functions.
 _conf_1() {
     _alsa_conf;
     _bash_conf;
@@ -4796,9 +4805,21 @@ _conf_1() {
 }
 
 # Software configuration - stage 2
-# Config might overwrite or be overwritten.
-# Config might depend on installed software.
-# Function might require: $force
+#
+# Config might:
+# > overwrite or be overwritten.
+# > depend on installed software.
+#
+# Function might:
+# > require $force
+#
+# Run stage 2 at any time of -- desired -- system configuration with:
+# > the full filesystem mounted and user dir provided ($home; $user).
+# > the output parsed to understand what is not yet being configured.
+#
+# The following functions shall -- only -- be defined in _conf_4() if they
+# are influenced by utility switches; never to be defined in any other _conf_*()
+# functions.
 _conf_2() {
     _autostart;
     _env;
@@ -4873,9 +4894,22 @@ _conf_2() {
 }
 
 # Software configuration - stage 3
-# Config might overwrite or be overwritten.
-# Config might depend on installed and ever-executed software.
-# Function might require: $force
+#
+# Config might:
+# > overwrite or be overwritten.
+# > depend on specific installed software.
+# > depend on ever-executed software.
+#
+# Function might:
+# > require $force
+#
+# Run stage 3 at any time of -- desired -- system configuration with:
+# > the full filesystem mounted and user dir provided ($home; $user).
+# > the output parsed to understand what is not yet being configured.
+#
+# The following functions shall -- only -- be defined in _conf_4() if they
+# are influenced by utility switches; never to be defined in any other _conf_*()
+# functions.
 _conf_3() {
     if file '/etc/bluetooth/main.conf'; then
         _bluez_conf;
@@ -4903,10 +4937,21 @@ _conf_3() {
 }
 
 # Software configuration - stage 4
-# Config might overwrite or be overwritten.
-# Config might depend on installed and ever-executed software.
-# Config is influenced by utility switches.
-# Function might require: $force
+#
+# Config is:
+# > influenced by utility switches.
+#
+# Config might:
+# > overwrite or be overwritten.
+# > depend on specific installed software.
+# > depend on ever-executed software.
+#
+# Function might:
+# > require $force
+#
+# Run stage 4 at any time of -- desired -- system configuration with:
+# > the full filesystem mounted and user dir provided ($home; $user).
+# > the intent of reproducing the currently declared configuration.
 _conf_4() {
     _alsa_conf;
     _autostart;
