@@ -4956,7 +4956,6 @@ _conf_4() {
     _alsa_conf;
     _autostart;
     _env;
-    _gai_conf;
     _hosts;
     _iwd_conf;
     _pipewire_conf;
@@ -4975,6 +4974,10 @@ _conf_4() {
 
     if file '/etc/dnsmasq.conf'; then
         _dnsmasq_conf;
+    fi
+
+    if file '/etc/gai.conf'; then
+        _gai_conf;
     fi
 
     if cmd 'grub-mkconfig' && file '/etc/default/grub'; then
