@@ -4792,7 +4792,6 @@ _conf_1() {
     _swaylock_conf;
     _sysctl_conf;
     _wireplumber_conf;
-    _xdg_conf;
     _xorg_conf;
 }
 
@@ -4811,6 +4810,7 @@ _conf_2() {
     _resolv_conf;
     _sh;
     _tz;
+    _xdg_conf;
     _xfce4_conf;
 
     if file '/etc/dhcpcd.conf'; then
@@ -4942,6 +4942,10 @@ _conf_4() {
 
     if file '/etc/pulse/default.pa'; then
         _pulseaudio_conf;
+    fi
+
+    if dir '/etc/xdg/autostart'; then
+        _xdg_conf;
     fi
 }
 
