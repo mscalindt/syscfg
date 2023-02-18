@@ -1683,7 +1683,7 @@ LOG_written() {
 #! .params:
 # <"$1"> - absolute path
 #! .gives:
-# <FILE> $ - the file
+# (0) <"$FILE"> - the content of the file
 #! .rc:
 # (0) success
 # (*) error
@@ -1708,7 +1708,7 @@ FILE() {
 #! .params:
 # <"$1"> - absolute path
 #! .gives:
-# <FILE> $ - the file
+# (0) <"$FILE"> - the content of the file
 #! .rc:
 # (0) success
 # (*) error
@@ -1733,7 +1733,7 @@ FILE_cont() {
 #! .desc:
 # Read STDIN into $FILE
 #! .gives:
-# <FILE> $ - STDIN
+# (0) <"$FILE"> - the content of STDIN
 #! .rc:
 # (0) success
 # (*) error
@@ -1747,7 +1747,7 @@ FILE() {
 #! .desc:
 # Read STDIN into $FILE_PATH
 #! .gives:
-# <FILE_PATH> $ - STDIN
+# (0) <"$FILE_PATH"> - the content of STDIN
 #! .rc:
 # (0) success
 # (*) error
@@ -1763,7 +1763,7 @@ FILE_PATH() {
 #! .desc:
 # Read STDIN into $FILE_PATH_TARGET
 #! .gives:
-# <FILE_PATH_TARGET> $ - STDIN
+# (0) <"$FILE_PATH_TARGET"> - the content of STDIN
 #! .rc:
 # (0) success
 # (*) error
