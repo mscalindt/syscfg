@@ -455,6 +455,8 @@ writable() {
 #     .
 # )
 # <"$3"+> - text
+#! .uses:
+# [NO_COLOR] $ - this environment variable disables colored output
 #! .rc:
 # (0) success
 # (255) bad input
@@ -535,6 +537,8 @@ err() {
 #     .
 # )
 # <"$3"+> - text
+#! .uses:
+# [NO_COLOR] $ - this environment variable disables colored output
 #! .rc:
 # (*) success
 # (255) bad input
@@ -630,6 +634,8 @@ errF() {
 #     .
 # )
 # <"$3"+> - text
+#! .uses:
+# [NO_COLOR] $ - this environment variable disables colored output
 #! .rc:
 # (0) success
 # (255) bad input
