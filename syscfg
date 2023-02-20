@@ -649,29 +649,53 @@ info() {
         *) return 255 ;;
     esac
 
-    case $2 in
-        '-')
-            shift 2
-            printf "%b%s%b\n" "$_color" "$*" '\033[0m'
-        ;;
-        '--')
-            shift 2
-            printf "%b%s%b" "$_color" "$*" '\033[0m'
-        ;;
-        '-1')
-            shift 2
-            printf "%b[%s] =>>: %b%s%b\n" "$_color" "$(date "+%H:%M:%S")" \
-                                          '\033[1;37m' "$*" '\033[0m'
-        ;;
-        '-2')
-            shift 2
-            printf "%b[%s] =>>: %b%s%b" "$_color" "$(date "+%H:%M:%S")" \
-                                        '\033[1;37m' "$*" '\033[0m'
-        ;;
-        *)
-            return 255
-        ;;
-    esac
+    if [ "$NO_COLOR" ]; then
+        case $2 in
+            '-')
+                shift 2
+                printf "%s\n" "$*"
+            ;;
+            '--')
+                shift 2
+                printf "%s" "$*"
+            ;;
+            '-1')
+                shift 2
+                printf "[%s] =>>: %s\n" "$(date "+%H:%M:%S")" "$*"
+            ;;
+            '-2')
+                shift 2
+                printf "[%s] =>>: %s" "$(date "+%H:%M:%S")" "$*"
+            ;;
+            *)
+                return 255
+            ;;
+        esac
+    else
+        case $2 in
+            '-')
+                shift 2
+                printf "%b%s%b\n" "$_color" "$*" '\033[0m'
+            ;;
+            '--')
+                shift 2
+                printf "%b%s%b" "$_color" "$*" '\033[0m'
+            ;;
+            '-1')
+                shift 2
+                printf "%b[%s] =>>: %b%s%b\n" "$_color" "$(date "+%H:%M:%S")" \
+                                              '\033[1;37m' "$*" '\033[0m'
+            ;;
+            '-2')
+                shift 2
+                printf "%b[%s] =>>: %b%s%b" "$_color" "$(date "+%H:%M:%S")" \
+                                            '\033[1;37m' "$*" '\033[0m'
+            ;;
+            *)
+                return 255
+            ;;
+        esac
+    fi
 }
 
 # END output_functions
