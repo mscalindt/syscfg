@@ -554,29 +554,55 @@ errF() {
 
     _exit_code="$1"
 
-    case $2 in
-        '-')
-            shift 2
-            printf "%b%s%b\n" '\033[1;31m' "$*" '\033[0m' >&2
-        ;;
-        '--')
-            shift 2
-            printf "%b%s%b" '\033[1;31m' "$*" '\033[0m' >&2
-        ;;
-        '-1')
-            shift 2
-            printf "%b[%s] =>>: %b%s%b\n" '\033[1;31m' "$(date "+%H:%M:%S")" \
-                                          '\033[1;37m' "$*" '\033[0m' >&2
-        ;;
-        '-2')
-            shift 2
-            printf "%b[%s] =>>: %b%s%b" '\033[1;31m' "$(date "+%H:%M:%S")" \
-                                        '\033[1;37m' "$*" '\033[0m' >&2
-        ;;
-        *)
-            return 255
-        ;;
-    esac
+    if [ "$NO_COLOR" ]; then
+        case $2 in
+            '-')
+                shift 2
+                printf "%s\n" "$*" >&2
+            ;;
+            '--')
+                shift 2
+                printf "%s" "$*" >&2
+            ;;
+            '-1')
+                shift 2
+                printf "[%s] =>>: %s\n" "$(date "+%H:%M:%S")" "$*" >&2
+            ;;
+            '-2')
+                shift 2
+                printf "[%s] =>>: %s" "$(date "+%H:%M:%S")" "$*" >&2
+            ;;
+            *)
+                return 255
+            ;;
+        esac
+    else
+        case $2 in
+            '-')
+                shift 2
+                printf "%b%s%b\n" '\033[1;31m' "$*" '\033[0m' >&2
+            ;;
+            '--')
+                shift 2
+                printf "%b%s%b" '\033[1;31m' "$*" '\033[0m' >&2
+            ;;
+            '-1')
+                shift 2
+                printf "%b[%s] =>>: %b%s%b\n" '\033[1;31m' \
+                                              "$(date "+%H:%M:%S")" \
+                                              '\033[1;37m' "$*" '\033[0m' >&2
+            ;;
+            '-2')
+                shift 2
+                printf "%b[%s] =>>: %b%s%b" '\033[1;31m' \
+                                            "$(date "+%H:%M:%S")" \
+                                            '\033[1;37m' "$*" '\033[0m' >&2
+            ;;
+            *)
+                return 255
+            ;;
+        esac
+    fi
 
     exit "$_exit_code"
 }
