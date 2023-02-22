@@ -152,6 +152,7 @@ binary_files() {
 #! .rc:
 # (0) success
 # (*) error
+#.
 IFS_restore() {
     IFS="$_old_IFS" 2> /dev/null
     ${_old_IFS+':'} unset IFS 2> /dev/null
@@ -162,6 +163,7 @@ IFS_restore() {
 #! .rc:
 # (0) success
 # (*) error
+#.
 IFS_save() {
     _old_IFS="$IFS" 2> /dev/null
     ${IFS+':'} unset _old_IFS 2> /dev/null
@@ -176,6 +178,7 @@ IFS_save() {
 # (0) valid
 # (1) invalid
 # (255) bad input
+#.
 args_eq() {
     # Check if $1 is a whole number
     case :"$1${1#*[!0123456789]}" in
@@ -207,6 +210,7 @@ args_eq() {
 # (0) valid
 # (1) invalid
 # (255) bad input
+#.
 args_max() {
     # Check if $1 is a natural number
     case :"$1${1#*[!0123456789]}" in
@@ -236,6 +240,7 @@ args_max() {
 # (0) valid
 # (1) invalid
 # (255) bad input
+#.
 args_min() {
     # Check if $1 is a natural number
     case :"$1${1#*[!0123456789]}" in
@@ -264,6 +269,7 @@ args_min() {
 # (0) yes
 # (*) no
 # (255) bad input
+#.
 cmd() {
     args_eq 1 "$#" || return 255
 
@@ -278,6 +284,7 @@ cmd() {
 # (0) yes
 # (1) no
 # (255) bad input
+#.
 dir() {
     args_eq 1 "$#" || return 255
 
@@ -292,6 +299,7 @@ dir() {
 # (0) yes
 # (1) no
 # (255) bad input
+#.
 exist() {
     args_eq 1 "$#" || return 255
 
@@ -306,6 +314,7 @@ exist() {
 # (0) yes
 # (1) no
 # (255) bad input
+#.
 file() {
     args_eq 1 "$#" || return 255
 
@@ -321,6 +330,7 @@ file() {
 # (1) no
 # (*) error
 # (255) bad input
+#.
 is_octal() {
     args_eq 1 "$#" || return 255
 
@@ -340,6 +350,7 @@ is_octal() {
 #! .rc:
 # (0) yes
 # (1) no
+#.
 is_uefi() {
     dir '/sys/firmware/efi/efivars'
 }
@@ -352,6 +363,7 @@ is_uefi() {
 # (0) yes
 # (1) no
 # (255) bad input
+#.
 readable() {
     args_eq 1 "$#" || return 255
 
@@ -367,6 +379,7 @@ readable() {
 # (0) yes
 # (1) no
 # (255) bad input
+#.
 str() {
     args_eq 2 "$#" || return 255
 
@@ -386,6 +399,7 @@ str() {
 # (0) yes
 # (1) no
 # (255) bad input
+#.
 str_pfix() {
     args_eq 2 "$#" || return 255
 
@@ -405,6 +419,7 @@ str_pfix() {
 # (0) yes
 # (1) no
 # (255) bad input
+#.
 str_sfix() {
     args_eq 2 "$#" || return 255
 
@@ -423,6 +438,7 @@ str_sfix() {
 # (0) yes
 # (1) no
 # (255) bad input
+#.
 writable() {
     args_eq 1 "$#" || return 255
 
@@ -460,6 +476,7 @@ writable() {
 #! .rc:
 # (0) success
 # (255) bad input
+#.
 err() {
     args_min 3 "$#" || return 255
 
@@ -542,6 +559,7 @@ err() {
 #! .rc:
 # (*) success
 # (255) bad input
+#.
 errF() {
     args_min 3 "$#" || return 255
 
@@ -639,6 +657,7 @@ errF() {
 #! .rc:
 # (0) success
 # (255) bad input
+#.
 info() {
     args_min 3 "$#" || return 255
 
@@ -715,6 +734,7 @@ info() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 bytes_size() {
     args_eq 1 "$#" || return 255
 
@@ -751,6 +771,7 @@ bytes_size() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 chattr_remove() {
     args_eq 1 "$#" || return 255
 
@@ -786,6 +807,7 @@ chattr_remove() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 mkdir_parents() {
     args_eq 1 "$#" || return 255
 
@@ -812,6 +834,7 @@ mkdir_parents() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 octal_decode() {
     args_eq 1 "$#" || return 255
 
@@ -833,6 +856,7 @@ octal_decode() {
 # (0) success
 # (127) command does not exist
 # (255) bad input
+#.
 rc() {
     args_min 1 "$#" || return 255
 
@@ -858,6 +882,7 @@ rc() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 replchars() {
     args_eq 3 "$#" || return 255
 
@@ -889,6 +914,7 @@ replchars() {
 #! .rc:
 # (0) success
 # (255) bad input
+#.
 unmount() {
     args_eq 1 "$#" || return 255
 
@@ -908,12 +934,14 @@ unmount() {
 # EPERM: "Operation not permitted"
 #! .rc:
 # 201
+#.
 EPERM() { err -r -2 'EPERM:'; }
 
 #! .desc:
 # ENOENT: "No such file or directory"
 #! .rc:
 # 202
+#.
 ENOENT() { err -r -1 'ENOENT:'; }
 
 #! .desc:
@@ -923,6 +951,7 @@ ENOENT() { err -r -1 'ENOENT:'; }
 #! .rc:
 # (217)
 # (255) bad input
+#.
 EEXIST() {
     args_min 1 "$#" || return 255
 
@@ -963,6 +992,7 @@ EEXIST() {
 #! .rc:
 # (220)
 # (255) bad input
+#.
 ENOTDIR() {
     args_min 1 "$#" || return 255
 
@@ -1001,6 +1031,7 @@ ENOTDIR() {
 #! .rc:
 # (221)
 # (255) bad input
+#.
 EISDIR() {
     args_min 1 "$#" || return 255
 
@@ -1024,6 +1055,7 @@ EISDIR() {
 # EINVAL: "Invalid argument"
 #! .rc:
 # 222
+#.
 EINVAL() { err -r -1 'EINVAL:'; }
 
 # END std_err_functions; 201-222
@@ -1036,6 +1068,7 @@ EINVAL() { err -r -1 'EINVAL:'; }
 #! .rc:
 # (230)
 # (255) bad input
+#.
 ENOCMD() {
     args_eq 1 "$#" || return 255
 
@@ -1051,6 +1084,7 @@ ENOCMD() {
 #! .rc:
 # (231)
 # (255) bad input
+#.
 EREAD() {
     args_min 1 "$#" || return 255
 
@@ -1091,6 +1125,7 @@ EREAD() {
 #! .rc:
 # (232)
 # (255) bad input
+#.
 ENOTFILE() {
     args_min 1 "$#" || return 255
 
@@ -1129,6 +1164,7 @@ ENOTFILE() {
 #! .rc:
 # (233)
 # (255) bad input
+#.
 EFSFLAG() {
     args_min 1 "$#" || return 255
 
@@ -1169,6 +1205,7 @@ EFSFLAG() {
 #! .rc:
 # (234)
 # (255) bad input
+#.
 EPERMS() {
     args_min 1 "$#" || return 255
 
@@ -1209,6 +1246,7 @@ EPERMS() {
 #! .rc:
 # (235)
 # (255) bad input
+#.
 EERROR() {
     args_eq 1 "$#" || return 255
 
@@ -1262,6 +1300,7 @@ EERROR() {
 # (0) success
 # (*) error
 # (255) bad input/usage
+#.
 libfile() {
     args_min 2 "$#" || return 255
 
@@ -1607,6 +1646,7 @@ EOF
 # (0) success
 # (*) error
 # (255) bad call
+#.
 LOG_clear() {
     if [ "$fatal" = 1 ]; then
         file "$tmpf" || return 255
@@ -1627,6 +1667,7 @@ LOG_clear() {
 # (0) success
 # (*) error
 # (255) bad call
+#.
 LOG_print() {
     if [ "$fatal" = 1 ]; then
         file "$tmpf" || return 255
@@ -1671,6 +1712,7 @@ LOG_print() {
 # (0) success
 # (*) error
 # (255) bad call | bad input
+#.
 LOG_write() {
     args_min 2 "$#" || return 255
 
@@ -1754,6 +1796,7 @@ LOG_write() {
 #! .rc:
 # (0) yes
 # (1) no
+#.
 LOG_written() {
     [ -s "$tmpf" ]
 }
@@ -1768,6 +1811,7 @@ LOG_written() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 FILE() {
     args_eq 1 "$#" || return 255
 
@@ -1793,6 +1837,7 @@ FILE() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 FILE_cont() {
     args_eq 1 "$#" || return 255
 
@@ -1817,6 +1862,7 @@ FILE_cont() {
 #! .rc:
 # (0) success
 # (*) error
+#.
 FILE() {
     { while IFS= read -r _line; do
         FILE="$FILE$_line
@@ -1831,6 +1877,7 @@ FILE() {
 #! .rc:
 # (0) success
 # (*) error
+#.
 FILE_PATH() {
     FILE=; FILE_PATH=; FILE_PATH_TARGET=
 
@@ -1847,6 +1894,7 @@ FILE_PATH() {
 #! .rc:
 # (0) success
 # (*) error
+#.
 FILE_PATH_TARGET() {
     FILE_PATH_TARGET=
 
@@ -1865,6 +1913,7 @@ FILE_PATH_TARGET() {
 # (0) yes
 # (1) no
 # (255) bad input
+#.
 bin_equiv() {
     args_eq 2 "$#" || return 255
 
@@ -1888,6 +1937,7 @@ bin_equiv() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 dir_write() {
     args_eq 2 "$#" || return 255
 
@@ -1914,6 +1964,7 @@ dir_write() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 file_copy() {
     args_eq 2 "$#" || return 255
 
@@ -1941,6 +1992,7 @@ file_copy() {
 # (1) no
 # (*) error
 # (255) bad input
+#.
 file_equiv() {
     args_eq 2 "$#" || return 255
 
@@ -1965,6 +2017,7 @@ file_equiv() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 file_write() {
     args_eq 2 "$#" || return 255
 
@@ -1989,6 +2042,7 @@ file_write() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 file_write_octal() {
     args_eq 2 "$#" || return 255
 
@@ -2016,6 +2070,7 @@ file_write_octal() {
 # (1) no
 # (*) error
 # (255) bad input
+#.
 files_equiv() {
     args_eq 2 "$#" || return 255
 
@@ -2035,6 +2090,7 @@ files_equiv() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 loc_backup() {
     args_eq 1 "$#" || return 255
 
@@ -2108,6 +2164,7 @@ loc_backup() {
 # (0) success
 # (*) error
 # (255) bad $1
+#.
 loc_delete() {
     args_eq 1 "$#" || return 255
 
@@ -2128,6 +2185,7 @@ loc_delete() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 loc_link() {
     args_eq 2 "$#" || return 255
 
@@ -2158,6 +2216,7 @@ loc_link() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 loc_link_ptr() {
     args_eq 2 "$#" || return 255
 
@@ -2190,6 +2249,7 @@ loc_link_ptr() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 loc_perms_user() {
     args_eq 1 "$#" || return 255
 
@@ -2247,6 +2307,7 @@ loc_perms_user() {
 # (0) success
 # (*) error
 # (255) bad usage
+#.
 __bin_write() {
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
@@ -2326,6 +2387,7 @@ __bin_write() {
 # (0) success
 # (*) error
 # (255) bad usage
+#.
 __bin_write_overwrite() {
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
@@ -2396,6 +2458,7 @@ __bin_write_overwrite() {
 # (0) success
 # (*) error
 # (255) bad usage
+#.
 __dir_target_write() {
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
@@ -2501,6 +2564,7 @@ __dir_target_write() {
 # (0) success
 # (*) error
 # (255) bad usage
+#.
 __dir_target_write_overwrite() {
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
@@ -2587,6 +2651,7 @@ __dir_target_write_overwrite() {
 # (0) success
 # (*) error
 # (255) bad usage
+#.
 __FILE_PATH_preload() {
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
@@ -2610,6 +2675,7 @@ __FILE_PATH_preload() {
 # (0) success
 # (*) error
 # (255) bad usage
+#.
 __file_executable() {
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
@@ -2644,6 +2710,7 @@ __file_executable() {
 # (0) success
 # (*) error
 # (255) bad usage
+#.
 __file_write() {
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
@@ -2723,6 +2790,7 @@ __file_write() {
 # (0) success
 # (*) error
 # (255) bad usage
+#.
 __file_write_overwrite() {
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
@@ -2793,6 +2861,7 @@ __file_write_overwrite() {
 # (0) success
 # (*) error
 # (255) bad usage
+#.
 __file_target_write() {
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
@@ -2895,6 +2964,7 @@ __file_target_write() {
 # (0) success
 # (*) error
 # (255) bad usage
+#.
 __file_target_write_overwrite() {
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
@@ -2979,6 +3049,7 @@ __file_target_write_overwrite() {
 # (0) success
 # (*) error
 # (255) bad input/usage
+#.
 __loc_chattr() {
     args_eq 1 "$#" || return 255
 
@@ -3041,6 +3112,7 @@ __loc_chattr() {
 # (0) success
 # (*) error
 # (255) bad input/usage
+#.
 __loc_chmod() {
     args_eq 1 "$#" || return 255
 
@@ -3103,6 +3175,7 @@ __loc_chmod() {
 # (0) success
 # (*) error
 # (255) bad input/usage
+#.
 __loc_chown() {
     args_eq 1 "$#" || return 255
 
@@ -3175,6 +3248,7 @@ __loc_chown() {
 # (0) success
 # (*) error
 # (255) bad usage
+#.
 __loc_delete() {
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
@@ -3234,6 +3308,7 @@ __loc_delete() {
 # (0) success
 # (*) error
 # (255) bad usage
+#.
 __loc_empty() {
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
@@ -3322,6 +3397,7 @@ __loc_empty() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 __git_get() {
     args_eq 1 "$#" || return 255
 
@@ -3351,6 +3427,7 @@ __git_get() {
 # (0) success
 # (*) error
 # (255) bad input
+#.
 __systemd_service_enable() {
     args_eq 1 "$#" || return 255
 
@@ -9570,6 +9647,7 @@ root_exec() {
 # (0) yes
 # (1) no
 # (255) bad input
+#.
 main_assert_args() {
     args_min 1 "$#" || return 255
 
@@ -9593,6 +9671,7 @@ main_assert_args() {
 # (0) yes
 # (1) no
 # (255) bad input
+#.
 main_assert_deps() {
     args_min 1 "$#" || return 255
 
@@ -9616,6 +9695,7 @@ main_assert_deps() {
 # (0) yes
 # (1) no
 # (255) bad input
+#.
 main_assert_ops() {
     args_min 1 "$#" || return 255
 
