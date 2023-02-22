@@ -8057,11 +8057,9 @@ replchars() {
 
 TITLE=$(
     swaymsg -t get_tree | \
-    jq '.. | select(.type?) | select(.focused==true).name' 2> /dev/null
+    jq -r '.. | select(.type?) | select(.focused==true).name' 2> /dev/null
 )
 if [ "$TITLE" ]; then
-    TITLE="${TITLE#?}"
-    TITLE="${TITLE%?}"
     replchars '&' '&amp;' "$TITLE"; TITLE="$_str";
 fi
 
