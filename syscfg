@@ -1802,32 +1802,6 @@ LOG_written() {
 }
 
 #! .desc:
-# Read a file into $FILE
-#! .params:
-# <"$1"> - absolute path
-#! .gives:
-# (0) <"$FILE"> - the content of the file
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input
-#.
-FILE() {
-    args_eq 1 "$#" || return 255
-
-    file "$1" || return 255
-    readable "$1" || return 255
-
-    FILE=$(
-        while IFS= read -r _line; do
-            printf "%s\n" "$_line"
-        done < "$1"; printf "%s" "$_line"
-
-        printf "%s" ' '
-    ) 2> /dev/null; FILE="${FILE%?}"
-}
-
-#! .desc:
 # Read STDIN into $FILE
 #! .gives:
 # (0) <"$FILE"> - the content of STDIN
@@ -1840,6 +1814,32 @@ FILE() {
         FILE="$FILE$_line
 "
     done; FILE="$FILE$_line"; } 2> /dev/null
+}
+
+#! .desc:
+# Read a file into $FILE
+#! .params:
+# <"$1"> - absolute path
+#! .gives:
+# (0) <"$FILE"> - the content of the file
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input
+#.
+FILE_preload() {
+    args_eq 1 "$#" || return 255
+
+    file "$1" || return 255
+    readable "$1" || return 255
+
+    FILE=$(
+        while IFS= read -r _line; do
+            printf "%s\n" "$_line"
+        done < "$1"; printf "%s" "$_line"
+
+        printf "%s" ' '
+    ) 2> /dev/null; FILE="${FILE%?}"
 }
 
 #! .desc:
@@ -2636,7 +2636,7 @@ __FILE_PATH_preload() {
         exit 202
     fi
 
-    FILE "$FILE_PATH" || EREAD "$FILE_PATH"
+    FILE_preload "$FILE_PATH" || EREAD "$FILE_PATH"
 }
 
 #! .desc:
