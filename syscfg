@@ -1828,34 +1828,6 @@ FILE() {
 }
 
 #! .desc:
-# Read a file into existing $FILE
-#! .params:
-# <"$1"> - absolute path
-#! .gives:
-# (0) <"$FILE"> - the content of the file
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input
-#.
-FILE_cont() {
-    args_eq 1 "$#" || return 255
-
-    file "$1" || return 255
-    readable "$1" || return 255
-
-    FILE=$(
-        printf "%s" "$FILE"
-
-        while IFS= read -r _line; do
-            printf "%s\n" "$_line"
-        done < "$1"; printf "%s" "$_line"
-
-        printf "%s" ' '
-    ) 2> /dev/null; FILE="${FILE%?}"
-}
-
-#! .desc:
 # Read STDIN into $FILE
 #! .gives:
 # (0) <"$FILE"> - the content of STDIN
