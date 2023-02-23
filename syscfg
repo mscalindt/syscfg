@@ -1310,270 +1310,253 @@ libfile() {
         fi
     fi
 
-    FILE=$(
-        line_add() {
-            while IFS= read -r line; do
-                i=$((i + 1))
+    line_add() {
+        while IFS= read -r line; do
+            i=$((i + 1))
 
-                # In a later stage, log writing can be made an internal
-                # setting, effectively increasing the number of conditional
-                # checks to a total of two. This way, specific line additions
-                # can be abbreviated (or not) as desired in the log file,
-                # without disabling the logging of other line additions.
-                if [ "$logging" = 1 ]; then
+            # In a later stage, log writing can be made an internal
+            # setting, effectively increasing the number of conditional
+            # checks to a total of two. This way, specific line additions
+            # can be abbreviated (or not) as desired in the log file,
+            # without disabling the logging of other line additions.
+            if [ "$logging" = 1 ]; then
+                LOG_write 1 "$i" "$line"
+            fi
+
+            printf "%s\n" "$line"
+        done <<EOF
+$1
+EOF
+    }
+
+    line_replace() {
+        # Here, $l is used to determine the current iteration of line.
+        l=0; while IFS= read -r line; do
+            l=$((l + 1))
+
+            # If $l is 1, it means we are in the first iteration. For the
+            # first iteration we do not increment the file line counter
+            # because we are simply replacing the line. For the following
+            # iterations we increment the file line counter because we are
+            # adding lines.
+            if [ "$l" -ne 1 ]; then
+                i=$((i + 1))
+            fi
+
+            # If $l is 1, it means we are in the first iteration. For the
+            # first iteration we log line replace, for the following
+            # iterations we log line addition.
+            if [ "$logging" = 1 ]; then
+                if [ "$l" -eq 1 ]; then
+                    if [ "$LINE" != "$line" ]; then
+                        LOG_write 3 "$i" "$LINE" "$line"
+                    fi
+                else
                     LOG_write 1 "$i" "$line"
                 fi
+            fi
 
-                printf "%s\n" "$line"
-            done <<EOF
+            printf "%s\n" "$line"
+        done <<EOF
 $1
 EOF
-        }
+    }
 
-        line_replace() {
-            # Here, $l is used to determine the current iteration of line.
-            l=0; while IFS= read -r line; do
-                l=$((l + 1))
+    parse_args() {
+        j=0; m=0; while [ "$#" -ge 2 ]; do case "$1" in
+            # + - {+} pre-line; $2
+            '+')
+                # The following variable helps to later compare and
+                # determine which lines requsted to be added should
+                # actually be added. It does this by noting the current
+                # iteration of lines requsted to be added.
+                j=$((j + 1))
 
-                # If $l is 1, it means we are in the first iteration. For the
-                # first iteration we do not increment the file line counter
-                # because we are simply replacing the line. For the following
-                # iterations we increment the file line counter because we are
-                # adding lines.
-                if [ "$l" -ne 1 ]; then
-                    i=$((i + 1))
-                fi
+                case "$LINE" in
+                    "$2")
+                        # The line requested to be added already exists.
+                        # Note it in the following variable to later
+                        # compare and add any missing requested lines, if
+                        # any. The comma character is used as a delimiter
+                        # between the numbers for easy and fail-safe number
+                        # grep.
+                        k="${k},${j},"
 
-                # If $l is 1, it means we are in the first iteration. For the
-                # first iteration we log line replace, for the following
-                # iterations we log line addition.
-                if [ "$logging" = 1 ]; then
-                    if [ "$l" -eq 1 ]; then
-                        if [ "$LINE" != "$line" ]; then
-                            LOG_write 3 "$i" "$LINE" "$line"
+                        printf "%s\n" "$LINE"
+
+                        return;
+                    ;;
+                    *)
+                        shift 2
+                    ;;
+                esac
+            ;;
+            # +0 - {E} pre-line & {+} post-line; $2 & $3 respectively
+            # +1 - {P} pre-line & {+} post-line; $2 & $3 respectively
+            # +2 - {S} pre-line & {+} post-line; $2 & $3 respectively
+            # +3 - {A} pre-line & {+} post-line; $2 & $3 respectively
+            '+0'|'+1'|'+2'|'+3')
+                args_min 3 "$#" || exit 255
+
+                case "$2" in
+                    *"$LF"*) exit 255 ;;
+                esac
+
+                case "$1$LINE" in
+                    "+0$2" | \
+                    "+1$2"* | \
+                    '+2'*"$2" | \
+                    '+3'*"$2"*)
+                        printf "%s\n" "$LINE"
+
+                        # Properly print $3 and increment the file line
+                        # counter if $3 contains newlines, i.e. if $3 is
+                        # multiple lines in one string. This function
+                        # automatically writes the relevant details to the
+                        # log file.
+                        line_add "$3"
+
+                        return;
+                    ;;
+                    *)
+                        shift 3
+                    ;;
+                esac
+            ;;
+            # -0 - {E} pre-line & {-}; $2 & $LINE respectively
+            # -1 - {P} pre-line & {-}; $2 & $LINE respectively
+            # -2 - {S} pre-line & {-}; $2 & $LINE respectively
+            # -3 - {A} pre-line & {-}; $2 & $LINE respectively
+            '-0'|'-1'|'-2'|'-3')
+                case "$2" in
+                    *"$LF"*) exit 255 ;;
+                esac
+
+                case "$1$LINE" in
+                    "-0$2" | \
+                    "-1$2"* | \
+                    '-2'*"$2" | \
+                    '-3'*"$2"*)
+                        if [ "$logging" = 1 ]; then
+                            LOG_write 2 "$i" "$LINE"
                         fi
-                    else
-                        LOG_write 1 "$i" "$line"
-                    fi
-                fi
 
-                printf "%s\n" "$line"
-            done <<EOF
-$1
-EOF
-        }
+                        i=$((i - 1))
 
-        parse_args() {
-            j=0; m=0; while [ "$#" -ge 2 ]; do case "$1" in
-                # + - {+} pre-line; $2
-                '+')
-                    # The following variable helps to later compare and
-                    # determine which lines requsted to be added should
-                    # actually be added. It does this by noting the current
-                    # iteration of lines requsted to be added.
-                    j=$((j + 1))
+                        return;
+                    ;;
+                    *)
+                        shift 2
+                    ;;
+                esac
+            ;;
+            # ~0 - {E} pre-line {~} post-line; $2 & $3 respectively
+            # ~1 - {P} pre-line {~} post-line; $2 & $3 respectively
+            # ~2 - {S} pre-line {~} post-line; $2 & $3 respectively
+            # ~3 - {A} pre-line {~} post-line; $2 & $3 respectively
+            '~0'|'~1'|'~2'|'~3')
+                args_min 3 "$#" || exit 255
 
-                    case "$LINE" in
-                        "$2")
-                            # The line requested to be added already exists.
-                            # Note it in the following variable to later
-                            # compare and add any missing requested lines, if
-                            # any. The comma character is used as a delimiter
-                            # between the numbers for easy and fail-safe number
-                            # grep.
-                            k="${k},${j},"
+                case "$2" in
+                    *"$LF"*) exit 255 ;;
+                esac
 
-                            printf "%s\n" "$LINE"
+                case "$1$LINE" in
+                    "~0$2" | \
+                    "~1$2"* | \
+                    '~2'*"$2" | \
+                    '~3'*"$2"*)
+                        # Properly replace the line with $3 and increment
+                        # the file line counter if $3 contains newlines,
+                        # i.e. if $3 is multiple lines in one string. This
+                        # function automatically writes the relevant
+                        # details to the log file.
+                        line_replace "$3"
 
-                            return;
-                        ;;
-                        *)
-                            shift 2
-                        ;;
-                    esac
-                ;;
-                # +0 - {E} pre-line & {+} post-line; $2 & $3 respectively
-                # +1 - {P} pre-line & {+} post-line; $2 & $3 respectively
-                # +2 - {S} pre-line & {+} post-line; $2 & $3 respectively
-                # +3 - {A} pre-line & {+} post-line; $2 & $3 respectively
-                '+0'|'+1'|'+2'|'+3')
-                    args_min 3 "$#" || exit 255
+                        return;
+                    ;;
+                    *)
+                        shift 3
+                    ;;
+                esac
+            ;;
+            # ~~1 - {P} pre-line {~} post-line | {+} post-line; $2 & $3
+            # ~~2 - {S} pre-line {~} post-line | {+} post-line; $2 & $3
+            # ~~3 - {A} pre-line {~} post-line | {+} post-line; $2 & $3
+            '~~1'|'~~2'|'~~3')
+                args_min 3 "$#" || exit 255
 
-                    case "$2" in
-                        *"$LF"*) exit 255 ;;
-                    esac
+                case "$2" in
+                    *"$LF"*) exit 255 ;;
+                esac
 
-                    case "$1$LINE" in
-                        "+0$2" | \
-                        "+1$2"* | \
-                        '+2'*"$2" | \
-                        '+3'*"$2"*)
-                            printf "%s\n" "$LINE"
+                m=$((m + 1))
 
-                            # Properly print $3 and increment the file line
-                            # counter if $3 contains newlines, i.e. if $3 is
-                            # multiple lines in one string. This function
-                            # automatically writes the relevant details to the
-                            # log file.
-                            line_add "$3"
+                case "$1$LINE" in
+                    "~~1$2"* | \
+                    '~~2'*"$2" | \
+                    '~~3'*"$2"*)
+                        n="${n},${m},"
 
-                            return;
-                        ;;
-                        *)
-                            shift 3
-                        ;;
-                    esac
-                ;;
-                # -0 - {E} pre-line & {-}; $2 & $LINE respectively
-                # -1 - {P} pre-line & {-}; $2 & $LINE respectively
-                # -2 - {S} pre-line & {-}; $2 & $LINE respectively
-                # -3 - {A} pre-line & {-}; $2 & $LINE respectively
-                '-0'|'-1'|'-2'|'-3')
-                    case "$2" in
-                        *"$LF"*) exit 255 ;;
-                    esac
+                        # Properly replace the line with $3 and increment
+                        # the file line counter if $3 contains newlines,
+                        # i.e. if $3 is multiple lines in one string. This
+                        # function automatically writes the relevant
+                        # details to the log file.
+                        line_replace "$3"
 
-                    case "$1$LINE" in
-                        "-0$2" | \
-                        "-1$2"* | \
-                        '-2'*"$2" | \
-                        '-3'*"$2"*)
-                            if [ "$logging" = 1 ]; then
-                                LOG_write 2 "$i" "$LINE"
-                            fi
+                        return;
+                    ;;
+                    *)
+                        shift 3
+                    ;;
+                esac
+            ;;
+            # ~~~1 - {P} pre-line & match {~} post-line; $3 & $2 & $4
+            # ~~~2 - {S} pre-line & match {~} post-line; $3 & $2 & $4
+            # ~~~3 - {A} pre-line & match {~} post-line; $3 & $2 & $4
+            '~~~1'|'~~~2'|'~~~3')
+                args_min 4 "$#" || exit 255
 
-                            i=$((i - 1))
+                case "$2$3" in
+                    *"$LF"*) exit 255 ;;
+                esac
 
-                            return;
-                        ;;
-                        *)
-                            shift 2
-                        ;;
-                    esac
-                ;;
-                # ~0 - {E} pre-line {~} post-line; $2 & $3 respectively
-                # ~1 - {P} pre-line {~} post-line; $2 & $3 respectively
-                # ~2 - {S} pre-line {~} post-line; $2 & $3 respectively
-                # ~3 - {A} pre-line {~} post-line; $2 & $3 respectively
-                '~0'|'~1'|'~2'|'~3')
-                    args_min 3 "$#" || exit 255
+                case "$1$LINE" in
+                    "~~~1$3"* | \
+                    '~~~2'*"$3" | \
+                    '~~~3'*"$3"*)
+                        case "$LINE" in
+                            *"$2"*) : ;;
+                            *) shift 4 && continue ;;
+                        esac
 
-                    case "$2" in
-                        *"$LF"*) exit 255 ;;
-                    esac
+                        # Properly replace the line with $4 and increment
+                        # the file line counter if $4 contains newlines,
+                        # i.e. if $4 is multiple lines in one string. This
+                        # function automatically writes the relevant
+                        # details to the log file.
+                        line_replace "$4"
 
-                    case "$1$LINE" in
-                        "~0$2" | \
-                        "~1$2"* | \
-                        '~2'*"$2" | \
-                        '~3'*"$2"*)
-                            # Properly replace the line with $3 and increment
-                            # the file line counter if $3 contains newlines,
-                            # i.e. if $3 is multiple lines in one string. This
-                            # function automatically writes the relevant
-                            # details to the log file.
-                            line_replace "$3"
+                        return;
+                    ;;
+                    *)
+                        shift 4
+                    ;;
+                esac
+            ;;
+            *)
+                exit 255
+            ;;
+        esac; done
 
-                            return;
-                        ;;
-                        *)
-                            shift 3
-                        ;;
-                    esac
-                ;;
-                # ~~1 - {P} pre-line {~} post-line | {+} post-line; $2 & $3
-                # ~~2 - {S} pre-line {~} post-line | {+} post-line; $2 & $3
-                # ~~3 - {A} pre-line {~} post-line | {+} post-line; $2 & $3
-                '~~1'|'~~2'|'~~3')
-                    args_min 3 "$#" || exit 255
+        args_eq 0 "$#" || exit 255
 
-                    case "$2" in
-                        *"$LF"*) exit 255 ;;
-                    esac
+        # Print the line as-is since no match was found.
+        printf "%s\n" "$LINE"
+    }
 
-                    m=$((m + 1))
-
-                    case "$1$LINE" in
-                        "~~1$2"* | \
-                        '~~2'*"$2" | \
-                        '~~3'*"$2"*)
-                            n="${n},${m},"
-
-                            # Properly replace the line with $3 and increment
-                            # the file line counter if $3 contains newlines,
-                            # i.e. if $3 is multiple lines in one string. This
-                            # function automatically writes the relevant
-                            # details to the log file.
-                            line_replace "$3"
-
-                            return;
-                        ;;
-                        *)
-                            shift 3
-                        ;;
-                    esac
-                ;;
-                # ~~~1 - {P} pre-line & match {~} post-line; $3 & $2 & $4
-                # ~~~2 - {S} pre-line & match {~} post-line; $3 & $2 & $4
-                # ~~~3 - {A} pre-line & match {~} post-line; $3 & $2 & $4
-                '~~~1'|'~~~2'|'~~~3')
-                    args_min 4 "$#" || exit 255
-
-                    case "$2$3" in
-                        *"$LF"*) exit 255 ;;
-                    esac
-
-                    case "$1$LINE" in
-                        "~~~1$3"* | \
-                        '~~~2'*"$3" | \
-                        '~~~3'*"$3"*)
-                            case "$LINE" in
-                                *"$2"*) : ;;
-                                *) shift 4 && continue ;;
-                            esac
-
-                            # Properly replace the line with $4 and increment
-                            # the file line counter if $4 contains newlines,
-                            # i.e. if $4 is multiple lines in one string. This
-                            # function automatically writes the relevant
-                            # details to the log file.
-                            line_replace "$4"
-
-                            return;
-                        ;;
-                        *)
-                            shift 4
-                        ;;
-                    esac
-                ;;
-                *)
-                    exit 255
-                ;;
-            esac; done
-
-            args_eq 0 "$#" || exit 255
-
-            # Print the line as-is since no match was found.
-            printf "%s\n" "$LINE"
-        }
-
-        # It is almost always preferred that any lines added by us are placed
-        # distinguishably, i.e. they are separated by our newline. This has the
-        # added benefit of standardizing the process of line addition as the
-        # count of trailing newlines in the original file, be it zero or more
-        # than one, will not matter. This could be made configurable at a later
-        # stage.
-        case "${FILE#"${FILE%??}"}" in
-            "$LF$LF") : ;;
-            *"$LF") FILE="$FILE$LF" ;;
-            *) FILE="$FILE$LF$LF" ;;
-        esac
-
-        i=0; printf "%s" "$FILE" | { while IFS= read -r LINE; do
-            i=$((i + 1)); parse_args "$@"
-        done
-
-        # Add lines remaining to be added, if any.
+    parse_args_post() {
         j=0; m=0; while [ "$#" -ge 2 ]; do case "$1" in
             '+')
                 j=$((j + 1))
@@ -1631,7 +1614,28 @@ EOF
             ;;
         esac; done
 
-        args_eq 0 "$#" || exit 255; }
+        args_eq 0 "$#" || exit 255
+    }
+
+    FILE=$(
+        # It is almost always preferred that any lines added by us are placed
+        # distinguishably, i.e. they are separated by our newline. This has the
+        # added benefit of standardizing the process of line addition as the
+        # count of trailing newlines in the original file, be it zero or more
+        # than one, will not matter. This could be made configurable at a later
+        # stage.
+        case "${FILE#"${FILE%??}"}" in
+            "$LF$LF") : ;;
+            *"$LF") FILE="$FILE$LF" ;;
+            *) FILE="$FILE$LF$LF" ;;
+        esac
+
+        i=0; printf "%s" "$FILE" | { while IFS= read -r LINE; do
+            i=$((i + 1)); parse_args "$@"
+        done
+
+        # Add lines remaining to be added, if any.
+        parse_args_post "$@"; }
     )
 
     # Add a newline, as the command substitution removed all trailing ones.
