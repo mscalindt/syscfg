@@ -7638,6 +7638,7 @@ ext x?html?, has midori,      X, flag f = midori -- "$@"
 ext x?html?, has chromium,    X, flag f = midori -- "$@"
 
 # Docs/Text
+ext sh,    has featherpad,     X, flag f = featherpad "$@"
 ext shfn,  has featherpad,     X, flag f = featherpad "$@"
 ext ini,   has featherpad,     X, flag f = featherpad "$@"
 ext docx?, has catdoc,         terminal = catdoc -- "$@" | "$PAGER"
