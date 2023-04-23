@@ -972,7 +972,7 @@ EEXIST() {
             err -r -- 'P ' # named pipe
         elif [ -S "$1" ]; then
             err -r -- 'S ' # socket
-        elif [ -t "$1" ]; then
+        elif [ -t "$1" 2> /dev/null ]; then
             err -r -- 'FD ' # open file descriptor
         elif [ -e "$1" ]; then
             err -r -- '> '
@@ -1011,7 +1011,7 @@ ENOTDIR() {
             err -r -- 'P ' # named pipe
         elif [ -S "$1" ]; then
             err -r -- 'S ' # socket
-        elif [ -t "$1" ]; then
+        elif [ -t "$1" 2> /dev/null ]; then
             err -r -- 'FD ' # open file descriptor
         elif [ -e "$1" ]; then
             err -r -- '> '
@@ -1105,7 +1105,7 @@ EREAD() {
             err -r -- 'P ' # named pipe
         elif [ -S "$1" ]; then
             err -r -- 'S ' # socket
-        elif [ -t "$1" ]; then
+        elif [ -t "$1" 2> /dev/null ]; then
             err -r -- 'FD ' # open file descriptor
         elif [ -e "$1" ]; then
             err -r -- '> '
@@ -1144,7 +1144,7 @@ ENOTFILE() {
             err -r -- 'P ' # named pipe
         elif [ -S "$1" ]; then
             err -r -- 'S ' # socket
-        elif [ -t "$1" ]; then
+        elif [ -t "$1" 2> /dev/null ]; then
             err -r -- 'FD ' # open file descriptor
         elif [ -e "$1" ]; then
             err -r -- '> '
@@ -1185,7 +1185,7 @@ EFSFLAG() {
             err -r -- 'P ' # named pipe
         elif [ -S "$1" ]; then
             err -r -- 'S ' # socket
-        elif [ -t "$1" ]; then
+        elif [ -t "$1" 2> /dev/null ]; then
             err -r -- 'FD ' # open file descriptor
         elif [ -e "$1" ]; then
             err -r -- '> '
@@ -1226,7 +1226,7 @@ EPERMS() {
             err -r -- 'P ' # named pipe
         elif [ -S "$1" ]; then
             err -r -- 'S ' # socket
-        elif [ -t "$1" ]; then
+        elif [ -t "$1" 2> /dev/null ]; then
             err -r -- 'FD ' # open file descriptor
         elif [ -e "$1" ]; then
             err -r -- '> '
@@ -3058,7 +3058,7 @@ __loc_chattr() {
             err -r -- 'P ' # named pipe
         elif [ -S "$FILE_PATH" ]; then
             err -r -- 'S ' # socket
-        elif [ -t "$FILE_PATH" ]; then
+        elif [ -t "$FILE_PATH" 2> /dev/null ]; then
             err -r -- 'FD ' # open file descriptor
         elif [ -e "$FILE_PATH" ]; then
             err -r -- '> '
@@ -3119,7 +3119,7 @@ __loc_chmod() {
             err -r -- 'P ' # named pipe
         elif [ -S "$FILE_PATH" ]; then
             err -r -- 'S ' # socket
-        elif [ -t "$FILE_PATH" ]; then
+        elif [ -t "$FILE_PATH" 2> /dev/null ]; then
             err -r -- 'FD ' # open file descriptor
         elif [ -e "$FILE_PATH" ]; then
             err -r -- '> '
@@ -3182,7 +3182,7 @@ __loc_chown() {
             err -r -- 'P ' # named pipe
         elif [ -S "$FILE_PATH" ]; then
             err -r -- 'S ' # socket
-        elif [ -t "$FILE_PATH" ]; then
+        elif [ -t "$FILE_PATH" 2> /dev/null ]; then
             err -r -- 'FD ' # open file descriptor
         elif [ -e "$FILE_PATH" ]; then
             err -r -- '> '
@@ -3259,7 +3259,7 @@ __loc_delete() {
             info -w -- 'P ' # named pipe
         elif [ -S "$FILE_PATH" ]; then
             info -w -- 'S ' # socket
-        elif [ -t "$FILE_PATH" ]; then
+        elif [ -t "$FILE_PATH" 2> /dev/null ]; then
             info -w -- 'FD ' # open file descriptor
         else
             info -w -- '> '
@@ -3307,7 +3307,7 @@ __loc_empty() {
             err -r -- 'P ' # named pipe
         elif [ -S "$FILE_PATH" ]; then
             err -r -- 'S ' # socket
-        elif [ -t "$FILE_PATH" ]; then
+        elif [ -t "$FILE_PATH" 2> /dev/null ]; then
             err -r -- 'FD ' # open file descriptor
         elif [ -e "$FILE_PATH" ]; then
             err -r -- '> '
