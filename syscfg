@@ -3497,7 +3497,7 @@ _autostart() {
 $home/.bash_profile
 _BASH_PROFILE
 
-        FILE \
+    FILE \
 <<'_BASH_PROFILE'
 set -a; for file in "$HOME"/.syscfg_env/*; do
     . "$file"
