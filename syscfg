@@ -4935,6 +4935,7 @@ _conf_1() {
     _pipewire_conf;
     _pipewire_media_session_conf;
     _ranger_conf;
+    _sudo_conf;
     _sway_conf;
     _swaylock_conf;
     _sysctl_conf;
@@ -7840,6 +7841,21 @@ DASHBINSH_HOOK
     fi
 }
 
+_sudo_conf() {
+    FILE_PATH \
+<<WHEEL
+/etc/sudoers.d/wheel
+WHEEL
+
+    FILE \
+<<'WHEEL'
+%wheel ALL=(ALL:ALL) ALL
+WHEEL
+
+    __file_write;
+    __loc_chmod '0440'
+}
+
 _sway_conf() {
     FILE_PATH \
 <<CONFIG
@@ -9990,6 +10006,7 @@ main() {
     ops="$ops reflector"
     ops="$ops resolv-conf"
     ops="$ops sh"
+    ops="$ops sudo-conf"
     ops="$ops sway-conf"
     ops="$ops swaylock-conf"
     ops="$ops sysctl-conf"
