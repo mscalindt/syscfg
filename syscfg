@@ -3295,7 +3295,7 @@ __loc_empty() {
         :
     elif file "$FILE_PATH"; then
         :
-    else
+    elif exist "$FILE_PATH"; then
         EINVAL;
         if [ -b "$FILE_PATH" ]; then
             err -r -- 'B ' # block file
@@ -3309,8 +3309,6 @@ __loc_empty() {
             err -r -- 'S ' # socket
         elif [ -t "$FILE_PATH" 2> /dev/null ]; then
             err -r -- 'FD ' # open file descriptor
-        elif [ -e "$FILE_PATH" ]; then
-            err -r -- '> '
         fi
         err - - "$FILE_PATH"
         exit 222
