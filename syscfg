@@ -3509,7 +3509,9 @@ _BASH_PROFILE
 <<'_BASH_PROFILE'
 
 if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
-    exec sway > /var/log/sway.log 2>&1
+    if command -v sway > /dev/null 2>&1; then
+        exec sway > /var/log/sway.log 2>&1
+    fi
 fi
 _BASH_PROFILE
 
@@ -3528,7 +3530,9 @@ SWAY_LOG
 <<'_BASH_PROFILE'
 
 if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
-    exec startx
+    if command -v startx > /dev/null 2>&1; then
+        exec startx
+    fi
 fi
 _BASH_PROFILE
 
