@@ -9941,9 +9941,9 @@ main() {
 
     # Utility location switches
     # Bulgaria:
-    bg=0
+    bg=1
     # Germany:
-    de=1
+    de=0
 
     # Data
     user='mscalindt'
