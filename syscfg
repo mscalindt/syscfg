@@ -7941,20 +7941,21 @@ input type:pointer {
     bindsym Alt+Shift+Tab focus left
 
     # Basic functions
-    bindsym $mod+F1 exec pamixer -d5
-    bindsym $mod+F2 exec pamixer -i5
-    bindsym $mod+F3 exec brightnessctl s 5%-
-    bindsym $mod+F4 exec brightnessctl s 5%+
+    bindsym $mod+z exec pamixer -d5
+    bindsym $mod+x exec pamixer -i5
+    bindsym $mod+c exec brightnessctl s 5%-
+    bindsym $mod+v exec brightnessctl s 5%+
     bindsym print exec grim -l 9 $(date +'SS_%Y-%m-%d_%H%M%S.png')
-    bindsym $mod+print exec grim -l 9 -g "$(slurp)" \
-                                 $(date +'SS_%Y-%m-%d_%H%M%S.png')
-    bindsym $mod+Shift+print exec grim -l 9 -g "$(slurp; sleep 2.5)" \
-                                       $(date +'SS_%Y-%m-%d_%H%M%S.png')
+    bindsym $mod+p exec grim -l 9 -g "$(slurp)" \
+                            $(date +'SS_%Y-%m-%d_%H%M%S.png')
+    bindsym $mod+Shift+p exec grim -l 9 -g "$(slurp; sleep 2.5)" \
+                                  $(date +'SS_%Y-%m-%d_%H%M%S.png')
 
     # Extended functions
-    bindsym $mod+Shift+p exec grim -g "$(slurp -p)" -t ppm - | \
-                         convert - -format '%[pixel:p{0,0}]' txt:- | \
-                         tail -n 1 | cut -d ' ' -f 4 | wl-copy -n
+    # get hex color of a pixel
+    bindsym $mod+h exec grim -g "$(slurp -p)" -t ppm - | \
+                        convert - -format '%[pixel:p{0,0}]' txt:- | \
+                        tail -n 1 | cut -d ' ' -f 4 | wl-copy -n
 
     # Kill window
     bindsym $mod+q kill
