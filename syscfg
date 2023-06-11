@@ -7555,6 +7555,7 @@ RC_CONF
 
     FILE \
 <<'RC_CONF'
+map D console delete
 copymap J <C-z>
 copymap K <C-x>
 copymap S <C-s>
