@@ -3779,6 +3779,7 @@ pkg_pip_get() (
     ARGS='-m pip'
     ARGS="$ARGS"' install'
     ARGS="$ARGS"' --user'
+    ARGS="$ARGS"' --break-system-packages'
 
     while [ "$1" ]; do
         ARGS="$ARGS"" \"$1\""
@@ -3799,6 +3800,7 @@ pkg_pip_get_req() (
     ARGS='-m pip'
     ARGS="$ARGS"' install'
     ARGS="$ARGS"' --user'
+    ARGS="$ARGS"' --break-system-packages'
 
     while [ "$1" ]; do
         ARGS="$ARGS"" --requirement \"$1\""
