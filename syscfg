@@ -4833,7 +4833,7 @@ RC=\$?; \
 '\[\033[1;31m\]\W\[\033[1;32m\]]\$\[\033[0m\] '
 
 export HISTCONTROL=ignoreboth:erasedups
-export PATH="${PATH}:$HOME/scripts"
+export PATH="${PATH}:$HOME/.local/bin:$HOME/scripts"
 export EDITOR=nano
 
 alias ls='ls --color'
