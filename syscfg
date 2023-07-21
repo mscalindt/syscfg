@@ -5714,7 +5714,7 @@ _GITCONFIG
 	smtpencryption = tls
 	smtpserverport = 587
 [user]
-	email = mscalindt@gmail.com
+	email = mscalindt@protonmail.com
 	name = Dimitar Yurukov
 	signingkey = 7D1F56FAD6FB86652A60BEE65BC3343816EAB179
 [commit]
