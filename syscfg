@@ -6715,7 +6715,7 @@ KVARCDARK__KVCONFIG
     __file_write;
 }
 
-# English locale config (as it should be, you [REDACTED] nationalists)
+# English locale config
 _locale() {
     cmd 'locale-gen' || ENOCMD 'locale-gen'
 
