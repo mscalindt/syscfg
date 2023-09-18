@@ -3942,8 +3942,7 @@ ffmpeg_a_get_from() (
         printf "%s" "${IN##*/}"
     )
 
-    ARGS="-ss $FROM"
-    ARGS="$ARGS"" -i \"$IN\""
+    ARGS="-i \"$IN\" -ss $FROM"
     ARGS="$ARGS"' -c:a copy'
     ARGS="$ARGS"" \"$OUT\""
 
