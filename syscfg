@@ -7654,7 +7654,7 @@ mime ^text, label editor                 = "${VISUAL:-$EDITOR}" -- "$@"
 mime ^text, label pager                  = "$PAGER" -- "$@"
 
 # Misc exts
-ext 1   = man "$1"
+ext 1|5 = man "$1"
 ext exe = wine "$1"
 
 # Misc mEmes
