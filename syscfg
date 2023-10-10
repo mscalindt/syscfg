@@ -3540,6 +3540,65 @@ _BASH_PROFILE
     fi
 
     if [ "$init" = systemd ]; then
+        if [ "$bluetooth" = 1 ]; then
+            FILE_PATH \
+<<BLUETOOTH_SERVICE
+/etc/systemd/system/bluetooth.service
+BLUETOOTH_SERVICE
+
+            FILE \
+<<BLUETOOTH_SERVICE
+[Unit]
+Description=Bluetooth service
+ConditionPathIsDirectory=/sys/class/bluetooth
+
+[Service]
+Type=dbus
+BusName=org.bluez
+ExecStart=/usr/lib/bluetooth/bluetoothd
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+LimitNPROC=1
+
+# Filesystem lockdown
+ProtectHome=true
+ProtectSystem=strict
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+StateDirectory=bluetooth
+StateDirectoryMode=0700
+ConfigurationDirectory=bluetooth
+ConfigurationDirectoryMode=0555
+
+# Execute Mappings
+MemoryDenyWriteExecute=true
+
+# Privilege escalation
+NoNewPrivileges=true
+
+# Real-time
+RestrictRealtime=true
+
+[Install]
+WantedBy=multi-user.target
+Alias=dbus-org.bluez.service
+BLUETOOTH_SERVICE
+
+            __file_write;
+
+            FILE_PATH \
+<<BLUETOOTH_SERVICE
+/etc/systemd/system/bluetooth.service
+BLUETOOTH_SERVICE
+
+            FILE_PATH_TARGET \
+<<BLUETOOTH_SERVICE
+/etc/systemd/system/multi-user.target.wants/bluetooth.service
+BLUETOOTH_SERVICE
+
+            __file_target_write 'SYMLINK'
+        fi
+
         if [ "$dns" = localhost ]; then
             if [ "$dns0" = dnsmasq ]; then
                 FILE_PATH \
@@ -9897,8 +9956,8 @@ main_util_env() {
 
 main_vars_lock() {
     readonly fatal tmpd tmpf avoid_write backup force logging m533ia \
-             arch_linux audio_hq browser dns gaming init ipv6 qt_theme server \
-             wm bg de user home efi_mnt arch_mirlist ops
+             arch_linux audio_hq bluetooth browser dns gaming init ipv6 \
+             qt_theme server wm bg de user home efi_mnt arch_mirlist ops
 }
 
 main() {
@@ -9923,6 +9982,8 @@ main() {
     # Utility software switches
     # Configure audio configs for highest possible quality:
     audio_hq=0
+    # Bluetooth support
+    bluetooth=1
     # Web browser; currently supported: firefox, none
     browser='firefox'
     # DNS; currently supported: localhost, none
