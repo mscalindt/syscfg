@@ -3664,6 +3664,7 @@ ConditionPathExists=/usr/bin/mocp
 RemainAfterExit=yes
 ExecStart=/usr/bin/mocp -S
 ExecStop=/usr/bin/mocp -x
+TimeoutStopSec=3
 
 [Install]
 WantedBy=default.target
