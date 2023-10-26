@@ -4175,6 +4175,14 @@ ffmpeg_a_get_fromto() (
     eval "ffmpeg ${ARGS}"
 )
 
+# gpg
+gpg_d() {
+    gpg -o "${1%.gpg}" -d "$1"
+}
+gpg_e() {
+    gpg -r 7D1F56FAD6FB86652A60BEE65BC3343816EAB179 -e "$1"
+}
+
 # steam
 :
 
