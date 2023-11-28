@@ -7954,6 +7954,15 @@ set $menu exec \
 
 focus_follows_mouse always
 
+# Prevent annoying apps from disrupting active focus by pinning them to a
+# certain workplace, in our case `7`, used as a last resort workspace or "bag".
+# Steam's "launcher"
+assign [title="Steam"] 7
+# Steam
+assign [class="steam"] 7
+# Telegram
+assign [app_id="org.telegram.desktop"] 7
+
 for_window [app_id="sway-app-launcher"] \
     floating enable, sticky enable, resize set 30 ppt 60 ppt, border pixel 5
 for_window [app_id="firefox"] \
