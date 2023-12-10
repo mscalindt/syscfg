@@ -8047,6 +8047,8 @@ input type:pointer {
     bindsym $mod+h exec grim -g "$(slurp -p)" -t ppm - | \
                         convert - -format '%[pixel:p{0,0}]' txt:- | \
                         tail -n 1 | cut -d ' ' -f 4 | wl-copy -n
+    # toggle audio playback
+    bindsym $mod+Space exec /home/$USER/.config/sway/music_toggle
 
     # Kill window
     bindsym $mod+q kill
@@ -8491,6 +8493,53 @@ STATUS="$STATUS | ${VOLUME}% | $KB_LAYOUT | $DATE |"
 
 printf "%s" "$STATUS"
 STATUS
+
+    __file_write;
+    __file_executable;
+
+    FILE_PATH \
+<<MUSIC_TOGGLE
+$home/.config/sway/music_toggle
+MUSIC_TOGGLE
+
+    FILE \
+<<'MUSIC_TOGGLE'
+#!/bin/sh
+
+MOCP_STATE=$(mocp -Q %state)
+MOCP_PAUSE_FILE="${TMPDIR:-/tmp}"/music_toggle_mocp
+MOCP_PAUSE_FILE_AGE=600 # 10 minutes
+CUR_TIME=$(date +%s)
+
+if [ -f "$MOCP_PAUSE_FILE" ]; then
+    if playerctl status 2> /dev/null | grep -q 'Playing'; then
+        playerctl play-pause
+        rm -f "$MOCP_PAUSE_FILE"
+        exit 0
+    fi
+
+    read -r TIME < "$MOCP_PAUSE_FILE"
+    AGE=$((CUR_TIME - TIME))
+
+    if [ "$AGE" -le "$MOCP_PAUSE_FILE_AGE" ]; then
+        if [ "$MOCP_STATE" = 'PAUSE' ]; then
+            mocp -U
+            rm -f "$MOCP_PAUSE_FILE"
+
+            exit 0
+        fi
+    fi
+
+    rm -f "$MOCP_PAUSE_FILE"
+elif [ "$MOCP_STATE" = 'PLAY' ]; then
+    mocp -P
+    printf "%s\n" "$CUR_TIME" > "$MOCP_PAUSE_FILE"
+
+    exit 0
+fi
+
+playerctl play-pause > /dev/null 2>&1
+MUSIC_TOGGLE
 
     __file_write;
     __file_executable;
