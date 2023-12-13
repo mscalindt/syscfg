@@ -8508,33 +8508,19 @@ MUSIC_TOGGLE
 
 MOCP_STATE=$(mocp -Q %state)
 MOCP_PAUSE_FILE="${TMPDIR:-/tmp}"/music_toggle_mocp
-MOCP_PAUSE_FILE_AGE=600 # 10 minutes
-CUR_TIME=$(date +%s)
 
 if [ -f "$MOCP_PAUSE_FILE" ]; then
     if playerctl status 2> /dev/null | grep -q 'Playing'; then
         playerctl play-pause
-        rm -f "$MOCP_PAUSE_FILE"
-        exit 0
-    fi
-
-    read -r TIME < "$MOCP_PAUSE_FILE"
-    AGE=$((CUR_TIME - TIME))
-
-    if [ "$AGE" -le "$MOCP_PAUSE_FILE_AGE" ]; then
-        if [ "$MOCP_STATE" = 'PAUSE' ]; then
-            mocp -U
-            rm -f "$MOCP_PAUSE_FILE"
-
-            exit 0
-        fi
+    elif [ "$MOCP_STATE" = 'PAUSE' ]; then
+        mocp -U
     fi
 
     rm -f "$MOCP_PAUSE_FILE"
+    exit 0
 elif [ "$MOCP_STATE" = 'PLAY' ]; then
     mocp -P
-    printf "%s\n" "$CUR_TIME" > "$MOCP_PAUSE_FILE"
-
+    : > "$MOCP_PAUSE_FILE"
     exit 0
 fi
 
