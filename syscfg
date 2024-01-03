@@ -7960,8 +7960,6 @@ focus_follows_mouse always
 assign [title="Steam"] 7
 # Steam
 assign [class="steam"] 7
-# Telegram
-assign [app_id="org.telegram.desktop"] 7
 
 for_window [app_id="sway-app-launcher"] \
     floating enable, sticky enable, resize set 30 ppt 60 ppt, border pixel 5
