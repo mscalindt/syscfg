@@ -4382,7 +4382,9 @@ ytdlp_a() (
         *) FILENAME="$2" ;;
     esac
 
-    ARGS='--format'
+    ARGS='--cookies-from-browser'
+    ARGS="$ARGS"' firefox'
+    ARGS="$ARGS"' --format'
     ARGS="$ARGS"' 338/258/327/141/256/251/140/22'
 
     yt-dlp ${ARGS} "$URL"
