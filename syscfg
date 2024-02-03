@@ -4870,19 +4870,49 @@ ytdlp_v_ogg_1080() (
 )
 steamwinerun() ( WINEPREFIX="$HOME"/.steam/root/steamapps/compatdata/$1/pfx wine "$2"; )
 dgrd() (
-    if [ ! "$1" ]; then
-        ls /var/cache/pacman/pkg/*.zst
+    if [ ! "$1" ] || [ ! "$2" ]; then
+        printf "%s\n" 'STEP (1-X) = $1'
+        printf "%s\n" 'NAME = $2+'
         exit 2
     fi
 
-    case "$1" in
-        '/'*)
-            su -c "pacman -U $1"
-        ;;
-        *)
-            su -c "pacman -U /var/cache/pacman/pkg/$1"
-        ;;
-    esac
+    STEP="$1"; shift
+    DIR=/var/cache/pacman/pkg
+    OUT_FLAG=0
+
+    while [ "$#" -ge 1 ]; do
+        NAME="$1"
+        FILES=$(
+            find "$DIR" -name "$NAME"-[0123456789]*.zst -printf "%T+ %p\n" | \
+            sort -r
+        )
+
+        if [ ! "$FILES" ]; then
+            printf "%s\n" 'ERR NO FILES. NAME=%s' "$NAME"
+            exit 1
+        fi
+
+        x=0; while IFS= read -r LINE; do
+            [ "$x" = "$STEP" ] || { x=$((x + 1)); continue; }
+
+            LINE="${LINE#* }"
+            if [ "$OUT_FLAG" = 0 ]; then
+                printf "%s\n" 'pacman -U \'
+                OUT_FLAG=1
+            fi
+            if [ "$2" ]; then
+                printf "%s %s\n" "$LINE" '\'
+            else
+                printf "%s\n" "$LINE"
+            fi
+            shift; continue 2
+        done <<EOF
+$FILES
+EOF
+
+        printf "ERR PKG DGRD STEP NO EXIST. x=%s\n" "$x"
+        exit 1
+    done
 )
 ytv() { youtube-dl --format bestvideo+bestaudio "$1"; }
 ytv1080() { youtube-dl --format bestvideo[height<=1080]+bestaudio "$1"; }
