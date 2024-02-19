@@ -8484,6 +8484,33 @@ done < /proc/meminfo; } 2> /dev/null
 
 VOLUME=$(pamixer --get-volume 2> /dev/null)
 
+AUDIO_SINK=$(pactl list sinks 2> /dev/null)
+{
+_STATE=; _NAME=
+while IFS= read -r LINE; do
+    case "$LINE" in
+        *'State: RUNNING'*) _STATE=1 ;;
+    esac
+
+    case "$LINE" in
+        *'Name: '*)
+            if [ "$_STATE" = 1 ]; then
+                _NAME="${LINE#*Name: }"; break
+            fi
+        ;;
+    esac
+done \
+<<EOF
+$AUDIO_SINK
+EOF
+
+AUDIO_SINK="$_NAME"
+} 2> /dev/null
+case "$AUDIO_SINK" in
+    'alsa_output'*) AUDIO_SINK=ALSA ;;
+    'bluez_output'*) AUDIO_SINK=BLUEZ ;;
+esac
+
 KB_LAYOUT=$(
     swaymsg -t get_inputs | \
     jq 'map(select(has("xkb_active_layout_name")))[0].xkb_active_layout_name'
@@ -8519,7 +8546,11 @@ case "$BATTERY" in
     100) : ;;
     *) STATUS="$STATUS | ~${BATTERY}%" ;;
 esac
-STATUS="$STATUS | ${VOLUME}% | $KB_LAYOUT | $DATE |"
+STATUS="$STATUS | ${VOLUME}%"
+if [ "$AUDIO_SINK" ]; then
+    STATUS="$STATUS | $AUDIO_SINK"
+fi
+STATUS="$STATUS | $KB_LAYOUT | $DATE |"
 
 printf "%s" "$STATUS"
 STATUS
