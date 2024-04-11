@@ -5051,6 +5051,7 @@ _conf_1() {
     _swaylock_conf;
     _sysctl_conf;
     _wireplumber_conf;
+    _xdg_conf;
     _xorg_conf;
 }
 
@@ -5159,8 +5160,6 @@ _conf_2() {
 # are influenced by utility switches; never to be defined in any other _conf_*()
 # functions.
 _conf_3() {
-    _xdg_conf;
-
     if file '/etc/bluetooth/main.conf'; then
         _bluez_conf;
     else
@@ -5240,10 +5239,6 @@ _conf_4() {
 
     if file '/etc/pulse/default.pa'; then
         _pulseaudio_conf;
-    fi
-
-    if dir '/etc/xdg/autostart'; then
-        _xdg_conf;
     fi
 }
 
@@ -8821,13 +8816,6 @@ Inherits=Breeze
 INDEX_THEME
 
     __file_write;
-
-    FILE_PATH \
-<<'AUTOSTART'
-/etc/xdg/autostart
-AUTOSTART
-
-    __loc_delete;
 }
 
 # Reproducible simple XFCE4 setup.
