@@ -3536,7 +3536,7 @@ _BASH_PROFILE
 
         __file_write;
     elif [ "$wm" = none ] || [ ! "$wm" ]; then
-        __loc_delete;
+        __file_write;
     fi
 
     if [ "$init" = systemd ]; then
