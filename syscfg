@@ -3637,6 +3637,42 @@ DNSMASQ_SERVICE
             fi
         fi
 
+        if [ "$m533ia" = 1 ]; then
+            FILE_PATH \
+<<'EVTEST_GRAB_SERVICE'
+/etc/systemd/system/evtest-grab.service
+EVTEST_GRAB_SERVICE
+
+            FILE \
+<<'EVTEST_GRAB_SERVICE'
+[Unit]
+Description=Grab m533ia keyboard at startup
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/evtest --grab /dev/input/event3
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EVTEST_GRAB_SERVICE
+
+            __file_write;
+
+            FILE_PATH \
+<<'EVTEST_GRAB_SERVICE'
+/etc/systemd/system/evtest-grab.service
+EVTEST_GRAB_SERVICE
+
+            FILE_PATH_TARGET \
+<<'EVTEST_GRAB_SERVICE'
+/etc/systemd/system/multi-user.target.wants/evtest-grab.service
+EVTEST_GRAB_SERVICE
+
+            __file_target_write 'SYMLINK'
+        fi
+
         FILE_PATH \
 <<IWD_SERVICE
 /etc/systemd/system/iwd.service
