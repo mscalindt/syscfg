@@ -1,6 +1,6 @@
 #!/bin/sh
 # SPDX-License-Identifier: BSD-2-Clause
-# Copyright (C) 2022-2023 Dimitar Yurukov <mscalindt@protonmail.com>
+# Copyright (C) 2022-2024 Dimitar Yurukov <mscalindt@protonmail.com>
 # syscfg - declarative OS configuration
 
 # Octal sequences of binary streams
