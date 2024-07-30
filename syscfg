@@ -7805,7 +7805,7 @@ mime application/x-executable               = "$1"
 mime ^font, has fontforge, X, flag f        = fontforge "$@"
 mime ^ranger/x-terminal-emulator, has kitty = kitty -- "$@"
 
-label open,   has xdg-open = xdg-open -- "$@"
+label open,   has xdg-open = xdg-open "$@"
 label editor, !mime ^text, = "${VISUAL:-$EDITOR}" -- "$@"
 label pager,  !mime ^text, = "$PAGER" -- "$@"
 RIFLE_CONF
