@@ -8916,23 +8916,27 @@ MIMEAPPS_LIST
 
     FILE \
 <<'MIMEAPPS_LIST'
+# Programs that support:
 [Added Associations]
-application/x-shellscript=featherpad.desktop;
+application/json=featherpad.desktop
 
+# Programs that don't support:
+[Removed Associations]
+
+# Programs that will be used to open by default:
 [Default Applications]
-application/xhtml+xml=firefox.desktop
-application/xml=firefox.desktop
-application/rss+xml=firefox.desktop
-application/json=firefox.desktop
-application/pdf=firefox.desktop
-application/x-xpinstall=firefox.desktop
-application/smil+xml=firefox.desktop
-application/rdf+xml=firefox.desktop
-text/html=firefox.desktop
+# /usr/lib/firefox/firefox: URLs / `.html` / `.pdf` / `.json`
 x-scheme-handler/http=firefox.desktop
 x-scheme-handler/https=firefox.desktop
-x-scheme-handler/about=firefox.desktop
-x-scheme-handler/unknown=firefox.desktop
+text/html=firefox.desktop
+application/pdf=firefox.desktop
+application/json=firefox.desktop
+# /usr/bin/featherpad: Text / Empty file / `.patch`/`.diff` / `.sh` / `.c`
+text/plain=featherpad.desktop
+inode/x-empty=featherpad.desktop
+text/x-diff=featherpad.desktop
+text/x-shellscript=featherpad.desktop
+text/x-c=featherpad.desktop
 MIMEAPPS_LIST
 
     __file_write;
