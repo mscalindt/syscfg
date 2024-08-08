@@ -2184,9 +2184,9 @@ loc_link() {
 }
 
 #! .desc:
-# Create a hard link of a file/directory
+# Create a hard link of a file
 #! .params:
-# <"$1"> - absolute path of the file/directory
+# <"$1"> - absolute path of the file
 # <"$2"> - absolute path to create the link at
 #! .rc:
 # (0) success
@@ -2196,9 +2196,7 @@ loc_link() {
 loc_link_ptr() {
     args_eq 2 "$#" || return 255
 
-    if dir "$1"; then
-        :
-    elif file "$1"; then
+    if file "$1"; then
         :
     else
         return 255
