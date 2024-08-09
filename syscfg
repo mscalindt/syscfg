@@ -8917,6 +8917,7 @@ MIMEAPPS_LIST
 # Programs that support:
 [Added Associations]
 application/json=featherpad.desktop
+application/javascript=firefox.desktop
 
 # Programs that don't support:
 [Removed Associations]
@@ -8929,12 +8930,14 @@ x-scheme-handler/https=firefox.desktop
 text/html=firefox.desktop
 application/pdf=firefox.desktop
 application/json=firefox.desktop
-# /usr/bin/featherpad: Text / Empty file / `.patch`/`.diff` / `.sh` / `.c`
+# /usr/bin/featherpad: Text / Empty file / `.patch`/`.diff` / `.sh` / `.c` /
+# JavaScript source
 text/plain=featherpad.desktop
 inode/x-empty=featherpad.desktop
 text/x-diff=featherpad.desktop
 text/x-shellscript=featherpad.desktop
 text/x-c=featherpad.desktop
+application/javascript=featherpad.desktop
 MIMEAPPS_LIST
 
     __file_write;
