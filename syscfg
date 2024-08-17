@@ -8469,10 +8469,12 @@ if [ -h /sys/class/net/"$NET_INTERFACE" ]; then
 	}
 
 	BEGIN {
+		printf "UDT"
+		printf " /"
 		printf hsize(bytes_tx, 1000)
-		printf " / "
+		printf " /"
 		printf hsize(bytes_rx, 1000)
-		printf " / "
+		printf " /"
 		printf hsize(bytes_total, 1000)
 	}
     ' 2> /dev/null)
