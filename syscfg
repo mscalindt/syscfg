@@ -4209,6 +4209,163 @@ ffmpeg_a_get_fromto() (
 
     eval "ffmpeg ${ARGS}"
 )
+ffmpeg_merge() (
+    { # Variables expected to be present: OUT, FILENAME.
+        handle_err() {
+            trap - EXIT
+            [ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
+            [ -d "$DIR" ] && cd "$DIR"
+            exit $1
+        }; handle_exit() {
+            case $1 in
+                0) : ;;
+                *) handle_err $1 ;;
+            esac
+            case ":$OUT" in
+                :) set -- * ;;
+                *) set -- "$OUT" ;;
+            esac
+            case ":$FILENAME" in
+                :)
+                    mv "$TMP_DIR"/"$1" "$DIR"/"$1"
+                    printf "%bFILE:%b %b%s%b\n" \
+                           "\033[1;32m" "\033[0m" "\033[1;37m" \
+                           "$DIR/$1" "\033[0m"
+                ;;
+                *)
+                    mv "$TMP_DIR"/"$1" "$DIR"/"${FILENAME}${1#"${1%.*}"}"
+                    printf "%bFILE:%b %b%s%b\n" \
+                           "\033[1;32m" "\033[0m" "\033[1;37m" \
+                           "$DIR/${FILENAME}${1#"${1%.*}"}" "\033[0m"
+                ;;
+            esac
+            [ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
+            [ -d "$DIR" ] && cd "$DIR"
+        }; work() {
+            DIR="$PWD"; TMP_DIR="$HOME"/.b81y7yt73627iyqguo9v3ryrand0mstr1ng
+            [ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
+            mkdir "$TMP_DIR"; cd "$TMP_DIR"
+        }
+        trap "handle_err \$?" INT TERM
+        trap "handle_exit \$?" EXIT
+        set -e
+        work;
+    } # Provided variables: DIR; TMP_DIR.
+
+    case ":$1" in
+        :)
+            printf "%bERROR:%b No audio file specified.\n" \
+                   "\033[1;31m" "\033[0m"
+            exit 2
+        ;;
+    esac
+    case ":$2" in
+        :)
+            printf "%bERROR:%b No video file specified.\n" \
+                   "\033[1;31m" "\033[0m"
+            exit 2
+        ;;
+    esac
+    case ":$3" in
+        :)
+            printf "%bERROR:%b No output name specified.\n" \
+                   "\033[1;31m" "\033[0m"
+            exit 2
+        ;;
+    esac
+
+    AUDIO_IN="$DIR/$1"
+    VIDEO_IN="$DIR/$2"
+
+    OUT="$3"
+
+    ARGS="-i \"$VIDEO_IN\""
+    ARGS="$ARGS"" -i \"$AUDIO_IN\""
+    ARGS="$ARGS"' -c:v copy -c:a copy -map 0:v:0 -map 1:a:0'
+    ARGS="$ARGS"" \"$OUT\""
+
+    eval "ffmpeg ${ARGS}"
+)
+ffmpeg_merge_mp4() (
+    { # Variables expected to be present: OUT, FILENAME.
+        handle_err() {
+            trap - EXIT
+            [ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
+            [ -d "$DIR" ] && cd "$DIR"
+            exit $1
+        }; handle_exit() {
+            case $1 in
+                0) : ;;
+                *) handle_err $1 ;;
+            esac
+            case ":$OUT" in
+                :) set -- * ;;
+                *) set -- "$OUT" ;;
+            esac
+            case ":$FILENAME" in
+                :)
+                    mv "$TMP_DIR"/"$1" "$DIR"/"$1"
+                    printf "%bFILE:%b %b%s%b\n" \
+                           "\033[1;32m" "\033[0m" "\033[1;37m" \
+                           "$DIR/$1" "\033[0m"
+                ;;
+                *)
+                    mv "$TMP_DIR"/"$1" "$DIR"/"${FILENAME}${1#"${1%.*}"}"
+                    printf "%bFILE:%b %b%s%b\n" \
+                           "\033[1;32m" "\033[0m" "\033[1;37m" \
+                           "$DIR/${FILENAME}${1#"${1%.*}"}" "\033[0m"
+                ;;
+            esac
+            [ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
+            [ -d "$DIR" ] && cd "$DIR"
+        }; work() {
+            DIR="$PWD"; TMP_DIR="$HOME"/.b81y7yt73627iyqguo9v3ryrand0mstr1ng
+            [ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
+            mkdir "$TMP_DIR"; cd "$TMP_DIR"
+        }
+        trap "handle_err \$?" INT TERM
+        trap "handle_exit \$?" EXIT
+        set -e
+        work;
+    } # Provided variables: DIR; TMP_DIR.
+
+    case ":$1" in
+        :)
+            printf "%bERROR:%b No audio file specified.\n" \
+                   "\033[1;31m" "\033[0m"
+            exit 2
+        ;;
+    esac
+    case ":$2" in
+        :)
+            printf "%bERROR:%b No video file specified.\n" \
+                   "\033[1;31m" "\033[0m"
+            exit 2
+        ;;
+    esac
+
+    AUDIO_IN="$DIR/$1"
+    VIDEO_IN="$DIR/$2"
+
+    if [ "$3" ]; then
+        case "$OUT" in
+            *'.mp4') OUT="$3" ;;
+            *) OUT="${3}.mp4" ;;
+        esac
+    else
+        case "$2" in
+            *'.mp4') OUT="$2" ;;
+            *) OUT="${2}.mp4" ;;
+        esac
+    fi
+
+    ARGS="-i \"$VIDEO_IN\""
+    ARGS="$ARGS"" -i \"$AUDIO_IN\""
+    ARGS="$ARGS"' -c:v copy -c:a copy -map 0:v:0 -map 1:a:0'
+    ARGS="$ARGS"" \"$OUT\""
+
+    eval "ffmpeg ${ARGS}"
+)
 
 # gpg
 gpg_d() {
