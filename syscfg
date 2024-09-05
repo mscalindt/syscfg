@@ -10402,8 +10402,9 @@ main_util_env() {
 
 main_vars_lock() {
     readonly fatal tmpd tmpf avoid_write backup force logging m533ia \
-             arch_linux audio_hq bluetooth browser dns gaming init ipv6 \
-             qt_theme server wm bg de user home efi_mnt arch_mirlist ops
+             arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
+             qt_theme server wm bg de user home efi_mnt arch_mirlist \
+             polkit_agent ops
 }
 
 main() {
