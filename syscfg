@@ -10347,6 +10347,14 @@ main_list_ops() (
             info -w -1 "$prev_op ^ $op"; prev_op=
         fi
     done; [ ! "$prev_op" ] || info -w -1 "$prev_op"
+
+    info -w -1 'SWITCH: avoid_write ^AE'
+    info -w -1 'SWITCH: audio_hq ^AQ'
+    info -w -1 'SWITCH: backup ^BP'
+    info -w -1 'SWITCH: force ^FE'
+    info -w -1 'SWITCH: gaming ^GG'
+    info -w -1 'SWITCH: ipv6 ^I6'
+    info -w -1 'SWITCH: logging ^LG'
 )
 
 main_rm_tmp() {
