@@ -10395,9 +10395,9 @@ main_util_env() {
 
     # Utility internal locations
     # Temporary per-function dir (cleared on func exit):
-    tmpd="${TMP:-/tmp}/syscfg_tmpd"
+    tmpd="${TMPDIR:-/tmp}/syscfg_tmpd"
     # Temporary per-function file (cleared on func exit):
-    tmpf="${TMP:-/tmp}/syscfg_tmpf"
+    tmpf="${TMPDIR:-/tmp}/syscfg_tmpf"
 }
 
 main_vars_lock() {
