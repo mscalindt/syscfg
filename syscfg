@@ -3965,6 +3965,28 @@ xfce_quit() (
     eval "xfce4-session-logout ${ARGS}"
 )
 
+# Other management
+ramfs_c() (
+    su -c "
+        [ ! -e /mnt/ramdisk ] || {
+            echo 'fail: /mnt/ramdisk already exists'; exit 0
+        }
+        mkdir /mnt/ramdisk 2> /dev/null
+        mount -t ramfs ramfs /mnt/ramdisk && \
+        chown $USER:$USER /mnt/ramdisk && \
+        chmod 700 /mnt/ramdisk
+    "
+)
+ramfs_d() (
+    su -c "
+        [ -e /mnt/ramdisk ] || {
+            echo 'fail: /mnt/ramdisk does not exist'; exit 0
+        }
+        umount /mnt/ramdisk && \
+        rm -rf /mnt/ramdisk
+    "
+)
+
 # ffmpeg
 ffmpeg_a_get_from() (
     { # Variables expected to be present: OUT, FILENAME.
@@ -4941,6 +4963,12 @@ ytdlp_s_auto_srt() (
     )
 
     ffmpeg -i "$IN" "$OUT"
+)
+ytdlp_ramfs() (
+    [ -e /mnt/ramdisk ] || {
+        echo 'fail: /mnt/ramdisk does not exist'; return 0
+    }
+    yt-dlp --no-part --no-cache-dir -P /mnt/ramdisk "$@"
 )
 
 # unfinished
