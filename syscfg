@@ -5955,6 +5955,7 @@ $home/.config/fontconfig/conf.d/01-font.conf
       <family>serif</family>
     </default>
   </alias>
+
   <alias>
     <family>sans-serif</family>
     <prefer>
@@ -5967,6 +5968,7 @@ $home/.config/fontconfig/conf.d/01-font.conf
       <family>sans-serif</family>
     </default>
   </alias>
+
   <alias>
     <family>monospace</family>
     <prefer>
