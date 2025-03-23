@@ -5972,11 +5972,11 @@ $home/.config/fontconfig/conf.d/01-font.conf
   <alias>
     <family>monospace</family>
     <prefer>
-      <family>system-ui</family>
+      <family>Cantarell</family>
     </prefer>
   </alias>
   <alias>
-    <family>system-ui</family>
+    <family>Cantarell</family>
     <default>
       <family>monospace</family>
     </default>
