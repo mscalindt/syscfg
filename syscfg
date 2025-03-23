@@ -8472,6 +8472,12 @@ while read -r LINE; do
         'gtk-font-name='*)
             gsettings set "$gnome_schema" font-name "${LINE#*=}"
         ;;
+        'gtk-document-font-name='*)
+            gsettings set "$gnome_schema" document-font-name "${LINE#*=}"
+        ;;
+        'gtk-monospace-font-name='*)
+            gsettings set "$gnome_schema" monospace-font-name "${LINE#*=}"
+        ;;
     esac
 done < "$cfg"
 IMPORT_GSETTINGS
