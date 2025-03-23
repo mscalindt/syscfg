@@ -8253,7 +8253,7 @@ input type:pointer {
     output * bg #241f31 solid_color
     default_border pixel
     client.focused #0A75AD #0A75AD #0A75AD #0A75AD #0A75AD
-    font pango:System-ui 12
+    font pango:Cantarell 12
     seat seat0 xcursor_theme Breeze
     exec_always /home/$USER/.config/sway/import-gsettings
     exec_always /home/$USER/.config/sway/wp-handler
