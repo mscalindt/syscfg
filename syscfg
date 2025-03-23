@@ -6265,7 +6265,7 @@ _GTKRC_2_0
 gtk-cursor-theme-name="Breeze"
 gtk-icon-theme-name="Papirus-Dark"
 gtk-theme-name="Arc-Dark-solid"
-gtk-font-name="System-ui 12"
+gtk-font-name="Cantarell 12"
 gtk-cursor-theme-size=0
 gtk-application-prefer-dark-theme=true
 gtk-enable-primary-paste=false
@@ -6318,7 +6318,7 @@ SETTINGS_INI
 gtk-cursor-theme-name="Breeze"
 gtk-icon-theme-name="Papirus-Dark"
 gtk-theme-name="Arc-Dark-solid"
-gtk-font-name="System-ui 12"
+gtk-font-name="Cantarell 12"
 gtk-cursor-theme-size=0
 gtk-application-prefer-dark-theme=true
 gtk-enable-primary-paste=false
