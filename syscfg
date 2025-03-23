@@ -5946,11 +5946,11 @@ $home/.config/fontconfig/conf.d/01-font.conf
   <alias>
     <family>serif</family>
     <prefer>
-      <family>system-ui</family>
+      <family>DejaVu Serif</family>
     </prefer>
   </alias>
   <alias>
-    <family>system-ui</family>
+    <family>DejaVu Serif</family>
     <default>
       <family>serif</family>
     </default>
