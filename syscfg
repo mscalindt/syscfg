@@ -4402,14 +4402,14 @@ gpg_e() {
 
 # tar
 tar_c() {
-    tar -cvf "$1".tar "$1"
+    tar --numeric-owner -cvpf "$1".tar "$1"
 }
 tar_e() {
     if [ ! -e "$1" ] && [ -e "$1".tar ]; then
         set -- "$1".tar
     fi
 
-    tar -xvf "$1"
+    tar --numeric-owner -xvpf "$1"
 }
 
 # youtube-dl
