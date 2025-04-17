@@ -795,7 +795,7 @@ chattr_remove() {
         find "$1"/. \( ! -path '*/./*' -o -prune \) \
              -type f -exec chattr -ia {} + 2> /dev/null
     elif file "$1"; then
-        chattr -ia "$1" 2> /dev/null
+        [ -h "$1" ] || chattr -ia "$1" 2> /dev/null
     fi
 }
 
