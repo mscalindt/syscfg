@@ -3602,6 +3602,7 @@ Type=simple
 ExecStart=/usr/bin/evtest --grab /dev/input/event3
 Restart=always
 User=root
+StandardOutput=null
 
 [Install]
 WantedBy=multi-user.target
