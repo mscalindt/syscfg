@@ -3391,48 +3391,6 @@ __git_get() {
     fi
 }
 
-#! .desc:
-# Enable systemd unit files provided by the system
-#! .params:
-# <"$1"> - service name
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input
-#.
-__systemd_service_enable() {
-    args_eq 1 "$#" || return 255
-
-    if ! str_sfix '.service' "$1"; then
-        set -- "${1}.service"
-    fi
-
-    case "$1" in
-        *'@'*'@'*)
-            return 255
-        ;;
-        *'@'*)
-            FILE_PATH \
-<<UNIT_SERVICE
-/usr/lib/systemd/system/${1%@*}@.service
-UNIT_SERVICE
-        ;;
-        *)
-            FILE_PATH \
-<<UNIT_SERVICE
-/usr/lib/systemd/system/$1
-UNIT_SERVICE
-        ;;
-    esac
-
-    FILE_PATH_TARGET \
-<<UNIT_SERVICE_TARGET
-/etc/systemd/system/multi-user.target.wants/$1
-UNIT_SERVICE_TARGET
-
-    __file_target_write 'SYMLINK'
-}
-
 # $m533ia assertion:
 #
 # Use laptop's sound card ALC256 instead of HDMI by default
