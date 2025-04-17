@@ -3488,55 +3488,6 @@ ASOUND_CONF
 #
 # An alternative to systemd shall be considered.
 _autostart() {
-    FILE_PATH \
-<<_BASH_PROFILE
-$home/.bash_profile
-_BASH_PROFILE
-
-    FILE \
-<<'_BASH_PROFILE'
-set -a; for file in "$HOME"/.syscfg_env/*; do
-    . "$file"
-done; set +a
-_BASH_PROFILE
-
-    if [ "$wm" = sway ]; then
-        FILE \
-<<'_BASH_PROFILE'
-
-if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
-    if command -v sway > /dev/null 2>&1; then
-        exec sway > /var/log/sway.log 2>&1
-    fi
-fi
-_BASH_PROFILE
-
-        __file_write;
-
-        FILE_PATH \
-<<'SWAY_LOG'
-/var/log/sway.log
-SWAY_LOG
-
-        __loc_empty;
-        __loc_chmod '0644'
-        __loc_chown "$user"
-    elif [ "$wm" = xfce4 ]; then
-        FILE \
-<<'_BASH_PROFILE'
-
-if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
-    if command -v startx > /dev/null 2>&1; then
-        exec startx
-    fi
-fi
-_BASH_PROFILE
-
-        __file_write;
-    elif [ "$wm" = none ] || [ ! "$wm" ]; then
-        __file_write;
-    fi
-
     if [ "$init" = systemd ]; then
         if [ "$bluetooth" = 1 ]; then
             FILE_PATH \
@@ -5680,6 +5631,55 @@ WM
         __file_write_overwrite;
     elif [ "$wm" = none ] || [ ! "$wm" ]; then
         __loc_delete;
+    fi
+
+    FILE_PATH \
+<<_BASH_PROFILE
+$home/.bash_profile
+_BASH_PROFILE
+
+    FILE \
+<<'_BASH_PROFILE'
+set -a; for file in "$HOME"/.syscfg_env/*; do
+    . "$file"
+done; set +a
+_BASH_PROFILE
+
+    if [ "$wm" = sway ]; then
+        FILE \
+<<'_BASH_PROFILE'
+
+if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
+    if command -v sway > /dev/null 2>&1; then
+        exec sway > /var/log/sway.log 2>&1
+    fi
+fi
+_BASH_PROFILE
+
+        __file_write;
+
+        FILE_PATH \
+<<'SWAY_LOG'
+/var/log/sway.log
+SWAY_LOG
+
+        __loc_empty;
+        __loc_chmod '0644'
+        __loc_chown "$user"
+    elif [ "$wm" = xfce4 ]; then
+        FILE \
+<<'_BASH_PROFILE'
+
+if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
+    if command -v startx > /dev/null 2>&1; then
+        exec startx
+    fi
+fi
+_BASH_PROFILE
+
+        __file_write;
+    elif [ "$wm" = none ] || [ ! "$wm" ]; then
+        __file_write;
     fi
 }
 
