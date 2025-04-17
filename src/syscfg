@@ -8198,6 +8198,10 @@ CONFIG
 
     FILE \
 <<'CONFIG'
+output * adaptive_sync off
+output * allow_tearing yes
+output * max_render_time off
+
 # Mod4 = Super key
 set $mod Mod4
 set $term kitty
