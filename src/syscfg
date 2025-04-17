@@ -9064,12 +9064,13 @@ table.insert (alsa_monitor.rules, {
 
     __file_write;
 
-    FILE_PATH \
+    if [ "$bluetooth" = 1 ]; then
+        FILE_PATH \
 <<'99_BLUEZ_LUA'
 /etc/wireplumber/bluetooth.lua.d/99-bluez.lua
 99_BLUEZ_LUA
 
-    FILE \
+        FILE \
 <<'99_BLUEZ_LUA'
 table.insert (bluez_monitor.rules, {
     matches = {
@@ -9084,25 +9085,26 @@ table.insert (bluez_monitor.rules, {
         ["session.suspend-timeout-seconds"] = 0,
 99_BLUEZ_LUA
 
-    if [ "$audio_hq" = 1 ]; then
-        FILE \
+        if [ "$audio_hq" = 1 ]; then
+            FILE \
 <<'99_BLUEZ_LUA'
         ["resample.quality"] = 15,
 99_BLUEZ_LUA
-    else
-        FILE \
+        else
+            FILE \
 <<'99_BLUEZ_LUA'
         ["resample.quality"] = 11,
 99_BLUEZ_LUA
-    fi
+        fi
 
-    FILE \
+        FILE \
 <<'99_BLUEZ_LUA'
     },
 })
 99_BLUEZ_LUA
 
-    __file_write;
+        __file_write;
+    fi
 }
 
 _xdg_conf() {
