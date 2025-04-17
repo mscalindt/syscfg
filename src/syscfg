@@ -5656,17 +5656,6 @@ if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
     fi
 fi
 _BASH_PROFILE
-
-        __file_write;
-
-        FILE_PATH \
-<<'SWAY_LOG'
-/var/log/sway.log
-SWAY_LOG
-
-        __loc_empty;
-        __loc_chmod '0644'
-        __loc_chown "$user"
     elif [ "$wm" = xfce4 ]; then
         FILE \
 <<'_BASH_PROFILE'
@@ -5677,10 +5666,19 @@ if [ -z "$DISPLAY" ] && [ "$(tty)" = '/dev/tty1' ]; then
     fi
 fi
 _BASH_PROFILE
+    fi
 
-        __file_write;
-    elif [ "$wm" = none ] || [ ! "$wm" ]; then
-        __file_write;
+    __file_write;
+
+    if [ "$wm" = sway ]; then
+        FILE_PATH \
+<<'SWAY_LOG'
+/var/log/sway.log
+SWAY_LOG
+
+        __loc_empty;
+        __loc_chmod '0644'
+        __loc_chown "$user"
     fi
 }
 
