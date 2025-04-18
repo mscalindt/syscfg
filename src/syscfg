@@ -3513,11 +3513,12 @@ DNSMASQ_SERVICE
 <<'DNSMASQ_SERVICE'
 [Unit]
 Description=Caching DNS server
-ConditionPathExists=/usr/bin/dnsmasq
+Wants=dbus.service
 
 [Service]
 Type=simple
 ExecStart=/usr/bin/dnsmasq -k --user=dnsmasq
+TimeoutStopSec=3
 
 [Install]
 WantedBy=multi-user.target
