@@ -3466,12 +3466,12 @@ _autostart() {
     if [ "$init" = systemd ]; then
         if [ "$bluetooth" = 1 ]; then
             FILE_PATH \
-<<BLUETOOTH_SERVICE
+<<'BLUETOOTH_SERVICE'
 /etc/systemd/system/bluetooth.service
 BLUETOOTH_SERVICE
 
             FILE \
-<<BLUETOOTH_SERVICE
+<<'BLUETOOTH_SERVICE'
 [Unit]
 Description=Bluetooth service
 Requires=dbus.service
@@ -3490,12 +3490,12 @@ BLUETOOTH_SERVICE
             __file_write;
 
             FILE_PATH \
-<<BLUETOOTH_SERVICE
+<<'BLUETOOTH_SERVICE'
 /etc/systemd/system/bluetooth.service
 BLUETOOTH_SERVICE
 
             FILE_PATH_TARGET \
-<<BLUETOOTH_SERVICE
+<<'BLUETOOTH_SERVICE'
 /etc/systemd/system/multi-user.target.wants/bluetooth.service
 BLUETOOTH_SERVICE
 
@@ -3505,12 +3505,12 @@ BLUETOOTH_SERVICE
         if [ "$dns" = localhost ]; then
             if [ "$dns0" = dnsmasq ]; then
                 FILE_PATH \
-<<DNSMASQ_SERVICE
+<<'DNSMASQ_SERVICE'
 /etc/systemd/system/dnsmasq.service
 DNSMASQ_SERVICE
 
                 FILE \
-<<DNSMASQ_SERVICE
+<<'DNSMASQ_SERVICE'
 [Unit]
 Description=Caching DNS server
 ConditionPathExists=/usr/bin/dnsmasq
@@ -3526,12 +3526,12 @@ DNSMASQ_SERVICE
                 __file_write;
 
                 FILE_PATH \
-<<DNSMASQ_SERVICE
+<<'DNSMASQ_SERVICE'
 /etc/systemd/system/dnsmasq.service
 DNSMASQ_SERVICE
 
                 FILE_PATH_TARGET \
-<<DNSMASQ_SERVICE
+<<'DNSMASQ_SERVICE'
 /etc/systemd/system/multi-user.target.wants/dnsmasq.service
 DNSMASQ_SERVICE
 
@@ -3577,12 +3577,12 @@ EVTEST_GRAB_SERVICE
         fi
 
         FILE_PATH \
-<<IWD_SERVICE
+<<'IWD_SERVICE'
 /etc/systemd/system/iwd.service
 IWD_SERVICE
 
         FILE \
-<<IWD_SERVICE
+<<'IWD_SERVICE'
 [Unit]
 Description=Wireless service
 
@@ -3601,24 +3601,24 @@ IWD_SERVICE
         __file_write;
 
         FILE_PATH \
-<<IWD_SERVICE
+<<'IWD_SERVICE'
 /etc/systemd/system/iwd.service
 IWD_SERVICE
 
         FILE_PATH_TARGET \
-<<IWD_SERVICE
+<<'IWD_SERVICE'
 /etc/systemd/system/multi-user.target.wants/iwd.service
 IWD_SERVICE
 
         __file_target_write 'SYMLINK'
 
         FILE_PATH \
-<<RTKIT_DAEMON_SERVICE
+<<'RTKIT_DAEMON_SERVICE'
 /etc/systemd/system/rtkit-daemon.service
 RTKIT_DAEMON_SERVICE
 
         FILE \
-<<RTKIT_DAEMON_SERVICE
+<<'RTKIT_DAEMON_SERVICE'
 [Unit]
 Description=RealtimeKit Scheduling Policy Service
 
@@ -3637,12 +3637,12 @@ RTKIT_DAEMON_SERVICE
         __file_write;
 
         FILE_PATH \
-<<RTKIT_DAEMON_SERVICE
+<<'RTKIT_DAEMON_SERVICE'
 /etc/systemd/system/rtkit-daemon.service
 RTKIT_DAEMON_SERVICE
 
         FILE_PATH_TARGET \
-<<RTKIT_DAEMON_SERVICE
+<<'RTKIT_DAEMON_SERVICE'
 /etc/systemd/system/multi-user.target.wants/rtkit-daemon.service
 RTKIT_DAEMON_SERVICE
 
