@@ -764,7 +764,7 @@ bytes_size() {
 }
 
 #! .desc:
-# Completely remove the filesystem flag protection of/near a file/directory
+# Remove the filesystem flag protection of a physical file
 #! .params:
 # <"$1"> - absolute path
 #! .rc:
@@ -777,25 +777,9 @@ chattr_remove() {
 
     cmd 'chattr' || return 0
 
-    if str_sfix '/' "$1"; then
-        set -- "${1%?}"
-    fi
+    { [ -f "$1" ] && [ ! -h "$1" ]; } || return 0
 
-    case "$1" in
-        '/'*'/'*) [ -h "${1%/*}" ] || chattr -ia "${1%/*}" 2> /dev/null ;;
-    esac
-
-    # 'find' is used because the shell glob returns symbolic links (whereas
-    # find does not unless explicitly specified) and executing chattr on a
-    # symbolic link results in a fatal error.
-    if dir "$1"; then
-        find "$1"/. \( ! -path '*/./*' -o -prune \) \
-             -type d -exec chattr -ia {} + 2> /dev/null
-        find "$1"/. \( ! -path '*/./*' -o -prune \) \
-             -type f -exec chattr -ia {} + 2> /dev/null
-    elif file "$1"; then
-        [ -h "$1" ] || chattr -ia "$1" 2> /dev/null
-    fi
+    chattr -ia "$1"
 }
 
 #! .desc:
