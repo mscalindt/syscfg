@@ -3444,6 +3444,23 @@ ASOUND_CONF
 # Sources:
 # https://unix.stackexchange.com/a/506374/431300
 #
+# Hard dependency mark in systemd:
+# Requires=<service>
+#
+# Hard dependency mark + runtime mark in systemd:
+# Requires=<service>
+# After=<service>
+#
+# Soft dependency mark in systemd:
+# Wants=<service>
+#
+# Soft dependency mark + runtime mark in systemd:
+# Wants=<service>
+# After=<service>
+#
+# In respect to dependencies, `WantedBy=` string will still be respected
+# in all cases.
+#
 # An alternative to systemd shall be considered.
 _autostart() {
     if [ "$init" = systemd ]; then
