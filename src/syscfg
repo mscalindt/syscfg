@@ -3654,6 +3654,10 @@ MOC_SERVICE
             if ! systemctl disable rtkit-daemon > /dev/null 2>&1; then
                 errF 235 - 'systemctl disable rtkit-daemon: Failed.'
             fi
+
+            if ! systemctl mask rtkit-daemon > /dev/null 2>&1; then
+                errF 235 - 'systemctl mask rtkit-daemon: Failed.'
+            fi
         fi
     fi
 }
