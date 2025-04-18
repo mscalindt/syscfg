@@ -788,7 +788,6 @@ chattr_remove() {
     # 'find' is used because the shell glob returns symbolic links (whereas
     # find does not unless explicitly specified) and executing chattr on a
     # symbolic link results in a fatal error.
-    # file() does not match symbolic links.
     if dir "$1"; then
         find "$1"/. \( ! -path '*/./*' -o -prune \) \
              -type d -exec chattr -ia {} + 2> /dev/null
