@@ -3358,6 +3358,58 @@ __loc_empty() {
 }
 
 #! .desc:
+# Create a symbolic link of an object at the specified path (overwrite)
+#! .uses:
+# <FILE_PATH> $ - the object
+# <FILE_PATH_TARGET> $ - the path to write the symbolic link at
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__loc_target_link_overwrite() {
+    if [ ! "$FILE_PATH" ]; then
+        err -r -1 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if [ ! "$FILE_PATH_TARGET" ]; then
+        err -r -1 'Missing FILE_PATH_TARGET.'
+        return 255
+    fi
+
+    if ! { exist "$FILE_PATH" || [ -h "$FILE_PATH" ]; }; then
+        ENOENT;
+        err -r -- 'F '; err - - "$FILE_PATH"
+        exit 202
+    fi
+
+    while :; do
+        if [ "$backup" = 1 ]; then
+            loc_backup "$FILE_PATH_TARGET"
+        fi
+
+        if [ "$logging" = 1 ]; then
+            info -w -1 'Will symbolic link source/target:'
+            info -w -- '? '; info - - "$FILE_PATH"
+            info -w -- 'L '; info - - "$FILE_PATH_TARGET"
+        fi
+
+        if ! loc_link "$FILE_PATH" "$FILE_PATH_TARGET"; then
+            err -r -1 'Write error:'
+            err -r -- 'L '; err - - "$FILE_PATH_TARGET"
+            exit 201
+        fi
+    break; done
+
+    if str_pfix "$home"/ "$FILE_PATH_TARGET"; then
+        if ! loc_perms_user "$FILE_PATH_TARGET"; then
+            EPERMS "$FILE_PATH_TARGET"
+        fi
+    fi
+}
+
+#! .desc:
 # Clone a git repository to $tmpd
 #! .params:
 # <"$1"> - URL
