@@ -2080,6 +2080,8 @@ loc_backup() {
         return 0
     fi
 
+    [ ! -h "$1" ] || return 0
+
     if [ "$force" = 1 ]; then
         # Intentionally ignore errors here; if chattr was used on some of the
         # files, it probably is very intentional. Make it act as a feature to
