@@ -3476,7 +3476,6 @@ BLUETOOTH_SERVICE
 Description=Bluetooth service
 Requires=dbus.service
 After=dbus.service
-ConditionPathIsDirectory=/sys/class/bluetooth
 
 [Service]
 Type=dbus
