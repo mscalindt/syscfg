@@ -3597,11 +3597,6 @@ Description=Wireless service
 
 [Service]
 ExecStart=/usr/lib/iwd/iwd
-PrivateTmp=true
-DeviceAllow=/dev/rfkill rw
-ConfigurationDirectory=iwd
-StateDirectory=iwd
-StateDirectoryMode=0700
 
 [Install]
 WantedBy=multi-user.target
