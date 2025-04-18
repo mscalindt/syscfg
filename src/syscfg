@@ -3563,7 +3563,6 @@ found && /Handlers=/ { \
       print "/dev/input/" $i; \
   exit \
 }'\'' /proc/bus/input/devices)'
-Restart=always
 User=root
 StandardOutput=null
 
