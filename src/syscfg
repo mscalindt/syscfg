@@ -3457,6 +3457,8 @@ BLUETOOTH_SERVICE
 <<BLUETOOTH_SERVICE
 [Unit]
 Description=Bluetooth service
+Requires=dbus.service
+After=dbus.service
 ConditionPathIsDirectory=/sys/class/bluetooth
 
 [Service]
