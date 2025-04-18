@@ -2077,7 +2077,7 @@ loc_backup() {
     elif file "$1"; then
         :
     else
-        return 255
+        return 0
     fi
 
     if [ "$force" = 1 ]; then
