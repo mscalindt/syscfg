@@ -3650,6 +3650,12 @@ $home/.config/systemd/user/default.target.wants/moc.service
 MOC_SERVICE
 
         __file_target_write 'SYMLINK'
+
+        if [ "$arch_linux" = 1 ]; then
+            if ! systemctl disable rtkit-daemon > /dev/null 2>&1; then
+                errF 235 - 'systemctl disable rtkit-daemon: Failed.'
+            fi
+        fi
     fi
 }
 
