@@ -3617,42 +3617,6 @@ IWD_SERVICE
         __file_target_write 'SYMLINK'
 
         FILE_PATH \
-<<'RTKIT_DAEMON_SERVICE'
-/etc/systemd/system/rtkit-daemon.service
-RTKIT_DAEMON_SERVICE
-
-        FILE \
-<<'RTKIT_DAEMON_SERVICE'
-[Unit]
-Description=RealtimeKit Scheduling Policy Service
-
-[Service]
-ExecStart=/usr/lib/rtkit-daemon
-Type=dbus
-BusName=org.freedesktop.RealtimeKit1
-NotifyAccess=main
-CapabilityBoundingSet=CAP_SYS_NICE CAP_DAC_READ_SEARCH CAP_SYS_CHROOT CAP_SETGID CAP_SETUID
-PrivateNetwork=yes
-
-[Install]
-WantedBy=multi-user.target
-RTKIT_DAEMON_SERVICE
-
-        __file_write;
-
-        FILE_PATH \
-<<'RTKIT_DAEMON_SERVICE'
-/etc/systemd/system/rtkit-daemon.service
-RTKIT_DAEMON_SERVICE
-
-        FILE_PATH_TARGET \
-<<'RTKIT_DAEMON_SERVICE'
-/etc/systemd/system/multi-user.target.wants/rtkit-daemon.service
-RTKIT_DAEMON_SERVICE
-
-        __file_target_write 'SYMLINK'
-
-        FILE_PATH \
 <<MOC_SERVICE
 $home/.config/systemd/user/moc.service
 MOC_SERVICE
