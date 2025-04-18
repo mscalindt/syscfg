@@ -2153,9 +2153,9 @@ loc_delete() {
 }
 
 #! .desc:
-# Create a symbolic link of a file/directory
+# Create a symbolic link of an object
 #! .params:
-# <"$1"> - absolute path of the file/directory
+# <"$1"> - absolute path of the object
 # <"$2"> - absolute path to create the link at
 #! .rc:
 # (0) success
@@ -2165,13 +2165,7 @@ loc_delete() {
 loc_link() {
     args_eq 2 "$#" || return 255
 
-    if dir "$1"; then
-        :
-    elif file "$1"; then
-        :
-    else
-        return 255
-    fi
+    { [ -e "$1" ] || [ -h "$1" ]; } || return 255
 
     if exist "$2"; then
         chattr_remove "$2"
