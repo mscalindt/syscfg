@@ -3553,7 +3553,16 @@ Description=Grab m533ia keyboard at startup
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/evtest --grab /dev/input/event3
+ExecStart=/bin/bash -c '\
+/usr/bin/evtest --grab \
+$(awk '\''\
+/AT Translated Set 2 keyboard/ { found=1 } \
+found && /Handlers=/ { \
+  for (i=1; i<=NF; i++) \
+    if ($i ~ /^event[0-9]+$/) \
+      print "/dev/input/" $i; \
+  exit \
+}'\'' /proc/bus/input/devices)'
 Restart=always
 User=root
 StandardOutput=null
