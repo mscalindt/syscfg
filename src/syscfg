@@ -3547,7 +3547,7 @@ BLUETOOTH_SERVICE
 /etc/systemd/system/multi-user.target.wants/bluetooth.service
 BLUETOOTH_SERVICE
 
-            __file_target_write 'SYMLINK'
+            __loc_target_link_overwrite;
         fi
 
         if [ "$dns" = localhost ]; then
@@ -3584,7 +3584,7 @@ DNSMASQ_SERVICE
 /etc/systemd/system/multi-user.target.wants/dnsmasq.service
 DNSMASQ_SERVICE
 
-                __file_target_write 'SYMLINK'
+                __loc_target_link_overwrite;
             fi
         fi
 
@@ -3630,7 +3630,7 @@ EVTEST_GRAB_SERVICE
 /etc/systemd/system/multi-user.target.wants/evtest-grab.service
 EVTEST_GRAB_SERVICE
 
-            __file_target_write 'SYMLINK'
+            __loc_target_link_overwrite;
         fi
 
         FILE_PATH \
@@ -3662,7 +3662,7 @@ IWD_SERVICE
 /etc/systemd/system/multi-user.target.wants/iwd.service
 IWD_SERVICE
 
-        __file_target_write 'SYMLINK'
+        __loc_target_link_overwrite;
 
         FILE_PATH \
 <<MOC_SERVICE
@@ -3696,7 +3696,7 @@ MOC_SERVICE
 $home/.config/systemd/user/default.target.wants/moc.service
 MOC_SERVICE
 
-        __file_target_write 'SYMLINK'
+        __loc_target_link_overwrite;
 
         if [ "$arch_linux" = 1 ]; then
             if ! systemctl disable rtkit-daemon > /dev/null 2>&1; then
@@ -8126,7 +8126,7 @@ DASH
 /usr/bin/sh
 SH
 
-    __file_target_write_overwrite 'SYMLINK'
+    __loc_target_link_overwrite;
 
     if [ "$arch_linux" = 1 ]; then
         FILE_PATH \
@@ -8968,7 +8968,7 @@ SOFIA
 /etc/localtime
 LOCALTIME
 
-    __file_target_write_overwrite 'SYMLINK'
+    __loc_target_link_overwrite;
 
     if [ "$logging" = 1 ]; then
         if ! hwclock -w; then
@@ -8995,7 +8995,7 @@ BERLIN
 /etc/localtime
 LOCALTIME
 
-    __file_target_write_overwrite 'SYMLINK'
+    __loc_target_link_overwrite;
 
     if [ "$logging" = 1 ]; then
         if ! hwclock -w; then
@@ -9134,7 +9134,7 @@ MIMEAPPS_LIST
 $home/.local/share/applications/mimeapps.list
 MIMEAPPS_LIST
 
-    __file_target_write 'SYMLINK'
+    __loc_target_link_overwrite;
 
     FILE_PATH \
 <<INDEX_THEME
