@@ -3637,13 +3637,17 @@ MOC_SERVICE
         __loc_target_link_overwrite;
 
         if [ "$arch_linux" = 1 ]; then
-            if ! systemctl disable rtkit-daemon > /dev/null 2>&1; then
-                errF 235 - 'systemctl disable rtkit-daemon: Failed.'
-            fi
+            FILE_PATH \
+<<'NULL'
+/dev/null
+NULL
 
-            if ! systemctl mask rtkit-daemon > /dev/null 2>&1; then
-                errF 235 - 'systemctl mask rtkit-daemon: Failed.'
-            fi
+            FILE_PATH_TARGET \
+<<'RTKIT_DAEMON_SERVICE'
+/etc/systemd/system/rtkit-daemon.service
+RTKIT_DAEMON_SERVICE
+
+            __loc_target_link_overwrite;
 
             FILE_PATH \
 <<'NULL'
