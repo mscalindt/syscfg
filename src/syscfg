@@ -3644,6 +3644,18 @@ MOC_SERVICE
             if ! systemctl mask rtkit-daemon > /dev/null 2>&1; then
                 errF 235 - 'systemctl mask rtkit-daemon: Failed.'
             fi
+
+            FILE_PATH \
+<<'NULL'
+/dev/null
+NULL
+
+            FILE_PATH_TARGET \
+<<AT_SPI_DBUS_BUS_SERVICE
+$home/.config/systemd/user/at-spi-dbus-bus.service
+AT_SPI_DBUS_BUS_SERVICE
+
+            __loc_target_link_overwrite;
         fi
     fi
 }
