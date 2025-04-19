@@ -8109,7 +8109,7 @@ DASHBINSH_HOOK
 
 _sudo_conf() {
     FILE_PATH \
-<<WHEEL
+<<'WHEEL'
 /etc/sudoers.d/wheel
 WHEEL
 
