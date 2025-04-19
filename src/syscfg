@@ -2188,63 +2188,40 @@ loc_link_ptr() {
 }
 
 #! .desc:
-# Set user permissions on/near a file/directory
+# Set $user as owner of an object and its parents in $home
 #! .params:
 # <"$1"> - absolute path
 #! .uses:
-# <user> $ - the user name
+# [user] $ - the user name
 # [home] $ - the user directory
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad input
 #.
-loc_perms_user() {
+loc_own_user() {
     args_eq 1 "$#" || return 255
 
-    exist "$1" || return 0
+    set -- "${1%"${1##*[!/]}"}"
 
-    if dir "$1"; then
-        :
-    elif file "$1"; then
-        :
-    else
-        return 255
-    fi
+    exist "$1" && str_pfix "$home"/ "$1" || return 0
 
     chattr_remove "$1"
 
-    find "$1" -exec chmod 0644 {} + 2> /dev/null
-    find "$1" -type d -exec chmod 0755 {} + 2> /dev/null
-
-    if [ "$(id -gn "$user")" = "$user" ]; then
-        chown -R "$user":"$user" "$1" 2> /dev/null
+    if dir "$1"; then
+        chown -RP -- "$user":"$user" "$1"
     else
-        chown -R "$user" "$1" 2> /dev/null
+        chown -P -- "$user":"$user" "$1"
     fi
 
-    if str_pfix "$home"/ "$1"; then
-        (
-            if [ "$(id -gn "$user")" = "$user" ]; then
-                set_owner() { chown "$user":"$user" "$1"; }
-            else
-                set_owner() { chown "$user" "$1"; }
-            fi
+    set -- "${1%/*}"
+    set -- "${1%"${1##*[!/]}"}"
+    until [ "$1" = "$home" ]; do
+        chown -P -- "$user":"$user" "$1"
 
-            OP_LOC="$1"
-            if str_sfix '/' "$OP_LOC"; then
-                OP_LOC="${OP_LOC%?}"
-            fi
-
-            OP_LOC="${OP_LOC%/*}"
-
-            while [ "$OP_LOC" != "$home" ]; do
-                chmod 0755 "$OP_LOC" 2> /dev/null
-                set_owner "$OP_LOC" 2> /dev/null
-                OP_LOC="${OP_LOC%/*}"
-            done
-        )
-    fi
+        set -- "${1%/*}"
+        set -- "${1%"${1##*[!/]}"}"
+    done
 }
 
 #! .desc:
@@ -2320,10 +2297,8 @@ __bin_write() {
         fi
     break; done
 
-    if str_pfix "$home"/ "$FILE_PATH"; then
-        if ! loc_perms_user "$FILE_PATH"; then
-            EPERMS "$FILE_PATH"
-        fi
+    if ! loc_own_user "$FILE_PATH"; then
+        EPERMS "$FILE_PATH"
     fi
 }
 
@@ -2386,10 +2361,8 @@ __bin_write_overwrite() {
         fi
     break; done
 
-    if str_pfix "$home"/ "$FILE_PATH"; then
-        if ! loc_perms_user "$FILE_PATH"; then
-            EPERMS "$FILE_PATH"
-        fi
+    if ! loc_own_user "$FILE_PATH"; then
+        EPERMS "$FILE_PATH"
     fi
 }
 
@@ -2492,10 +2465,8 @@ __dir_target_write() {
         fi
     break; done
 
-    if str_pfix "$home"/ "$FILE_PATH_TARGET"; then
-        if ! loc_perms_user "$FILE_PATH_TARGET"; then
-            EPERMS "$FILE_PATH_TARGET"
-        fi
+    if ! loc_own_user "$FILE_PATH_TARGET"; then
+        EPERMS "$FILE_PATH_TARGET"
     fi
 }
 
@@ -2584,10 +2555,8 @@ __dir_target_write_overwrite() {
         fi
     break; done
 
-    if str_pfix "$home"/ "$FILE_PATH_TARGET"; then
-        if ! loc_perms_user "$FILE_PATH_TARGET"; then
-            EPERMS "$FILE_PATH_TARGET"
-        fi
+    if ! loc_own_user "$FILE_PATH_TARGET"; then
+        EPERMS "$FILE_PATH_TARGET"
     fi
 }
 
@@ -2718,10 +2687,8 @@ __file_write() {
         fi
     break; done
 
-    if str_pfix "$home"/ "$FILE_PATH"; then
-        if ! loc_perms_user "$FILE_PATH"; then
-            EPERMS "$FILE_PATH"
-        fi
+    if ! loc_own_user "$FILE_PATH"; then
+        EPERMS "$FILE_PATH"
     fi
 
     if ! LOG_clear; then
@@ -2784,10 +2751,8 @@ __file_write_overwrite() {
         fi
     break; done
 
-    if str_pfix "$home"/ "$FILE_PATH"; then
-        if ! loc_perms_user "$FILE_PATH"; then
-            EPERMS "$FILE_PATH"
-        fi
+    if ! loc_own_user "$FILE_PATH"; then
+        EPERMS "$FILE_PATH"
     fi
 
     if ! LOG_clear; then
@@ -2892,10 +2857,8 @@ __file_target_write() {
         fi
     break; done
 
-    if str_pfix "$home"/ "$FILE_PATH_TARGET"; then
-        if ! loc_perms_user "$FILE_PATH_TARGET"; then
-            EPERMS "$FILE_PATH_TARGET"
-        fi
+    if ! loc_own_user "$FILE_PATH_TARGET"; then
+        EPERMS "$FILE_PATH_TARGET"
     fi
 }
 
@@ -2981,10 +2944,8 @@ __file_target_write_overwrite() {
         fi
     break; done
 
-    if str_pfix "$home"/ "$FILE_PATH_TARGET"; then
-        if ! loc_perms_user "$FILE_PATH_TARGET"; then
-            EPERMS "$FILE_PATH_TARGET"
-        fi
+    if ! loc_own_user "$FILE_PATH_TARGET"; then
+        EPERMS "$FILE_PATH_TARGET"
     fi
 }
 
@@ -3381,10 +3342,8 @@ __loc_target_link_overwrite() {
         fi
     break; done
 
-    if str_pfix "$home"/ "$FILE_PATH_TARGET"; then
-        if ! loc_perms_user "$FILE_PATH_TARGET"; then
-            EPERMS "$FILE_PATH_TARGET"
-        fi
+    if ! loc_own_user "$FILE_PATH_TARGET"; then
+        EPERMS "$FILE_PATH_TARGET"
     fi
 }
 
