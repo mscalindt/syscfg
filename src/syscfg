@@ -4485,7 +4485,7 @@ ytdlp_a() (
     ARGS="$ARGS"' --format'
     ARGS="$ARGS"' 338/258/327/141/256/251/140/22'
 
-    yt-dlp ${ARGS} "$URL"
+    yt-dlp_ ${ARGS} "$URL"
 
     IN=$(
         set -- *
