@@ -2805,11 +2805,6 @@ __file_target_write() {
 
 #! .desc:
 # Copy a file at the specified path (overwrite path)
-#! .params:
-# [$1] - type(
-#     'SYMLINK' - symbolic copy
-#     .
-# )
 #! .uses:
 # <FILE_PATH> $ - the directory
 # <FILE_PATH_TARGET> $ - the path to write the directory at
@@ -2842,13 +2837,13 @@ __file_target_write_overwrite() {
     while :; do
         if [ "$avoid_write" = 1 ]; then
             if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
-                if [ "$1" != 'SYMLINK' ]; then
-                    info -w -1 'Write avoided:'
-                    info -g -- 'F '; info - - "$FILE_PATH_TARGET"
-                    break
-                elif [ "$1" = 'SYMLINK' ] && [ -h "$FILE_PATH_TARGET" ]; then
+                if [ -h "$FILE_PATH_TARGET" ]; then
                     info -w -1 'Write avoided:'
                     info -g -- 'L '; info - - "$FILE_PATH_TARGET"
+                    break
+                else
+                    info -w -1 'Write avoided:'
+                    info -g -- 'F '; info - - "$FILE_PATH_TARGET"
                     break
                 fi
             fi
@@ -2859,29 +2854,15 @@ __file_target_write_overwrite() {
         fi
 
         if [ "$logging" = 1 ]; then
-            if [ "$1" = 'SYMLINK' ]; then
-                info -w -1 'Will symlink to/from:'
-                info -w -- 'F '; info - - "$FILE_PATH"
-                info -w -- 'F '; info - - "$FILE_PATH_TARGET"
-            else
-                info -w -1 'Will copy from/to:'
-                info -w -- 'F '; info - - "$FILE_PATH"
-                info -w -- 'F '; info - - "$FILE_PATH_TARGET"
-            fi
+            info -w -1 'Will copy from/to:'
+            info -w -- 'F '; info - - "$FILE_PATH"
+            info -w -- 'F '; info - - "$FILE_PATH_TARGET"
         fi
 
-        if [ "$1" = 'SYMLINK' ]; then
-            if ! loc_link "$FILE_PATH" "$FILE_PATH_TARGET"; then
-                err -r -1 'Write error:'
-                err -r -- 'F '; err - - "$FILE_PATH_TARGET"
-                exit 201
-            fi
-        else
-            if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
-                err -r -1 'Write error:'
-                err -r -- 'F '; err - - "$FILE_PATH_TARGET"
-                exit 201
-            fi
+        if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
+            err -r -1 'Write error:'
+            err -r -- 'F '; err - - "$FILE_PATH_TARGET"
+            exit 201
         fi
     break; done
 
