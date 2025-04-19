@@ -891,9 +891,9 @@ replchars() {
 }
 
 #! .desc:
-# Execute 'umount' on a file/directory
+# Execute 'umount' on a directory
 #! .params:
-# <"$1"> - file/directory
+# <"$1"> - directory
 #! .rc:
 # (0) success
 # (255) bad input
@@ -901,11 +901,7 @@ replchars() {
 unmount() {
     args_eq 1 "$#" || return 255
 
-    cmd 'umount' || return 0
-
-    if ! exist "$1"; then
-        return 0
-    fi
+    cmd 'umount' && exist "$1" && dir "$1" || return 0
 
     umount -Rf "$1" > /dev/null 2>&1 || :
 }
