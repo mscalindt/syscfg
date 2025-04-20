@@ -5589,16 +5589,19 @@ showEndings=false
 showWhiteSpace=false
 skipNonText=true
 spellCheckFromStart=false
+textMargin=false
 textTabSize=8
 thickCursor=false
 vLineDistance=80
 
 [window]
 closeWithLastTab=false
+disableMenubarAccel=false
 fullscreen=false
 hideSearchbar=false
 hideSingleTab=false
 max=true
+menubarTitle=false
 nativeDialog=true
 noMenubar=false
 noToolbar=true
@@ -5613,6 +5616,7 @@ sidePaneMode=false
 size=@Size(700 500)
 splitterPos=20
 startSize=@Size(700 500)
+sysIcons=false
 tabPosition=0
 tabWrapAround=false
 FP_CONF
