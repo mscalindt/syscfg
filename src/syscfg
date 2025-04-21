@@ -7179,7 +7179,7 @@ PACMAN_CONF
             'Color' \
             ~~3 \
             'ParallelDownloads' \
-            'ParallelDownloads = 3' \
+            'ParallelDownloads = 5' \
             ~~3 \
             'VerbosePkgLists' \
             'VerbosePkgLists'
