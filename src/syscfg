@@ -5905,6 +5905,9 @@ _GITCONFIG
 	signingkey = 7D1F56FAD6FB86652A60BEE65BC3343816EAB179
 [commit]
 	gpgsign = 1
+[color "diff"]
+	old = red
+	new = yellow
 _GITCONFIG
 
     __file_write;
