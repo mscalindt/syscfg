@@ -10133,41 +10133,6 @@ main_chk_vars() {
     esac
 }
 
-main_defs() {
-    err_handler() {
-        main_rm_tmp;
-
-        # These return codes signify that output has already been written and
-        # exit has already been invoked. (pre-func)
-        # Executed cleanup above, no more fuss needed here.
-        case $1 in
-            201|202|217|220|221|222|230|231|232|233|234|235)
-                err -r -1 "${opd}(): Failed. (RC = $1)"
-
-                return 0
-            ;;
-        esac
-
-        if [ "$1" -eq 130 ]; then
-            trap - TERM EXIT
-            info -y - "${LF}Operation cancelled: ${opd}()"
-            exit 130
-        fi
-
-        if [ "$1" -eq 127 ]; then
-            errF 127 - "Operation unhandled: ${opd}()"
-        fi
-
-        errF "$1" -1 "${opd}(): Unhandled error. (RC = $1)"
-    }
-
-    LC_ALL=C; export LC_ALL
-    LF='
-'
-
-    binary_files;
-}
-
 main_func_env_cleanup() {
     FILE=; FILE_PATH_TARGET=; umask 022
     LOG_clear; rm -rf "${tmpd:?}"/*
@@ -10255,12 +10220,38 @@ main_vars_lock() {
              polkit_agent ops
 }
 
+err_handler() {
+    main_rm_tmp;
+
+    # These return codes signify that output has already been written and
+    # exit has already been invoked. (pre-func)
+    # Executed cleanup above, no more fuss needed here.
+    case $1 in
+        201|202|217|220|221|222|230|231|232|233|234|235)
+            err -r -1 "${opd}(): Failed. (RC = $1)"
+
+            return 0
+        ;;
+    esac
+
+    if [ "$1" -eq 130 ]; then
+        trap - TERM EXIT
+        info -y - "${LF}Operation cancelled: ${opd}()"
+        exit 130
+    fi
+
+    if [ "$1" -eq 127 ]; then
+        errF 127 - "Operation unhandled: ${opd}()"
+    fi
+
+    errF "$1" -1 "${opd}(): Unhandled error. (RC = $1)"
+}
+
 main() {
     [ "$(id -u)" = 0 ] || {
         errF 1 - 'Missing root rights.'
     }
 
-    main_defs;
     main_util_env;
 
     # Utility control switches
@@ -10435,6 +10426,12 @@ main() {
     main_tmpd;
     main_tmpf;
     main_vars_lock;
+
+    LC_ALL=C; export LC_ALL
+    LF='
+'
+
+    binary_files;
 
     while [ "$1" ]; do
         main_set_opd "$1"
