@@ -779,7 +779,7 @@ chattr_remove() {
 
     { [ -f "$1" ] && [ ! -h "$1" ]; } || return 0
 
-    chattr -ia "$1"
+    chattr -ia "$1" 2> /dev/null || :
 }
 
 #! .desc:
