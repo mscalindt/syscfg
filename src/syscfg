@@ -10025,48 +10025,6 @@ _XINITRC
     __file_write;
 }
 
-# WARNING:
-# The code below can facilitate arbitrary path execution; not to be used in
-# security contexts. The function is only included for convenience. Programs
-# focused on security shall instead exit and output EPERM.
-root_exec() {
-    case :$(id -u) in
-        :)
-            errF 127 - "'id' returned nothing."
-        ;;
-        :0)
-            :
-        ;;
-        *)
-            # Again, this is NOT a foolproof way to get the absolute path. There
-            # isn't one that doesn't involve external hacks.
-            case "$0" in
-                '/'*) MAIN_UTIL_PATH="$0" ;;
-                *) MAIN_UTIL_PATH="$PWD/$0" ;;
-            esac
-
-            # It appears that, in zsh specifically, $0 is not a way to obtain
-            # the script name, as $0 here would always print 'root_exec', i.e.
-            # the function name.
-            if ! file "$MAIN_UTIL_PATH"; then
-                MAIN_UTIL_PATH=$(command -v "$0" 2> /dev/null)
-            fi
-
-            file "$MAIN_UTIL_PATH" || errF 2 - 'Integrity failed.'
-
-            if command -v doas > /dev/null 2>&1; then
-                exec doas -u root -- "$MAIN_UTIL_PATH" "$@"
-            elif command -v sudo > /dev/null 2>&1; then
-                exec sudo -u root -- "$MAIN_UTIL_PATH" "$@"
-            elif command -v su > /dev/null 2>&1; then
-                exec su root -- "$MAIN_UTIL_PATH" "$@"
-            fi
-
-            errF 1 - 'Missing root rights.'
-        ;;
-    esac
-}
-
 #! .desc:
 # Assert the passed arguments match BRE: [0-9A-Za-z_-]
 #! .params:
@@ -10298,6 +10256,10 @@ main_vars_lock() {
 }
 
 main() {
+    [ "$(id -u)" = 0 ] || {
+        errF 1 - 'Missing root rights.'
+    }
+
     main_defs;
     main_util_env;
 
@@ -10499,5 +10461,4 @@ main() {
     return "$RC"
 }
 
-root_exec "$@"
 main "$@"
