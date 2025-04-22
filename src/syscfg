@@ -10105,12 +10105,6 @@ main_chk_home() {
     writable "$home" || errF 1 - "Home is not writable: $home"
 }
 
-main_chk_user() {
-    case :$(id -u) in
-        :) errF 127 - "User does not exist: $user" ;;
-    esac
-}
-
 main_func_env_cleanup() {
     FILE=; FILE_PATH_TARGET=; umask 022
     LOG_clear; rm -rf "${tmpd:?}"/*
@@ -10392,7 +10386,6 @@ main() {
     }
 
     if [ "$fatal" = 1 ]; then
-        main_chk_user;
         main_chk_home;
     fi
 
