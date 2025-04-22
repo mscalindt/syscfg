@@ -10098,13 +10098,6 @@ main_assert_ops() {
     done
 }
 
-main_chk_home() {
-    exist "$home" || errF 1 - "Home does not exist: $home"
-    dir "$home" || errF 1 - "Home is not a directory: $home"
-    readable "$home" || errF 1 - "Home is not readable: $home"
-    writable "$home" || errF 1 - "Home is not writable: $home"
-}
-
 main_func_env_cleanup() {
     FILE=; FILE_PATH_TARGET=; umask 022
     LOG_clear; rm -rf "${tmpd:?}"/*
@@ -10384,10 +10377,6 @@ main() {
     [ "$(id -u)" = 0 ] || {
         errF 1 - 'Missing root rights.'
     }
-
-    if [ "$fatal" = 1 ]; then
-        main_chk_home;
-    fi
 
     main_tmpd;
     main_tmpf;
