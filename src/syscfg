@@ -10298,6 +10298,9 @@ main_vars_lock() {
 }
 
 main() {
+    main_defs;
+    main_util_env;
+
     # Utility control switches
     # Compare the real file against our and do not write if same:
     avoid_write=1
@@ -10497,6 +10500,4 @@ main() {
 }
 
 root_exec "$@"
-main_defs;
-main_util_env;
 main "$@"
