@@ -10237,10 +10237,6 @@ err_handler() {
 }
 
 main() {
-    [ "$(id -u)" = 0 ] || {
-        errF 1 - 'Missing root rights.'
-    }
-
     # Utility control switches
     # Compare the real file against our and do not write if same:
     avoid_write=1
@@ -10414,6 +10410,10 @@ main() {
         main_list_ops;
         exit 2
     fi
+
+    [ "$(id -u)" = 0 ] || {
+        errF 1 - 'Missing root rights.'
+    }
 
     if [ "$fatal" = 1 ]; then
         main_chk_user;
