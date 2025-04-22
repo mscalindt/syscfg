@@ -10145,7 +10145,8 @@ main_list_ops() (
         done | sort
     )
 
-    IFS="$LF"; prev_op=; for op in $ops; do
+    IFS='
+'; prev_op=; for op in $ops; do
         if [ ! "$prev_op" ]; then
             prev_op="$op" && continue
         else
