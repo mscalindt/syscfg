@@ -10201,18 +10201,6 @@ main_tmpf() {
     fi
 }
 
-main_util_env() {
-    # Utility env switches
-    # Enable/disable env error checking:
-    fatal=0
-
-    # Utility internal locations
-    # Temporary per-function dir (cleared on func exit):
-    tmpd="${TMPDIR:-/tmp}/syscfg_tmpd"
-    # Temporary per-function file (cleared on func exit):
-    tmpf="${TMPDIR:-/tmp}/syscfg_tmpf"
-}
-
 main_vars_lock() {
     readonly fatal tmpd tmpf avoid_write backup force logging m533ia \
              arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
@@ -10251,8 +10239,6 @@ main() {
     [ "$(id -u)" = 0 ] || {
         errF 1 - 'Missing root rights.'
     }
-
-    main_util_env;
 
     # Utility control switches
     # Compare the real file against our and do not write if same:
@@ -10373,6 +10359,16 @@ main() {
     ops="$ops xfce4-conf"
     ops="$ops xorg-conf"
     ops="${ops# }"
+
+    # Utility env switches
+    # Enable/disable env error checking:
+    fatal=0
+
+    # Utility internal locations
+    # Temporary per-function dir (cleared on func exit):
+    tmpd="${TMPDIR:-/tmp}/syscfg_tmpd"
+    # Temporary per-function file (cleared on func exit):
+    tmpf="${TMPDIR:-/tmp}/syscfg_tmpf"
 
     # Enable avoid_write from cmdline: ^AE as $1
     # Enable audio_hq from cmdline:    ^AQ as $1
