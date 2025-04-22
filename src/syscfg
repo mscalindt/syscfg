@@ -10111,28 +10111,6 @@ main_chk_user() {
     esac
 }
 
-main_chk_vars() {
-    [ "$fatal" ] || errF 2 - 'BAD: $fatal'
-    case "$fatal" in
-        0|1) : ;;
-        *) errF 2 - 'BAD: $fatal' ;;
-    esac
-
-    [ "$tmpd" ] || errF 2 - 'BAD: $tmpd'
-    case "$tmpd" in
-        *'/' | *'//'*) errF 2 - 'BAD: $tmpd' ;;
-        '/'*) : ;;
-        *) errF 2 - 'BAD: $tmpd' ;;
-    esac
-
-    [ "$tmpf" ] || errF 2 - 'BAD: $tmpf'
-    case "$tmpf" in
-        *'/' | *'//'*) errF 2 - 'BAD: $tmpf' ;;
-        '/'*) : ;;
-        *) errF 2 - 'BAD: $tmpf' ;;
-    esac
-}
-
 main_func_env_cleanup() {
     FILE=; FILE_PATH_TARGET=; umask 022
     LOG_clear; rm -rf "${tmpd:?}"/*
@@ -10396,8 +10374,6 @@ main() {
         info -w - "Allowed characters: 0-9A-Za-z_-"
         exit 2
     fi
-
-    main_chk_vars;
 
     # Only POSIX utilites with POSIX option usage shall be specified and used.
     if ! main_assert_deps 'awk' 'chmod' 'chown' 'cmp' 'cp' 'find' 'grep' 'id' \
