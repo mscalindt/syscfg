@@ -783,6 +783,38 @@ chattr_remove() {
 }
 
 #! .desc:
+# Process each populated IFS field split with a function
+#! .params:
+# <"$1"> - string
+# <$2> - function name
+# ["$3"]+ - function argument
+#! .uses.var:
+# <IFS> $ - environment variable;
+#           list of characters that is used for field splitting
+#! .sets:
+# <set +f>;
+#! .rc:
+# (0) success
+# (*) error
+#! .rc.fn:
+# ($2) (*) error
+#! .desc.ext:
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Field Splitting".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: set".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Shell Variables".
+#.
+ifs_map() {
+    set -f && _str="$1" && shift && for _field in $_str; do
+        [ "$_field" ] || continue
+
+        "$@" "$_field" || { set -- "$?"; set +f; return "$?"; }
+    done && set +f
+}
+
+#! .desc:
 # Create the parents of a file/directory
 #! .params:
 # <"$1"> - absolute path
@@ -10103,31 +10135,6 @@ main_func_env_cleanup() {
     LOG_clear; rm -rf "${tmpd:?}"/*
 }
 
-main_list_ops() (
-    ops=$(
-        IFS=' '; for op in $ops; do
-            printf "%s\n" "$op"
-        done | sort
-    )
-
-    IFS='
-'; prev_op=; for op in $ops; do
-        if [ ! "$prev_op" ]; then
-            prev_op="$op" && continue
-        else
-            info -w -1 "$prev_op ^ $op"; prev_op=
-        fi
-    done; [ ! "$prev_op" ] || info -w -1 "$prev_op"
-
-    info -w -1 'SWITCH: avoid_write ^AE'
-    info -w -1 'SWITCH: audio_hq ^AQ'
-    info -w -1 'SWITCH: backup ^BP'
-    info -w -1 'SWITCH: force ^FE'
-    info -w -1 'SWITCH: gaming ^GG'
-    info -w -1 'SWITCH: ipv6 ^I6'
-    info -w -1 'SWITCH: logging ^LG'
-)
-
 main_rm_tmp() {
     if dir "$tmpd" || file "$tmpf"; then
         rm -rf "$tmpd" "$tmpf"
@@ -10350,11 +10357,24 @@ main() {
         *) break ;;
     esac done
 
-    if args_eq 0 "$#"; then
-        err -r -1 'No operation has been specified.'
-        main_list_ops;
+    { args_min 1 "$#" && main_assert_ops "$@"; } || {
+        if [ "$#" -eq 0 ]; then
+            err -r -1 'No operation has been specified.'
+        else
+            err -r -1 "Unrecognized operation: '$_opd'"
+        fi
+
+        ifs_map "$ops" info -w -1
+        info -w -1 'SWITCH: avoid_write ^AE'
+        info -w -1 'SWITCH: audio_hq ^AQ'
+        info -w -1 'SWITCH: backup ^BP'
+        info -w -1 'SWITCH: force ^FE'
+        info -w -1 'SWITCH: gaming ^GG'
+        info -w -1 'SWITCH: ipv6 ^I6'
+        info -w -1 'SWITCH: logging ^LG'
+
         exit 2
-    fi
+    }
 
     if ! main_assert_args "$@"; then
         err -r - "Bad argument: '$_arg'."
@@ -10366,12 +10386,6 @@ main() {
     if ! main_assert_deps 'awk' 'chmod' 'chown' 'cmp' 'cp' 'find' 'grep' 'id' \
                           'ln' 'mkdir' 'od' 'rm'; then
         errF 127 - "Missing utility: $_dep"
-    fi
-
-    if ! main_assert_ops "$@"; then
-        err -r -1 "Unrecognized operation: '$_opd'"
-        main_list_ops;
-        exit 2
     fi
 
     [ "$(id -u)" = 0 ] || {
