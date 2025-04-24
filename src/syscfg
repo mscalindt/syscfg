@@ -10082,28 +10082,6 @@ main_assert_args() {
 }
 
 #! .desc:
-# Assert the passed arguments are valid commands
-#! .params:
-# <"$1"+> - command
-#! .gives:
-# (0) <"$_dep"> - the last command
-# (1) <"$_dep"> - the bad command
-#! .rc:
-# (0) yes
-# (1) no
-# (255) bad input
-#.
-main_assert_deps() {
-    args_min 1 "$#" || return 255
-
-    for _dep in "$@"; do
-        [ "$_dep" ] || return 255
-
-        command -v "$_dep" > /dev/null 2>&1 || return 1
-    done
-}
-
-#! .desc:
 # Assert the passed arguments are valid operations
 #! .params:
 # <"$1"+> - operation
@@ -10380,12 +10358,6 @@ main() {
         err -r - "Bad argument: '$_arg'."
         info -w - "Allowed characters: 0-9A-Za-z_-"
         exit 2
-    fi
-
-    # Only POSIX utilites with POSIX option usage shall be specified and used.
-    if ! main_assert_deps 'awk' 'chmod' 'chown' 'cmp' 'cp' 'find' 'grep' 'id' \
-                          'ln' 'mkdir' 'od' 'rm'; then
-        errF 127 - "Missing utility: $_dep"
     fi
 
     [ "$(id -u)" = 0 ] || {
