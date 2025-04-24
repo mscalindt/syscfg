@@ -10361,6 +10361,7 @@ main() {
     LC_ALL=C; export LC_ALL
     LF='
 '
+    readonly LF
 
     while [ "$1" ]; do
         main_set_opd "$1"
@@ -10380,7 +10381,7 @@ main() {
         info -g -1 'Done! (｡◕‿◕｡)'
 
         shift
-    done
+    done; readonly RC
 
     main_rm_tmp;
 
