@@ -4292,12 +4292,10 @@ ytdlp_a() (
         *) FILENAME="$2" ;;
     esac
 
-    ARGS='--cookies-from-browser'
-    ARGS="$ARGS"' firefox'
-    ARGS="$ARGS"' --format'
-    ARGS="$ARGS"' 338/258/327/141/256/251/140/22'
-
-    yt-dlp_ ${ARGS} "$URL"
+    yt-dlp_ --cookies-from-browser firefox \
+            --extractor-args "youtube:formats=missing_pot" \
+            --format 338/258/327/141/256/251/140/22 \
+            "$URL"
 
     IN=$(
         set -- *
