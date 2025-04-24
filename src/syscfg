@@ -10152,13 +10152,6 @@ main_tmpf() {
     fi
 }
 
-main_vars_lock() {
-    readonly fatal tmpd tmpf avoid_write backup force logging m533ia \
-             arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
-             qt_theme server wm bg de user home efi_mnt arch_mirlist \
-             polkit_agent ops
-}
-
 err_handler() {
     main_rm_tmp;
 
@@ -10366,7 +10359,11 @@ main() {
 
     main_tmpd;
     main_tmpf;
-    main_vars_lock;
+
+    readonly fatal tmpd tmpf avoid_write backup force logging m533ia \
+             arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
+             qt_theme server wm bg de user home efi_mnt arch_mirlist \
+             polkit_agent ops
 
     LC_ALL=C; export LC_ALL
     LF='
