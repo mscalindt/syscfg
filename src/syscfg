@@ -10121,20 +10121,6 @@ main_set_opd() {
     fi
 }
 
-main_tmpf() {
-    if [ "$fatal" = 1 ]; then
-        if ! { : > "$tmpf"; } 2> /dev/null; then
-            errF "$?" - "Cannot create tmpf: $tmpf"
-        fi
-
-        if ! chmod 0600 "$tmpf" 2> /dev/null; then
-            errF "$?" - "Permissions error on tmpf: $tmpf"
-        fi
-    else
-        { : > "$tmpf"; chmod 0600 "$tmpf"; } 2> /dev/null
-    fi
-}
-
 err_handler() {
     main_rm_tmp;
 
@@ -10347,7 +10333,9 @@ main() {
 
     mkdir -p "$tmpd" || errF "$?" - "Cannot create tmpd: $tmpd"
 
-    main_tmpf;
+    { : > "$tmpf" && chmod 0600 "$tmpf"; } || {
+        errF "$?" - "Cannot create tmpf: $tmpf"
+    }
 
     LC_ALL=C; export LC_ALL
     LF='
