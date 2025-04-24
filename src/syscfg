@@ -10121,16 +10121,6 @@ main_set_opd() {
     fi
 }
 
-main_tmpd() {
-    if [ "$fatal" = 1 ]; then
-        if ! mkdir -p "$tmpd" 2> /dev/null; then
-            errF "$?" - "Cannot create tmpd: $tmpd"
-        fi
-    else
-        mkdir -p "$tmpd" 2> /dev/null
-    fi
-}
-
 main_tmpf() {
     if [ "$fatal" = 1 ]; then
         if ! { : > "$tmpf"; } 2> /dev/null; then
@@ -10355,7 +10345,8 @@ main() {
         errF 1 - 'Missing root rights.'
     }
 
-    main_tmpd;
+    mkdir -p "$tmpd" || errF "$?" - "Cannot create tmpd: $tmpd"
+
     main_tmpf;
 
     LC_ALL=C; export LC_ALL
