@@ -10106,12 +10106,6 @@ main_func_env_cleanup() {
     LOG_clear; rm -rf "${tmpd:?}"/*
 }
 
-main_rm_tmp() {
-    if dir "$tmpd" || file "$tmpf"; then
-        rm -rf "$tmpd" "$tmpf"
-    fi
-}
-
 main_set_opd() {
     opd="_$1"
 
@@ -10122,7 +10116,9 @@ main_set_opd() {
 }
 
 err_handler() {
-    main_rm_tmp;
+    if [ -e "$tmpd" ] || [ -e "$tmpf" ]; then
+        rm -rf "$tmpd" "$tmpf"
+    fi
 
     # These return codes signify that output has already been written and
     # exit has already been invoked. (pre-func)
@@ -10364,7 +10360,9 @@ main() {
         shift
     done; readonly RC
 
-    main_rm_tmp;
+    if [ -e "$tmpd" ] || [ -e "$tmpf" ]; then
+        rm -rf "$tmpd" "$tmpf"
+    fi
 
     return "$RC"
 }
