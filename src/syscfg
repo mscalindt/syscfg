@@ -3910,6 +3910,71 @@ MOC_SERVICE
 
         __loc_target_link_overwrite;
 
+        FILE_PATH \
+<<PIPEWIRE_SERVICE
+$home/.config/systemd/user/pipewire.service
+PIPEWIRE_SERVICE
+
+        FILE \
+<<'PIPEWIRE_SERVICE'
+[Unit]
+Description=PipeWire Multimedia Service
+
+[Service]
+ExecStart=/usr/bin/pipewire
+
+[Install]
+WantedBy=default.target
+PIPEWIRE_SERVICE
+
+        __file_write;
+
+        FILE_PATH \
+<<PIPEWIRE_SERVICE
+$home/.config/systemd/user/pipewire.service
+PIPEWIRE_SERVICE
+
+        FILE_PATH_TARGET \
+<<PIPEWIRE_SERVICE
+$home/.config/systemd/user/default.target.wants/pipewire.service
+PIPEWIRE_SERVICE
+
+        __loc_target_link_overwrite;
+
+        FILE_PATH \
+<<PIPEWIRE_MEDIA_SESSION_SERVICE
+$home/.config/systemd/user/pipewire-media-session.service
+PIPEWIRE_MEDIA_SESSION_SERVICE
+
+        FILE \
+<<'PIPEWIRE_MEDIA_SESSION_SERVICE'
+[Unit]
+Description=PipeWire Media Session Manager
+After=pipewire.service
+BindsTo=pipewire.service
+
+[Service]
+ExecStartPre=/usr/bin/sleep 2
+ExecStart=/usr/bin/pipewire-media-session
+
+[Install]
+WantedBy=pipewire.service
+PIPEWIRE_MEDIA_SESSION_SERVICE
+
+        __file_write;
+
+        FILE_PATH \
+<<PIPEWIRE_MEDIA_SESSION_SERVICE
+$home/.config/systemd/user/pipewire-media-session.service
+PIPEWIRE_MEDIA_SESSION_SERVICE
+
+        FILE_PATH_TARGET \
+<<PIPEWIRE_MEDIA_SESSION_SERVICE
+$home/.config/systemd/user/pipewire.service.wants/pipewire-media-session.service
+PIPEWIRE_MEDIA_SESSION_SERVICE
+
+        __loc_target_link_overwrite;
+
         if [ "$arch_linux" = 1 ]; then
             FILE_PATH \
 <<'NULL'
@@ -3932,6 +3997,18 @@ NULL
 <<AT_SPI_DBUS_BUS_SERVICE
 $home/.config/systemd/user/at-spi-dbus-bus.service
 AT_SPI_DBUS_BUS_SERVICE
+
+            __loc_target_link_overwrite;
+
+            FILE_PATH \
+<<'NULL'
+/dev/null
+NULL
+
+            FILE_PATH_TARGET \
+<<PIPEWIRE_SOCKET
+$home/.config/systemd/user/pipewire.socket
+PIPEWIRE_SOCKET
 
             __loc_target_link_overwrite;
         fi
