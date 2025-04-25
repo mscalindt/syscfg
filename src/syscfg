@@ -10576,11 +10576,6 @@ main_assert_ops() {
     done
 }
 
-main_func_env_cleanup() {
-    FILE=; FILE_PATH_TARGET=; umask 022
-    LOG_clear; rm -rf "${tmpd:?}"/*
-}
-
 err_handler() {
     if [ -e "$tmpd" ] || [ -e "$tmpf" ]; then
         rm -rf "$tmpd" "$tmpf"
@@ -10818,7 +10813,9 @@ main() {
         eval "info -be -1 \"$1 -> ${opd}()\"; $opd"
         RC=$?
 
-        main_func_env_cleanup;
+        # env cleanup and reset
+        FILE=; FILE_PATH_TARGET=; umask 022
+        LOG_clear; rm -rf "${tmpd}"/*
 
         trap - INT TERM EXIT
         set +e
