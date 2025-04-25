@@ -10562,7 +10562,9 @@ main_assert_ops() {
 }
 
 err_handler() {
+    # env cleanup
     if [ -e "$tmpd" ] || [ -e "$tmpf" ]; then
+        chattr -R -ia "$tmpd" "$tmpf" > /dev/null 2>&1 || :
         rm -rf "$tmpd" "$tmpf"
     fi
 
@@ -10771,12 +10773,6 @@ main() {
         errF 1 - 'Missing root rights.'
     }
 
-    mkdir -p "$tmpd" || errF "$?" - "Cannot create tmpd: $tmpd"
-
-    { : > "$tmpf" && chmod 0600 "$tmpf"; } || {
-        errF "$?" - "Cannot create tmpf: $tmpf"
-    }
-
     LC_ALL=C; export LC_ALL
     LF='
 '
@@ -10791,12 +10787,20 @@ main() {
         trap "err_handler \$?" INT TERM EXIT
         set -e
 
+        # env setup
+        mkdir -p "$tmpd" || errF "$?" - "Cannot create tmpd: $tmpd"
+        { : > "$tmpf" && chmod 0600 "$tmpf"; } || {
+            errF "$?" - "Cannot create tmpf: $tmpf"
+        }
+
         eval "info -be -1 \"$1 -> ${opd}()\"; $opd"
         RC=$?
 
-        # env cleanup and reset
-        FILE=; FILE_PATH_TARGET=; umask 022
-        LOG_clear; rm -rf "${tmpd}"/*
+        # env reset
+        FILE=; FILE_PATH_TARGET=
+        umask 022
+        chattr -R -ia "$tmpd" "$tmpf" > /dev/null 2>&1 || :
+        rm -rf "$tmpd" "$tmpf"
 
         trap - INT TERM EXIT
         set +e
@@ -10806,7 +10810,9 @@ main() {
         shift
     done; readonly RC
 
+    # env cleanup
     if [ -e "$tmpd" ] || [ -e "$tmpf" ]; then
+        chattr -R -ia "$tmpd" "$tmpf" > /dev/null 2>&1 || :
         rm -rf "$tmpd" "$tmpf"
     fi
 
