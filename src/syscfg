@@ -8749,28 +8749,6 @@ sleep 2 && \
     systemctl --user restart \
     xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk \
     xdg-document-portal
-sleep 2 && \
-    systemctl --user restart \
-    pipewire pipewire-pulse pipewire-media-session
-
-set -- 'pipewire' 'pipewire-pulse' 'pipewire-media-session' \
-       'xdg-desktop-portal' 'pipewire' 'pipewire-pulse' 'pipewire-media-session'
-while [ "$1" ]; do
-    case "$(systemctl status --user "$1")" in
-        *'mod.rt: RTKit error: org.freedesktop.DBus.Error.NoReply'* | \
-        *'Failed connect to PipeWire: No node factory discovered'* | \
-        *'Caught PipeWire error: connection error'* | \
-        *'realtime using RTKit: Input/output error'* | \
-        *'mod.rt:'*'Input/output error'* | \
-        *'mod.rt: could not make thread'*)
-            systemctl restart --user "$1"
-            sleep 0.2
-        ;;
-        *)
-            shift
-        ;;
-    esac
-done
 
 sleep 12
 systemctl restart --user xdg-desktop-portal
