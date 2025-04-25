@@ -1665,7 +1665,7 @@ libfile() {
             # checks to a total of two. This way, specific line additions
             # can be abbreviated (or not) as desired in the log file,
             # without disabling the logging of other line additions.
-            if [ "$logging" = 1 ]; then
+            if [ "$silent" = 0 ]; then
                 LOG_write 1 "$i" "$line"
             fi
 
@@ -1692,7 +1692,7 @@ EOF
             # If $l is 1, it means we are in the first iteration. For the
             # first iteration we log line replace, for the following
             # iterations we log line addition.
-            if [ "$logging" = 1 ]; then
+            if [ "$silent" = 0 ]; then
                 if [ "$l" -eq 1 ]; then
                     if [ "$LINE" != "$line" ]; then
                         LOG_write 3 "$i" "$LINE" "$line"
@@ -1783,7 +1783,7 @@ EOF
                     "-1$2"* | \
                     '-2'*"$2" | \
                     '-3'*"$2"*)
-                        if [ "$logging" = 1 ]; then
+                        if [ "$silent" = 0 ]; then
                             LOG_write 2 "$i" "$LINE"
                         fi
 
@@ -2435,7 +2435,7 @@ loc_backup() {
         if dir "$1"; then
             cp -R "$1" "$1".bak"$_i" 2> /dev/null || break
 
-            if [ "$logging" = 1 ]; then
+            if [ "$silent" = 0 ]; then
                 info -w - 'loc_backup(): Backup from/to:'
                 info -r -- 'D '; info - - "$1"
                 info -g -- 'D '; info - - "$1".bak"$_i"
@@ -2443,7 +2443,7 @@ loc_backup() {
         else
             cp "$1" "$1".bak"$_i" 2> /dev/null || break
 
-            if [ "$logging" = 1 ]; then
+            if [ "$silent" = 0 ]; then
                 info -w - 'loc_backup(): Backup from/to:'
                 info -r -- 'F '; info - - "$1"
                 info -g -- 'F '; info - - "$1".bak"$_i"
@@ -2453,7 +2453,7 @@ loc_backup() {
         return 0
     done
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         if [ "$_i" -eq 1000 ]; then
             info -y - 'loc_backup(): Failed; too many .bak files.'
         else
@@ -2630,7 +2630,7 @@ __bin_write() {
             fi
         fi
 
-        if [ "$logging" = 1 ]; then
+        if [ "$silent" = 0 ]; then
             info -w -1 'Will write:'
             info -w -- 'F '; info - - "$FILE_PATH"
 
@@ -2694,7 +2694,7 @@ __bin_write_overwrite() {
             loc_backup "$FILE_PATH"
         fi
 
-        if [ "$logging" = 1 ]; then
+        if [ "$silent" = 0 ]; then
             info -w -1 'Will write:'
             info -w -- 'F '; info - - "$FILE_PATH"
 
@@ -2768,7 +2768,7 @@ __dir_target_write() {
             fi
         fi
 
-        if [ "$logging" = 1 ]; then
+        if [ "$silent" = 0 ]; then
             info -w -1 'Will copy from/to:'
             info -w -- 'D '; info - - "$FILE_PATH"
             info -w -- 'D '; info - - "$FILE_PATH_TARGET"
@@ -2838,7 +2838,7 @@ __dir_target_write_overwrite() {
             loc_backup "$FILE_PATH_TARGET"
         fi
 
-        if [ "$logging" = 1 ]; then
+        if [ "$silent" = 0 ]; then
             info -w -1 'Will copy from/to:'
             info -w -- 'D '; info - - "$FILE_PATH"
             info -w -- 'D '; info - - "$FILE_PATH_TARGET"
@@ -2920,7 +2920,7 @@ __file_executable() {
 
     file "$FILE_PATH" || ENOTFILE "$FILE_PATH"
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         if ! chmod +x "$FILE_PATH"; then
             EPERMS "$FILE_PATH"
         fi
@@ -2980,7 +2980,7 @@ __file_write() {
             fi
         fi
 
-        if [ "$logging" = 1 ]; then
+        if [ "$silent" = 0 ]; then
             if LOG_written; then
                 info -w -1 'Changes:'
                 info -w -- 'F '; info - - "$FILE_PATH"
@@ -3044,7 +3044,7 @@ __file_write_overwrite() {
             loc_backup "$FILE_PATH"
         fi
 
-        if [ "$logging" = 1 ]; then
+        if [ "$silent" = 0 ]; then
             if LOG_written; then
                 info -w -1 'Changes:'
                 info -w -- 'F '; info - - "$FILE_PATH"
@@ -3137,7 +3137,7 @@ __file_target_write() {
             fi
         fi
 
-        if [ "$logging" = 1 ]; then
+        if [ "$silent" = 0 ]; then
             info -w -1 'Will copy from/to:'
             info -w -- 'F '; info - - "$FILE_PATH"
             info -w -- 'F '; info - - "$FILE_PATH_TARGET"
@@ -3205,7 +3205,7 @@ __file_target_write_overwrite() {
             loc_backup "$FILE_PATH_TARGET"
         fi
 
-        if [ "$logging" = 1 ]; then
+        if [ "$silent" = 0 ]; then
             info -w -1 'Will copy from/to:'
             info -w -- 'F '; info - - "$FILE_PATH"
             info -w -- 'F '; info - - "$FILE_PATH_TARGET"
@@ -3275,7 +3275,7 @@ __loc_chattr() {
         exit 222
     fi
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         if ! chattr +"$1" "$FILE_PATH"; then
             EFSFLAG "$FILE_PATH"
         fi
@@ -3338,7 +3338,7 @@ __loc_chmod() {
 
     chattr_remove "$FILE_PATH"
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         if ! chmod "$1" "$FILE_PATH"; then
             EPERMS "$FILE_PATH"
         fi
@@ -3401,7 +3401,7 @@ __loc_chown() {
 
     chattr_remove "$FILE_PATH"
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         if [ "$(id -gn "$user")" = "$user" ]; then
             if ! chown -R "$user":"$user" "$FILE_PATH"; then
                 EPERMS "$FILE_PATH"
@@ -3451,7 +3451,7 @@ __loc_delete() {
         fi
     fi
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         info -w -1 'Will delete:'
         if [ -b "$FILE_PATH" ]; then
             info -w -- 'B ' # block file
@@ -3527,7 +3527,7 @@ __loc_empty() {
     fi
 
     if dir "$FILE_PATH"; then
-        if [ "$logging" = 1 ]; then
+        if [ "$silent" = 0 ]; then
             info -w -1 'Will empty:'
             info -w -- 'D '; info - - "$FILE_PATH"
 
@@ -3540,7 +3540,7 @@ __loc_empty() {
             fi
         fi
     else
-        if [ "$logging" = 1 ]; then
+        if [ "$silent" = 0 ]; then
             if exist "$FILE_PATH"; then
                 info -w -1 'Will truncate:'
             else
@@ -3603,7 +3603,7 @@ __loc_target_link_overwrite() {
             loc_backup "$FILE_PATH_TARGET"
         fi
 
-        if [ "$logging" = 1 ]; then
+        if [ "$silent" = 0 ]; then
             info -w -1 'Will symbolic link source/target:'
             info -w -- '? '; info - - "$FILE_PATH"
             info -w -- 'L '; info - - "$FILE_PATH_TARGET"
@@ -5369,7 +5369,7 @@ _clk_sync() {
     cmd 'hwclock' || ENOCMD 'hwclock'
     cmd 'ntpd' || ENOCMD 'ntpd'
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         info -w - 'ntpd:'
 
         if ! ntpd -gGLnq pool.ntp.org; then
@@ -6149,7 +6149,7 @@ PROFILES_INI
             while IFS= read -r line; do
                 i=$((i + 1))
 
-                if [ "$logging" = 1 ]; then
+                if [ "$silent" = 0 ]; then
                     LOG_write 1 "$i" "$line"
                 fi
 
@@ -6224,7 +6224,7 @@ PROFILES_INI
             while IFS= read -r line; do
                 i=$((i + 1))
 
-                if [ "$logging" = 1 ]; then
+                if [ "$silent" = 0 ]; then
                     LOG_write 1 "$i" "$line"
                 fi
 
@@ -6472,7 +6472,7 @@ _grub() {
         set -- "$efi_mnt"/*
 
         if exist "$1"; then
-            if [ "$logging" = 1 ]; then
+            if [ "$silent" = 0 ]; then
                 info -w -1 'Will delete:'
                 for arg in "$@"; do
                     if [ -d "$arg" ]; then
@@ -6486,7 +6486,7 @@ _grub() {
                 done
             fi
 
-            if [ "$logging" = 1 ]; then
+            if [ "$silent" = 0 ]; then
                 if ! rm -rf "$@"; then
                     errF 235 - 'rm: Failed.'
                 fi
@@ -6498,7 +6498,7 @@ _grub() {
         fi
     fi
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         info -w - 'grub-install:'
 
         if ! grub-install --target=x86_64-efi \
@@ -6585,7 +6585,7 @@ GRUB
 
     __file_write_overwrite;
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         info -w - 'grub-mkconfig:'
 
         if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg; then
@@ -6784,7 +6784,7 @@ MKINITCPIO_CONF
 
     __file_write_overwrite;
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         info -w - 'mkinitcpio:'
 
         if ! mkinitcpio -P; then
@@ -7422,7 +7422,7 @@ LOCALE_GEN
 
     __file_write;
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         info -w - 'locale-gen:'
 
         if ! locale-gen; then
@@ -7596,7 +7596,7 @@ _nvram_clr() {
     set -- '/sys/firmware/efi/efivars'/Boot*
 
     if cmd 'chattr'; then
-        if [ "$logging" = 1 ]; then
+        if [ "$silent" = 0 ]; then
             if ! chattr -ia "$@"; then
                 EFSFLAG "$@"
             fi
@@ -7607,13 +7607,13 @@ _nvram_clr() {
         fi
     fi
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         info -w -1 'Will delete:'
         printf "%s\n" '/sys/firmware/efi/efivars'/BootOrder*
         printf "%s\n" '/sys/firmware/efi/efivars'/Boot0*
     fi
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         if ! rm -f '/sys/firmware/efi/efivars'/BootOrder* \
                    '/sys/firmware/efi/efivars'/Boot0*; then
             errF 235 - 'rm: Failed.'
@@ -7674,7 +7674,7 @@ PACMAN_CONF
             while IFS= read -r line; do
                 i=$((i + 1))
 
-                if [ "$logging" = 1 ]; then
+                if [ "$silent" = 0 ]; then
                     LOG_write 1 "$i" "$line"
                 fi
 
@@ -7692,7 +7692,7 @@ EOF
                     i=$((i + 1))
                 fi
 
-                if [ "$logging" = 1 ]; then
+                if [ "$silent" = 0 ]; then
                     if [ "$l" -eq 1 ]; then
                         if [ "$LINE" != "$line" ]; then
                             LOG_write 3 "$i" "$LINE" "$line"
@@ -7806,7 +7806,7 @@ SU
                     i=$((i + 1))
                 fi
 
-                if [ "$logging" = 1 ]; then
+                if [ "$silent" = 0 ]; then
                     if [ "$l" -eq 1 ]; then
                         if [ "$LINE" != "$line" ]; then
                             LOG_write 3 "$i" "$LINE" "$line"
@@ -7869,7 +7869,7 @@ SYSTEM_AUTH
                     i=$((i + 1))
                 fi
 
-                if [ "$logging" = 1 ]; then
+                if [ "$silent" = 0 ]; then
                     if [ "$l" -eq 1 ]; then
                         if [ "$LINE" != "$line" ]; then
                             LOG_write 3 "$i" "$LINE" "$line"
@@ -9338,7 +9338,7 @@ LOCALTIME
 
     __loc_target_link_overwrite;
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         if ! hwclock -w; then
             errF 235 - 'hwclock: Failed to set the system clock.'
         fi
@@ -9365,7 +9365,7 @@ LOCALTIME
 
     __loc_target_link_overwrite;
 
-    if [ "$logging" = 1 ]; then
+    if [ "$silent" = 0 ]; then
         if ! hwclock -w; then
             errF 235 - 'hwclock: Failed to set the system clock.'
         fi
@@ -10598,8 +10598,8 @@ main() {
     backup=0
     # Force successful operation at all costs (file overwrite/removal):
     force=0
-    # Logging; recommended 1:
-    logging=1
+    # Disable logging; not recommended:
+    silent=0
 
     # Utility device switches
     # ASUS VivoBook S15 X521IA-M533IA (AMD):
@@ -10723,7 +10723,7 @@ main() {
     # Enable force from cmdline:        ^FE as $1
     # Enable gaming from cmdline:       ^GG as $1
     # Enable ipv6 from cmdline:         ^I6 as $1
-    # Enable logging from cmdline:      ^LG as $1
+    # Enable silent from cmdline:       ^ST as $1
     while :; do case "$1" in
         '^AE') always_write=1; shift && continue ;;
         '^AQ') audio_hq=1; shift && continue ;;
@@ -10731,11 +10731,11 @@ main() {
         '^FE') force=1; shift && continue ;;
         '^GG') gaming=1; shift && continue ;;
         '^I6') ipv6=1; shift && continue ;;
-        '^LG') logging=1; shift && continue ;;
+        '^ST') silent=1; shift && continue ;;
         *) break ;;
     esac done
 
-    readonly tmpd tmpf always_write backup force logging m533ia \
+    readonly tmpd tmpf always_write backup force silent m533ia \
              arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
              qt_theme server wm bg de user home efi_mnt arch_mirlist \
              polkit_agent ops
@@ -10754,7 +10754,7 @@ main() {
         info -w -1 'SWITCH: force ^FE'
         info -w -1 'SWITCH: gaming ^GG'
         info -w -1 'SWITCH: ipv6 ^I6'
-        info -w -1 'SWITCH: logging ^LG'
+        info -w -1 'SWITCH: silent ^ST'
 
         exit 2
     }
