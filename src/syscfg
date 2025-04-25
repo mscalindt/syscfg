@@ -2604,7 +2604,7 @@ __bin_write() {
     fi
 
     while :; do
-        if [ "$avoid_write" = 1 ]; then
+        if [ "$always_write" = 0 ]; then
             if bin_equiv "$FILE_PATH" "$FILE"; then
                 info -w -1 'Write avoided:'
                 info -g -- 'F '; info - - "$FILE_PATH"
@@ -2682,7 +2682,7 @@ __bin_write_overwrite() {
     fi
 
     while :; do
-        if [ "$avoid_write" = 1 ]; then
+        if [ "$always_write" = 0 ]; then
             if bin_equiv "$FILE_PATH" "$FILE"; then
                 info -w -1 'Write avoided:'
                 info -g -- 'F '; info - - "$FILE_PATH"
@@ -2954,7 +2954,7 @@ __file_write() {
     fi
 
     while :; do
-        if [ "$avoid_write" = 1 ]; then
+        if [ "$always_write" = 0 ]; then
             if file_equiv "$FILE_PATH" "$FILE"; then
                 info -w -1 'Write avoided:'
                 info -g -- 'F '; info - - "$FILE_PATH"
@@ -3032,7 +3032,7 @@ __file_write_overwrite() {
     fi
 
     while :; do
-        if [ "$avoid_write" = 1 ]; then
+        if [ "$always_write" = 0 ]; then
             if file_equiv "$FILE_PATH" "$FILE"; then
                 info -w -1 'Write avoided:'
                 info -g -- 'F '; info - - "$FILE_PATH"
@@ -3105,7 +3105,7 @@ __file_target_write() {
     readable "$FILE_PATH" || EREAD "$FILE_PATH"
 
     while :; do
-        if [ "$avoid_write" = 1 ]; then
+        if [ "$always_write" = 0 ]; then
             if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
                 if [ -h "$FILE_PATH_TARGET" ]; then
                     info -w -1 'Write avoided:'
@@ -3187,7 +3187,7 @@ __file_target_write_overwrite() {
     readable "$FILE_PATH" || EREAD "$FILE_PATH"
 
     while :; do
-        if [ "$avoid_write" = 1 ]; then
+        if [ "$always_write" = 0 ]; then
             if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
                 if [ -h "$FILE_PATH_TARGET" ]; then
                     info -w -1 'Write avoided:'
@@ -10592,8 +10592,8 @@ err_handler() {
 
 main() {
     # Utility control switches
-    # Compare the real file against our and do not write if same:
-    avoid_write=1
+    # Always write files, even if the remote/fs content matches ours.
+    always_write=0
     # Backup locations before respective write/delete:
     backup=0
     # Force successful operation at all costs (file overwrite/removal):
@@ -10717,15 +10717,15 @@ main() {
     # Temporary per-function file (cleared on func exit):
     tmpf="${TMPDIR:-/tmp}/syscfg_tmpf"
 
-    # Enable avoid_write from cmdline: ^AE as $1
-    # Enable audio_hq from cmdline:    ^AQ as $1
-    # Enable backup from cmdline:      ^BP as $1
-    # Enable force from cmdline:       ^FE as $1
-    # Enable gaming from cmdline:      ^GG as $1
-    # Enable ipv6 from cmdline:        ^I6 as $1
-    # Enable logging from cmdline:     ^LG as $1
+    # Enable always_write from cmdline: ^AE as $1
+    # Enable audio_hq from cmdline:     ^AQ as $1
+    # Enable backup from cmdline:       ^BP as $1
+    # Enable force from cmdline:        ^FE as $1
+    # Enable gaming from cmdline:       ^GG as $1
+    # Enable ipv6 from cmdline:         ^I6 as $1
+    # Enable logging from cmdline:      ^LG as $1
     while :; do case "$1" in
-        '^AE') avoid_write=1; shift && continue ;;
+        '^AE') always_write=1; shift && continue ;;
         '^AQ') audio_hq=1; shift && continue ;;
         '^BP') backup=1; shift && continue ;;
         '^FE') force=1; shift && continue ;;
@@ -10735,7 +10735,7 @@ main() {
         *) break ;;
     esac done
 
-    readonly tmpd tmpf avoid_write backup force logging m533ia \
+    readonly tmpd tmpf always_write backup force logging m533ia \
              arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
              qt_theme server wm bg de user home efi_mnt arch_mirlist \
              polkit_agent ops
@@ -10748,7 +10748,7 @@ main() {
         fi
 
         ifs_map "$ops" info -w -1
-        info -w -1 'SWITCH: avoid_write ^AE'
+        info -w -1 'SWITCH: always_write ^AE'
         info -w -1 'SWITCH: audio_hq ^AQ'
         info -w -1 'SWITCH: backup ^BP'
         info -w -1 'SWITCH: force ^FE'
