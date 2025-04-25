@@ -585,6 +585,462 @@ info() {
 # START utility_functions
 
 #! .desc:
+# Assert a string
+#! .params:
+# <$1> - type(
+#     '-single-quote-escaped-argument' - argument escaped with single quotes
+#     '-single-quotes-array' - pseudo array of single-quote-escaped arguments
+#     '-bit' - N that represents a valid bit (valid bit position)
+#     '-eq' - N [0,1,00,01...] (integer) equal to another N
+#     '-max' - N [0,1,00,01...] (integer) maximum of another N
+#     '-min' - N [0,1,00,01...] (integer) minimum of another N
+#     '-n' - N [0,1,00,01...] (integer)
+#     '-greater-n' - N [0,1,00,01...] (integer) greater than another N
+#     '-lower-n' - N [0,1,00,01...] (integer) lower than another N
+#     '-natural-n' - natural N [1...] (positive integer)
+#     '-whole-n' - whole N [0,1...] (non-negative integer)
+#     '-portable-name' - portable ("Portable Filename") name
+#     '-absolute-path' - absolute path (/*)
+#     '-canonical-path' - lexically canonical (assertable) path
+#     '-directory-path' - directory path
+#     '-file-path' - file path
+#     '-fs-canonical-path' - semantically canonical (assertable) path
+#     '-relative-path' - relative path
+#     '-shell-array' - shell-parseable evaluable array of arguments
+#     '-shell-name' - portable shell-parseable name
+#     '-shell-whitespace' - is "IFS white space" (<space>, <tab>, <newline>)
+#     '-has-shell-whitespace' - contains "IFS white space" characters
+#     .
+# )
+# <"$2"> - string
+# ["$3"] - string
+#! .uses:
+# [()]
+#! .rc:
+# (0) true
+# (1) false
+# (2) false due to bad operand(s)
+#! .ec:
+# (255) bad input
+#! .desc.ext:
+# Empty input will assert false (return code `1`) by default; on string types
+# with multiple input, `2` might be returned instead.
+#
+# For `-shell-array`, it is implementation-defined whether the array
+# is evaluable, in part with what consists part of "IFS white space";
+# the result of the assert is therefore made according to the locale in effect.
+#
+# For `-shell-whitespace` and `-has-shell-whitespace`, it is
+# implementation-defined whether any other, in addition to
+# the specified characters, consist part of "IFS white space";
+# the result of the assert is therefore made according to the locale in effect.
+#
+# For more information, refer to:
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: Absolute Pathname".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: Argument".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: Name".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: Portable Filename".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: Portable Filename Character Set".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: Relative Pathname".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: User Name".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: General Concepts,
+#   Subsection: Pathname Resolution".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Regular Expressions,
+#   Subsection: RE Bracket Expression".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Escape Character (Backslash)".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: eval".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Field Splitting".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Quoting".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: set".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Single-Quotes".
+#.
+assert() {
+    case "$1" in
+        # Assert $2 is a valid single-quote-escaped argument.
+        #
+        # A valid single-quote-escaped argument is a shell-parseable string
+        # enclosed in single quotes. A single-quote inside
+        # a single-quote-escaped argument is escaped
+        # with the syntactical expression `'\''`.
+        #
+        # This string is semantically safe for `eval`.
+        '-single-quote-escaped-argument')
+            set -- "$2"; while [ "$1" ] || return 1; do
+                [ "${1#\'}" != "$1" ] && set -- "${1#\'}" || return 1
+
+                while [ "$1" ]; do
+                    case "${1#*\'}" in
+                        \\\'\'*) set -- "${1#*\'\\\'\'}"; continue ;;
+                        '') return 0 ;;
+                    esac
+
+                    return 1
+                done
+            done
+        ;;
+        # Assert $2 is a valid single-quotes array of arguments.
+        #
+        # A valid single-quotes array is a shell-parseable string consisting
+        # of at least one argument, each enclosed in single quotes
+        # and delimited by <space>. A single-quote inside
+        # a single-quote-escaped argument is escaped
+        # with the syntactical expression `'\''`.
+        #
+        # This string is semantically safe for `eval`.
+        '-single-quotes-array')
+            set -- "${2%"${2##*[! ]}"}"; while [ "$1" ] || return 1; do
+                set -- "${1#"${1%%[! ]*}"}"
+
+                [ "${1#\'}" != "$1" ] && set -- "${1#\'}" || return 1
+
+                while [ "$1" ]; do
+                    case "${1#*\'}" in
+                        \\\'\'*) set -- "${1#*\'\\\'\'}"; continue ;;
+                        \ *) set -- "${1#*\'}"; continue 2 ;;
+                        '') return 0 ;;
+                    esac
+
+                    return 1
+                done
+            done
+        ;;
+        # Assert $2 is a number that represents a valid bit.
+        #
+        # A valid bit is a natural number that represents a specific bit
+        # position in a bitmask and is always a power of 2 (`1`, `2`, `4`, `8`,
+        # ...). This is also known as "valid bit position".
+        #
+        # A number is a power of 2 if performing bitwise AND in the expression
+        # `N & (N - 1)` results in zero (the binary representation turns to all
+        # zeroes due to the single 1-bit being flipped off, given N is
+        # a positive integer that is a power of 2).
+        '-bit')
+            assert -natural-n "$2" || return 2
+
+            [ "$(($2 & ($2 - 1)))" = 0 ] || return 1
+        ;;
+        # Assert $2 is a number equal to $3.
+        #
+        # Leading zeroes are ignored, except `[0] -eq [0]` is true. This
+        # comparison essentially emulates the behavior of operator `-eq` of
+        # `test` in POSIX shells, just with support for extremely large
+        # numbers. This comparison is also known as
+        # "lexicographical numeric comparison".
+        '-eq')
+            assert -n "$2" || return 2
+            assert -n "$3" || return 2
+
+            set -- "${2#"${2%%[!0]*}"}" "${3#"${3%%[!0]*}"}"
+
+            [ "$1" = "$2" ] || return 1
+        ;;
+        # Assert $2 is a number maximum of $3.
+        #
+        # Leading zeroes are ignored, except `[0] -eq [0]` is true. This
+        # comparison essentially emulates the behavior of operator `-le` of
+        # `test` in POSIX shells, just with support for extremely large
+        # numbers. This comparison is also known as
+        # "lexicographical numeric comparison".
+        '-max')
+            assert -lower-n "$2" "$3" || \
+            assert -eq "$2" "$3" || \
+            return "$?"
+        ;;
+        # Assert $2 is a number minimum of $3.
+        #
+        # Leading zeroes are ignored, except `[0] -eq [0]` is true. This
+        # comparison essentially emulates the behavior of operator `-ge` of
+        # `test` in POSIX shells, just with support for extremely large
+        # numbers. This comparison is also known as
+        # "lexicographical numeric comparison".
+        '-min')
+            assert -greater-n "$2" "$3" || \
+            assert -eq "$2" "$3" || \
+            return "$?"
+        ;;
+        # Assert $2 is a number (`0`, `1`, `00`, `01`, ...).
+        #
+        # A number is any string consisting only of digits. This is also
+        # well known as "integer".
+        '-n')
+            case "${2:-0}${2#*[!0123456789]}" in
+                "$2$2") return 0 ;;
+            esac
+
+            return 1
+        ;;
+        # Assert $2 is a number greater than $3.
+        #
+        # To determine which number is greater, leading zeroes are removed,
+        # and the numbers are first compared by length, followed by
+        # digit comparison if the lengths are the same. This comparison
+        # essentially emulates the behavior of operator `-gt` of `test`
+        # in POSIX shells, just with support for extremely large
+        # numbers. This comparison is also known as
+        # "lexicographical numeric comparison".
+        '-greater-n')
+            assert -n "$2" && assert -n "$3" || return 2
+
+            set -- "${2#"${2%%[!0]*}"}" "${3#"${3%%[!0]*}"}"
+
+            [ ! "$1" = "$2" ] && [ ! "${#1}" -lt "${#2}" ] || return 1
+            [ ! "${#1}" -gt "${#2}" ] || return 0
+
+            while [ "$1" ]; do
+                case "$1" in
+                    "${2%"${2#?}"}"*) set -- "${1#?}" "${2#?}"; continue ;;
+                esac
+
+                if [ "${1%"${1#?}"}" -gt "${2%"${2#?}"}" ]; then
+                    return 0
+                fi
+
+                return 1
+            done
+        ;;
+        # Assert $2 is a number lower than $3.
+        #
+        # To determine which number is lower, leading zeroes are removed,
+        # and the numbers are first compared by length, followed by
+        # digit comparison if the lengths are the same. This comparison
+        # essentially emulates the behavior of operator `-lt` of `test`
+        # in POSIX shells, just with support for extremely large
+        # numbers. This comparison is also known as
+        # "lexicographical numeric comparison".
+        '-lower-n')
+            assert -n "$2" && assert -n "$3" || return 2
+
+            set -- "${2#"${2%%[!0]*}"}" "${3#"${3%%[!0]*}"}"
+
+            [ ! "$1" = "$2" ] && [ ! "${#1}" -gt "${#2}" ] || return 1
+            [ ! "${#1}" -lt "${#2}" ] || return 0
+
+            while [ "$1" ]; do
+                case "$1" in
+                    "${2%"${2#?}"}"*) set -- "${1#?}" "${2#?}"; continue ;;
+                esac
+
+                if [ "${1%"${1#?}"}" -lt "${2%"${2#?}"}" ]; then
+                    return 0
+                fi
+
+                return 1
+            done
+        ;;
+        # Assert $2 is a natural number (`1`, `2`, ...).
+        #
+        # A natural number is any string consisting only of digits,
+        # of which the first is not `0`. Also known as "positive integer"
+        # in the POSIX standard.
+        '-natural-n')
+            case "${2:-0}${2#*[!0123456789]}" in
+                0*) return 1 ;;
+                "$2$2") return 0 ;;
+            esac
+
+            return 1
+        ;;
+        # Assert $2 is a whole number (`0`, `1`, `2`, ...).
+        #
+        # A whole number is `0` and any string consisting only of digits,
+        # of which the first is not `0`. Also known as "non-negative integer"
+        # in the POSIX standard.
+        '-whole-n')
+            assert -natural-n "$2" || \
+            assert -eq "$2" 0 || \
+            return "$?"
+        ;;
+        # Assert $2 is a portable ("Portable Filename") name.
+        #
+        # A portable name is a string composed of the characters in
+        # the portable filename character set,
+        # with the following exceptions:
+        #
+        # - Should not begin with a <hyphen-minus> character. This exception
+        #   is currently not being asserted.
+        #
+        # The character classes have been intentionally expanded to be
+        # locale-independent.
+        '-portable-name')
+            case "$2" in
+                *[!0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_\.\-]*)
+                    return 1
+                ;;
+            esac
+
+            [ "$2" ] || return 1
+        ;;
+        # Assert $2 is an absolute (/*) path.
+        #
+        # An absolute path is any string of which the first character
+        # is `/`.
+        '-absolute-path')
+            case "$2" in
+                '/'*) return 0 ;;
+            esac
+
+            return 1
+        ;;
+        # Assert $2 is a lexically canonical (assertable) path.
+        #
+        # A canonical path is largely implementation-defined string that
+        # refers to the normalized absolute path. Therefore,
+        # a lexical canonical path is:
+        #
+        # - Assertive: Multiple consecutive slashes (`//`) are removed,
+        #   `.` and `..` are resolved. The only exception is two consecutive
+        #   slashes (`//`) at the beginning of the string, which is specified
+        #   by the POSIX standard as an "implementation-defined" exception.
+        #
+        # - Absolute: The path is always rooted from `/`.
+        '-canonical-path')
+            case "$2" in
+                '//'*) set -- "${2#/}" ;;
+                *) set -- "$2" ;;
+            esac
+
+            case "$1" in
+                *'//'*) return 1 ;;
+                '/'*) : ;;
+                *) return 1 ;;
+            esac
+
+            case "$1/" in
+                *'/./'* | *'/../'*) return 1 ;;
+            esac
+
+            return 0
+        ;;
+        # Assert $2 is a directory (directory-resolving) path.
+        #
+        # A directory path is any string containing at least one non-<slash>
+        # (`/`) character and that ends with one or more trailing <slash>
+        # characters.
+        '-directory-path')
+            case "$2" in
+                *[!/]*/) return 0 ;;
+            esac
+
+            return 1
+        ;;
+        # Assert $2 is a file (file-resolving) path.
+        #
+        # A file path is any string containing at least one non-<slash>
+        # (`/`) character and that does not end with trailing <slash>
+        # characters.
+        '-file-path')
+            case "$2" in
+                *[!/]*/) return 1 ;;
+                *[!/]*) return 0 ;;
+            esac
+
+            return 1
+        ;;
+        # Assert $2 is a semantically canonical (assertable) path.
+        #
+        # A canonical path is largely implementation-defined string that
+        # refers to the normalized absolute path. Therefore,
+        # a semantic canonical path is:
+        #
+        # - Semantic: Neither the path nor its segments are a symbolic link on
+        #   the filesystem. The actual existence of the path or its segments is
+        #   ignored.
+        #
+        # - Assertive: Multiple consecutive slashes (`//`) are removed,
+        #   `.` and `..` are resolved.
+        #
+        # - Absolute: The path is always rooted from `/`.
+        '-fs-canonical-path')
+            case "$2" in
+                '/') return 0 ;;
+                *'//'*) return 1 ;;
+                '/'*) set -- "${2%/}/" ;;
+                *) return 1 ;;
+            esac
+
+            case "$1" in
+                *'/./'* | *'/../'*) return 1 ;;
+            esac
+
+            while [ ! -h "${1%/}" ] || return 1; do
+                [ "${1%/*/}" ] && set -- "${1%/*/}/" || return 0
+            done
+        ;;
+        # Assert $2 is a relative (partial) path.
+        #
+        # A relative path is any string of which the first character
+        # is not `/`.
+        '-relative-path')
+            case "$2" in
+                '/'*) return 1 ;;
+            esac
+
+            [ "$2" ] || return 1
+        ;;
+        # Assert $2 is a shell-parseable evaluable array of arguments.
+        #
+        # A valid shell-parseable evaluable array is a parseable,
+        # according to the shell grammar, whole string consisting of
+        # at least one argument.
+        #
+        # This string is semantically safe for `eval`.
+        '-shell-array')
+            [ "$2" ] && ( eval set -- "$2" && [ "$#" -ge 1 ]; ) || return 1
+        ;;
+        # Assert $2 is a portable shell-parseable name.
+        #
+        # A portable shell-parseable name is a string composed of
+        # the characters in the portable filename character set,
+        # with the following exceptions:
+        #
+        # - Cannot begin with a digit.
+        # - Cannot contain a <hyphen-minus> character.
+        # - Cannot contain a <period> character.
+        #
+        # The character classes have been intentionally expanded to be
+        # locale-independent.
+        '-shell-name')
+            case "$2" in
+                [0123456789]*)
+                    return 1
+                ;;
+                *[!0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_]*)
+                    return 1
+                ;;
+            esac
+
+            [ "$2" ] || return 1
+        ;;
+        # Assert $2 consists of "IFS white space" (<space>, <tab>, <newline>)
+        # characters.
+        '-shell-whitespace')
+            [ "$2" ] && set -- $2 && [ "$#" -eq 0 ] || return 1
+        ;;
+        # Assert $2 contains "IFS white space" (<space>, <tab>, <newline>)
+        # characters.
+        '-has-shell-whitespace')
+            [ "$2" ] && set -- .$2. && [ "$#" -ne 1 ] || return 1
+        ;;
+        *)
+            exit 255
+        ;;
+    esac
+}
+
+#! .desc:
 # Print bytes in human-readable fmt: "N" "X"iB / "N" "X"B
 #! .params:
 # <$1> - bytes
@@ -744,40 +1200,61 @@ rc() {
 }
 
 #! .desc:
-# Replace specific character(s) with character(s) in a given string
+# Replace a specific character with character(s) in a string using PE
 #! .params:
-# <"$1"> - specific character(s)
-# <"$2"> - character(s)
-# <"$3"> - string
+# ["$1"] - specific character
+# ["$2"] - character(s)
+# ["$3"] - string
+#! .uses.fn:
+# <assert> ('-max' '${#1}' '1');
+#          Assert a string
 #! .gives:
-# (0) <"$_str"> - the modified string
+# (0) <"$_str"> - [string];
+#                 [modified <$3>]
 #! .rc:
 # (0) success
 # (*) error
-# (255) bad input
+#! .rc.fn:
+# (assert) (255) bad input
+#! .desc.ext:
+# Multi-byte and multiple characters are not supported and error code `255`
+# (bad input) will be returned.
+#
+# For more information, refer to:
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Parameter Expansion".
 #.
-replchars() {
-    args_eq 3 "$#" || return 255
+replchar_posix() {
+    assert -max "${#1}" 1 || return 255
 
-    replchar() {
-        IFS="$1"; _chars="$2"
+    # Traverse $3 (string), replacing the occurrences of $1 with $2.
+    _str=; _a="$3"; while [ "$1" ]; do case "$_a" in
+        *"$1"*)
+            # Example character, replacement character, and string:
+            # `a` `A` `ddaabcd`
+            # $_b: `dd`
+            # $_c: `aabcd`
+            # $_d: `aa`
+            # $_a: `bcd`
+            _b="${_a%%"$1"*}"
+            _c="${_a#"$_b"}"
+            _d="${_c%%[!"$1"]*}"
+            _a="${_a#"$_b$_d"}"
 
-        set -f; set -- $3 "$3"; set +f
+            # ${#_d}: `2`
+            # $_chars: `AA`
+            _chars=; _i=0; until [ "$_i" = "${#_d}" ]; do
+                _chars="$_chars$2"; _i=$((_i + 1))
+            done
 
-        _str=; while [ "$#" -ge 3 ]; do
-            _str="$_str$1$_chars"; shift
-        done
-
-        if str "${2#"${2%?}"}" "$IFS"; then
-            _str="$_str$1$_chars"
-        else
-            _str="$_str$1"
-        fi
-    }
-
-    IFS_save;
-    replchar "$1" "$2" "$3"
-    IFS_restore;
+            # $_str: `ddAA`
+            _str="$_str$_b$_chars"
+        ;;
+        *)
+            # $_str: `ddAAbcd`
+            _str="$_str$_a"; break
+        ;;
+    esac done
 }
 
 #! .desc:
@@ -1619,7 +2096,7 @@ LOG_write() {
 
     case $1 in
         0)
-            replchars "'" "'\\''" "$2"; set -- "$_str"
+            replchar_posix \' \'\\\'\' "$2"; set -- "$_str"
 
             printf "'printf' %s %s\n" \
                    "'%s\n'" \
@@ -1627,7 +2104,7 @@ LOG_write() {
                    >> "$tmpf"
         ;;
         1)
-            replchars "'" "'\\''" "$3"; set -- "$2" "$_str"
+            replchar_posix \' \'\\\'\' "$3"; set -- "$2" "$_str"
 
             printf "'printf' %s %s %s\n" \
                    "'%b%s%b%s\n'" \
@@ -1636,7 +2113,7 @@ LOG_write() {
                    >> "$tmpf"
         ;;
         2)
-            replchars "'" "'\\''" "$3"; set -- "$2" "$_str"
+            replchar_posix \' \'\\\'\' "$3"; set -- "$2" "$_str"
 
             printf "'printf' %s %s %s\n" \
                    "'%b%s%b%s\n'" \
@@ -1645,8 +2122,8 @@ LOG_write() {
                    >> "$tmpf"
         ;;
         3)
-            replchars "'" "'\\''" "$3"; set -- "$2" "$_str" "$4"
-            replchars "'" "'\\''" "$3"; set -- "$1" "$2" "$_str"
+            replchar_posix \' \'\\\'\' "$3"; set -- "$2" "$_str" "$4"
+            replchar_posix \' \'\\\'\' "$3"; set -- "$1" "$2" "$_str"
 
             {
                 printf "'printf' %s %s %s\n" \
@@ -10108,7 +10585,7 @@ main_set_opd() {
     opd="_$1"
 
     if str '-' "$1"; then
-        replchars '-' '_' "$1"
+        replchar_posix '-' '_' "$1"
         opd="_$_str"
     fi
 }
