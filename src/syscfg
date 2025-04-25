@@ -1998,13 +1998,8 @@ EOF
 # (255) bad call
 #.
 LOG_clear() {
-    if [ "$fatal" = 1 ]; then
-        file "$tmpf" || return 255
-        writable "$tmpf" || return 255
-    else
-        file "$tmpf" || return 0
-        writable "$tmpf" || return 0
-    fi
+    file "$tmpf" || return 255
+    writable "$tmpf" || return 255
 
     { : > "$tmpf"; } 2> /dev/null
 }
@@ -2019,13 +2014,8 @@ LOG_clear() {
 # (255) bad call
 #.
 LOG_print() {
-    if [ "$fatal" = 1 ]; then
-        file "$tmpf" || return 255
-        readable "$tmpf" || return 255
-    else
-        file "$tmpf" || return 0
-        readable "$tmpf" || return 0
-    fi
+    file "$tmpf" || return 255
+    readable "$tmpf" || return 255
 
     ( . "$tmpf"; ) 2> /dev/null
 }
@@ -2086,13 +2076,8 @@ LOG_write() {
         esac
     fi
 
-    if [ "$fatal" = 1 ]; then
-        file "$tmpf" || return 255
-        writable "$tmpf" || return 255
-    else
-        file "$tmpf" || return 0
-        writable "$tmpf" || return 0
-    fi
+    file "$tmpf" || return 255
+    writable "$tmpf" || return 255
 
     case $1 in
         0)
@@ -10726,10 +10711,6 @@ main() {
     ops="$ops xorg-conf"
     ops="${ops# }"
 
-    # Utility env switches
-    # Enable/disable env error checking:
-    fatal=0
-
     # Utility internal locations
     # Temporary per-function dir (cleared on func exit):
     tmpd="${TMPDIR:-/tmp}/syscfg_tmpd"
@@ -10754,7 +10735,7 @@ main() {
         *) break ;;
     esac done
 
-    readonly fatal tmpd tmpf avoid_write backup force logging m533ia \
+    readonly tmpd tmpf avoid_write backup force logging m533ia \
              arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
              qt_theme server wm bg de user home efi_mnt arch_mirlist \
              polkit_agent ops
