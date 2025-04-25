@@ -10581,15 +10581,6 @@ main_func_env_cleanup() {
     LOG_clear; rm -rf "${tmpd:?}"/*
 }
 
-main_set_opd() {
-    opd="_$1"
-
-    if str '-' "$1"; then
-        replchar_posix '-' '_' "$1"
-        opd="_$_str"
-    fi
-}
-
 err_handler() {
     if [ -e "$tmpd" ] || [ -e "$tmpf" ]; then
         rm -rf "$tmpd" "$tmpf"
@@ -10816,7 +10807,9 @@ main() {
     readonly LF
 
     while [ "$1" ]; do
-        main_set_opd "$1"
+        opd="_$1"; case "$opd" in
+            *'-'*) replchar_posix '-' '_' "$opd" && opd="$_str" ;;
+        esac
 
         # use '|| :' to validate a command failure
         trap "err_handler \$?" INT TERM EXIT
