@@ -3699,7 +3699,11 @@ ASOUND_CONF
 # graphical.target, otherwise 3-5 if multi-user.target.
 # Symlink is created because the service will not be started if there isn't a
 # symlink under a directory with name composed of the WantedBy string +
-# '.wants' appended. ¯\_(ツ)_/¯
+# '.wants' appended.
+#
+# Without a symbolic link, the service will be ready to start, but
+# it will not be started automatically unless manually started or something
+# specifies its start.
 #
 # Sources:
 # https://unix.stackexchange.com/a/506374/431300
