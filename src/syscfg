@@ -8818,8 +8818,7 @@ SYSTEMD_HANDLER
 systemctl --user import-environment \
     DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP \
     DESKTOP_SESSION
-dbus-update-activation-environment && \
-    dbus-update-activation-environment --systemd \
+dbus-update-activation-environment --systemd \
     DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP \
     DESKTOP_SESSION
 sleep 2 && \
