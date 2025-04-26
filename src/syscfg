@@ -4155,9 +4155,9 @@ PIPEWIRE_SOCKET
 NULL
 
             FILE_PATH_TARGET \
-<<PIPEWIRE_SOCKET
+<<PIPEWIRE_PULSE_SOCKET
 $home/.config/systemd/user/pipewire-pulse.socket
-PIPEWIRE_SOCKET
+PIPEWIRE_PULSE_SOCKET
 
             __loc_target_link_overwrite;
 
