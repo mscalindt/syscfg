@@ -8821,15 +8821,10 @@ systemctl --user import-environment \
 dbus-update-activation-environment --systemd \
     DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP \
     DESKTOP_SESSION
-sleep 2 && \
-    systemctl --user restart \
-    xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk \
+
+systemctl --user start \
+    xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-wlr \
     xdg-document-portal
-
-sleep 12
-systemctl restart --user xdg-desktop-portal
-
-return 0
 SYSTEMD_HANDLER
 
         __file_write;
