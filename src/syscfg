@@ -9043,7 +9043,7 @@ dbus-update-activation-environment --systemd \
 
 systemctl --user start \
     xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-wlr \
-    xdg-document-portal
+    xdg-document-portal xdg-permission-store
 SYSTEMD_HANDLER
 
         __file_write;
