@@ -10900,7 +10900,7 @@ main() {
     browser='firefox'
     # DNS; currently supported: localhost, none
     dns='localhost'
-    # Dedicated DNS (stub) resolver; currently supported: dnsmasq
+    # Dedicated DNS (stub) resolver (localhost); currently supported: dnsmasq
     dns0='dnsmasq'
     # Init system; currently supported: systemd
     init='systemd'
