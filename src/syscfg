@@ -4231,6 +4231,216 @@ ORG_FREEDESKTOP_PORTAL_DOCUMENTS_SERVICE
 
             __file_write;
         fi
+    elif [ "init" = none ] || [ ! "$init" ]; then
+        FILE_PATH \
+<<'BLUETOOTH_SERVICE'
+/etc/systemd/system/bluetooth.service
+BLUETOOTH_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<'BLUETOOTH_SERVICE'
+/etc/systemd/system/multi-user.target.wants/bluetooth.service
+BLUETOOTH_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<'DNSMASQ_SERVICE'
+/etc/systemd/system/dnsmasq.service
+DNSMASQ_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<'DNSMASQ_SERVICE'
+/etc/systemd/system/multi-user.target.wants/dnsmasq.service
+DNSMASQ_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<'EVTEST_GRAB_SERVICE'
+/etc/systemd/system/evtest-grab.service
+EVTEST_GRAB_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<'EVTEST_GRAB_SERVICE'
+/etc/systemd/system/multi-user.target.wants/evtest-grab.service
+EVTEST_GRAB_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<'IWD_SERVICE'
+/etc/systemd/system/iwd.service
+IWD_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<'IWD_SERVICE'
+/etc/systemd/system/multi-user.target.wants/iwd.service
+IWD_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<MOC_SERVICE
+$home/.config/systemd/user/moc.service
+MOC_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<MOC_SERVICE
+$home/.config/systemd/user/default.target.wants/moc.service
+MOC_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<PIPEWIRE_SERVICE
+$home/.config/systemd/user/pipewire.service
+PIPEWIRE_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<PIPEWIRE_SERVICE
+$home/.config/systemd/user/default.target.wants/pipewire.service
+PIPEWIRE_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<PIPEWIRE_MEDIA_SESSION_SERVICE
+$home/.config/systemd/user/pipewire-media-session.service
+PIPEWIRE_MEDIA_SESSION_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<PIPEWIRE_MEDIA_SESSION_SERVICE
+$home/.config/systemd/user/pipewire.service.wants/pipewire-media-session.service
+PIPEWIRE_MEDIA_SESSION_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<PIPEWIRE_PULSE_SERVICE
+$home/.config/systemd/user/pipewire-pulse.service
+PIPEWIRE_PULSE_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<PIPEWIRE_PULSE_SERVICE
+$home/.config/systemd/user/pipewire.service.wants/pipewire-pulse.service
+PIPEWIRE_PULSE_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<XDG_DESKTOP_PORTAL_SERVICE
+$home/.config/systemd/user/xdg-desktop-portal.service
+XDG_DESKTOP_PORTAL_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<XDG_DESKTOP_PORTAL_GTK_SERVICE
+$home/.config/systemd/user/xdg-desktop-portal-gtk.service
+XDG_DESKTOP_PORTAL_GTK_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<XDG_DESKTOP_PORTAL_WLR_SERVICE
+$home/.config/systemd/user/xdg-desktop-portal-wlr.service
+XDG_DESKTOP_PORTAL_WLR_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<XDG_DOCUMENT_PORTAL_SERVICE
+$home/.config/systemd/user/xdg-document-portal.service
+XDG_DOCUMENT_PORTAL_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<XDG_PERMISSION_STORE_SERVICE
+$home/.config/systemd/user/xdg-permission-store.service
+XDG_PERMISSION_STORE_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<'RTKIT_DAEMON_SERVICE'
+/etc/systemd/system/rtkit-daemon.service
+RTKIT_DAEMON_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<AT_SPI_DBUS_BUS_SERVICE
+$home/.config/systemd/user/at-spi-dbus-bus.service
+AT_SPI_DBUS_BUS_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<PIPEWIRE_SOCKET
+$home/.config/systemd/user/pipewire.socket
+PIPEWIRE_SOCKET
+
+        __loc_delete;
+
+        FILE_PATH \
+<<PIPEWIRE_PULSE_SOCKET
+$home/.config/systemd/user/pipewire-pulse.socket
+PIPEWIRE_PULSE_SOCKET
+
+        __loc_delete;
+
+        FILE_PATH \
+<<ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_GTK_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.impl.portal.desktop.gtk.service
+ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_GTK_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_WLR_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.impl.portal.desktop.wlr.service
+ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_WLR_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<ORG_FREEDESKTOP_IMPL_PORTAL_PERMISSIONSTORE_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.impl.portal.PermissionStore.service
+ORG_FREEDESKTOP_IMPL_PORTAL_PERMISSIONSTORE_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<ORG_FREEDESKTOP_PORTAL_DESKTOP_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.portal.Desktop.service
+ORG_FREEDESKTOP_PORTAL_DESKTOP_SERVICE
+
+        __loc_delete;
+
+        FILE_PATH \
+<<ORG_FREEDESKTOP_PORTAL_DOCUMENTS_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.portal.Documents.service
+ORG_FREEDESKTOP_PORTAL_DOCUMENTS_SERVICE
+
+        __loc_delete;
     fi
 }
 
@@ -10902,7 +11112,7 @@ main() {
     dns='localhost'
     # Dedicated DNS (stub) resolver (localhost); currently supported: dnsmasq
     dns0='dnsmasq'
-    # Init system; currently supported: systemd
+    # Init system; currently supported: systemd, none
     init='systemd'
     # QT theme engine; currently supported: kvantum, none
     qt_theme='kvantum'
