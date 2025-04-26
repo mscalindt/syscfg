@@ -4092,6 +4092,26 @@ XDG_DOCUMENT_PORTAL_SERVICE
 
         __file_write;
 
+        FILE_PATH \
+<<XDG_PERMISSION_STORE_SERVICE
+$home/.config/systemd/user/xdg-permission-store.service
+XDG_PERMISSION_STORE_SERVICE
+
+        FILE \
+<<'XDG_PERMISSION_STORE_SERVICE'
+[Unit]
+Description=sandboxed app permission store
+PartOf=graphical-session.target
+
+[Service]
+Type=dbus
+BusName=org.freedesktop.impl.portal.PermissionStore
+ExecStart=/usr/lib/xdg-permission-store
+Slice=session.slice
+XDG_PERMISSION_STORE_SERVICE
+
+        __file_write;
+
         if [ "$arch_linux" = 1 ]; then
             FILE_PATH \
 <<'NULL'
@@ -4166,6 +4186,20 @@ ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_WLR_SERVICE
 Name=org.freedesktop.impl.portal.desktop.wlr
 Exec=/usr/bin/true
 ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_WLR_SERVICE
+
+            __file_write;
+
+            FILE_PATH \
+<<ORG_FREEDESKTOP_IMPL_PORTAL_PERMISSIONSTORE_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.impl.portal.PermissionStore.service
+ORG_FREEDESKTOP_IMPL_PORTAL_PERMISSIONSTORE_SERVICE
+
+            FILE \
+<<'ORG_FREEDESKTOP_IMPL_PORTAL_PERMISSIONSTORE_SERVICE'
+[D-BUS Service]
+Name=org.freedesktop.impl.portal.PermissionStore
+Exec=/usr/bin/true
+ORG_FREEDESKTOP_IMPL_PORTAL_PERMISSIONSTORE_SERVICE
 
             __file_write;
 
