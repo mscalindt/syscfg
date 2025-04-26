@@ -3975,6 +3975,84 @@ PIPEWIRE_MEDIA_SESSION_SERVICE
 
         __loc_target_link_overwrite;
 
+        FILE_PATH \
+<<XDG_DESKTOP_PORTAL_SERVICE
+$home/.config/systemd/user/xdg-desktop-portal.service
+XDG_DESKTOP_PORTAL_SERVICE
+
+        FILE \
+<<'XDG_DESKTOP_PORTAL_SERVICE'
+[Unit]
+Description=Portal service
+PartOf=graphical-session.target
+
+[Service]
+Type=dbus
+BusName=org.freedesktop.portal.Desktop
+ExecStart=/usr/lib/xdg-desktop-portal
+Slice=session.slice
+XDG_DESKTOP_PORTAL_SERVICE
+
+        __file_write;
+
+        FILE_PATH \
+<<XDG_DESKTOP_PORTAL_GTK_SERVICE
+$home/.config/systemd/user/xdg-desktop-portal-gtk.service
+XDG_DESKTOP_PORTAL_GTK_SERVICE
+
+        FILE \
+<<'XDG_DESKTOP_PORTAL_GTK_SERVICE'
+[Unit]
+Description=Portal service (GTK/GNOME implementation)
+PartOf=graphical-session.target
+
+[Service]
+Type=dbus
+BusName=org.freedesktop.impl.portal.desktop.gtk
+ExecStart=/usr/lib/xdg-desktop-portal-gtk
+XDG_DESKTOP_PORTAL_GTK_SERVICE
+
+        __file_write;
+
+        FILE_PATH \
+<<XDG_DESKTOP_PORTAL_WLR_SERVICE
+$home/.config/systemd/user/xdg-desktop-portal-wlr.service
+XDG_DESKTOP_PORTAL_WLR_SERVICE
+
+        FILE \
+<<'XDG_DESKTOP_PORTAL_WLR_SERVICE'
+[Unit]
+Description=Portal service (wlroots implementation)
+PartOf=graphical-session.target
+
+[Service]
+Type=dbus
+BusName=org.freedesktop.impl.portal.desktop.wlr
+ExecStart=/usr/lib/xdg-desktop-portal-wlr
+XDG_DESKTOP_PORTAL_WLR_SERVICE
+
+        __file_write;
+
+        FILE_PATH \
+<<XDG_DOCUMENT_PORTAL_SERVICE
+$home/.config/systemd/user/xdg-document-portal.service
+XDG_DOCUMENT_PORTAL_SERVICE
+
+        FILE \
+<<'XDG_DOCUMENT_PORTAL_SERVICE'
+[Unit]
+Description=flatpak document portal service
+PartOf=graphical-session.target
+
+[Service]
+Type=dbus
+BusName=org.freedesktop.portal.Documents
+ExecStart=/usr/lib/xdg-document-portal
+Slice=session.slice
+XDG_DOCUMENT_PORTAL_SERVICE
+
+        __file_write;
+
         if [ "$arch_linux" = 1 ]; then
             FILE_PATH \
 <<'NULL'
@@ -4011,6 +4089,62 @@ $home/.config/systemd/user/pipewire.socket
 PIPEWIRE_SOCKET
 
             __loc_target_link_overwrite;
+
+            FILE_PATH \
+<<ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_GTK_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.impl.portal.desktop.gtk.service
+ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_GTK_SERVICE
+
+            FILE \
+<<'ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_GTK_SERVICE'
+[D-BUS Service]
+Name=org.freedesktop.impl.portal.desktop.gtk
+Exec=/usr/bin/true
+ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_GTK_SERVICE
+
+            __file_write;
+
+            FILE_PATH \
+<<ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_WLR_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.impl.portal.desktop.wlr.service
+ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_WLR_SERVICE
+
+            FILE \
+<<'ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_WLR_SERVICE'
+[D-BUS Service]
+Name=org.freedesktop.impl.portal.desktop.wlr
+Exec=/usr/bin/true
+ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_WLR_SERVICE
+
+            __file_write;
+
+            FILE_PATH \
+<<ORG_FREEDESKTOP_PORTAL_DESKTOP_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.portal.Desktop.service
+ORG_FREEDESKTOP_PORTAL_DESKTOP_SERVICE
+
+            FILE \
+<<'ORG_FREEDESKTOP_PORTAL_DESKTOP_SERVICE'
+[D-BUS Service]
+Name=org.freedesktop.portal.Desktop
+Exec=/usr/bin/true
+ORG_FREEDESKTOP_PORTAL_DESKTOP_SERVICE
+
+            __file_write;
+
+            FILE_PATH \
+<<ORG_FREEDESKTOP_PORTAL_DOCUMENTS_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.portal.Documents.service
+ORG_FREEDESKTOP_PORTAL_DOCUMENTS_SERVICE
+
+            FILE \
+<<'ORG_FREEDESKTOP_PORTAL_DOCUMENTS_SERVICE'
+[D-BUS Service]
+Name=org.freedesktop.portal.Documents
+Exec=/usr/bin/true
+ORG_FREEDESKTOP_PORTAL_DOCUMENTS_SERVICE
+
+            __file_write;
         fi
     fi
 }
