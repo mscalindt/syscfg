@@ -4047,6 +4047,7 @@ PartOf=graphical-session.target
 Type=dbus
 BusName=org.freedesktop.impl.portal.desktop.gtk
 ExecStart=/usr/lib/xdg-desktop-portal-gtk
+Slice=session.slice
 XDG_DESKTOP_PORTAL_GTK_SERVICE
 
         __file_write;
@@ -4066,6 +4067,7 @@ PartOf=graphical-session.target
 Type=dbus
 BusName=org.freedesktop.impl.portal.desktop.wlr
 ExecStart=/usr/lib/xdg-desktop-portal-wlr
+Slice=session.slice
 XDG_DESKTOP_PORTAL_WLR_SERVICE
 
         __file_write;
