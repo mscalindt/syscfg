@@ -10861,7 +10861,7 @@ err_handler() {
 }
 
 main() {
-    # Utility control switches
+    # Control switches
     # Always write files, even if the remote/fs content matches ours.
     always_write=0
     # Backup locations before respective write/delete:
@@ -10871,31 +10871,39 @@ main() {
     # Disable logging; not recommended:
     silent=0
 
-    # Utility device switches
+    # Device switches
     # ASUS VivoBook S15 X521IA-M533IA (AMD):
     m533ia=1
 
-    # Utility OS switches
+    # OS switches
     # Arch Linux system:
     arch_linux=1
 
-    # Utility software switches
+    # Software switches
     # Configure audio configs for highest possible quality:
     audio_hq=0
     # Bluetooth support
     bluetooth=1
+    # Configure specific applications to be suited for gaming
+    gaming=0
+    # Configure and prefer IPv6 over IPv4:
+    ipv6=0
+
+    # Location switches
+    # Bulgaria:
+    bg=0
+    # Germany:
+    de=1
+
+    # Software
     # Web browser; currently supported: firefox, none
     browser='firefox'
     # DNS; currently supported: localhost, none
     dns='localhost'
     # Dedicated DNS (stub) resolver; currently supported: dnsmasq
     dns0='dnsmasq'
-    # Configure specific applications to be suited for gaming
-    gaming=0
     # Init system; currently supported: systemd
     init='systemd'
-    # Configure and prefer IPv6 over IPv4:
-    ipv6=0
     # QT theme engine; currently supported: kvantum, none
     qt_theme='kvantum'
     # Display server; currently supported: wayland, x11, none
@@ -10903,12 +10911,6 @@ main() {
     # Desktop environment / window manager; currently supported: sway, xfce4,
     # none
     wm='sway'
-
-    # Utility location switches
-    # Bulgaria:
-    bg=0
-    # Germany:
-    de=1
 
     # Data
     user='mscalindt'
