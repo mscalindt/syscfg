@@ -3980,6 +3980,39 @@ PIPEWIRE_MEDIA_SESSION_SERVICE
         __loc_target_link_overwrite;
 
         FILE_PATH \
+<<PIPEWIRE_PULSE_SERVICE
+$home/.config/systemd/user/pipewire-pulse.service
+PIPEWIRE_PULSE_SERVICE
+
+        FILE \
+<<'PIPEWIRE_PULSE_SERVICE'
+[Unit]
+Description=PipeWire PulseAudio
+After=pipewire.service
+BindsTo=pipewire.service
+
+[Service]
+ExecStart=/usr/bin/pipewire-pulse
+
+[Install]
+WantedBy=pipewire.service
+PIPEWIRE_PULSE_SERVICE
+
+        __file_write;
+
+        FILE_PATH \
+<<PIPEWIRE_PULSE_SERVICE
+$home/.config/systemd/user/pipewire-pulse.service
+PIPEWIRE_PULSE_SERVICE
+
+        FILE_PATH_TARGET \
+<<PIPEWIRE_PULSE_SERVICE
+$home/.config/systemd/user/pipewire.service.wants/pipewire-pulse.service
+PIPEWIRE_PULSE_SERVICE
+
+        __loc_target_link_overwrite;
+
+        FILE_PATH \
 <<XDG_DESKTOP_PORTAL_SERVICE
 $home/.config/systemd/user/xdg-desktop-portal.service
 XDG_DESKTOP_PORTAL_SERVICE
@@ -4090,6 +4123,18 @@ NULL
             FILE_PATH_TARGET \
 <<PIPEWIRE_SOCKET
 $home/.config/systemd/user/pipewire.socket
+PIPEWIRE_SOCKET
+
+            __loc_target_link_overwrite;
+
+            FILE_PATH \
+<<'NULL'
+/dev/null
+NULL
+
+            FILE_PATH_TARGET \
+<<PIPEWIRE_SOCKET
+$home/.config/systemd/user/pipewire-pulse.socket
 PIPEWIRE_SOCKET
 
             __loc_target_link_overwrite;
