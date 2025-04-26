@@ -11039,6 +11039,8 @@ main() {
         exit 2
     }
 
+    # end arg parsing; main()
+
     [ "$(id -u)" = 0 ] || {
         errF 1 - 'Missing root rights.'
     }
