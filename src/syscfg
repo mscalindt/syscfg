@@ -10006,6 +10006,7 @@ _tz() {
         _tz_de;
     else
         info -w -1 'Nothing to be done.'
+
         return 0
     fi
 }
