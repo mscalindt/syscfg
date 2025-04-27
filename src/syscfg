@@ -3875,6 +3875,20 @@ EVTEST_GRAB_SERVICE
 EVTEST_GRAB_SERVICE
 
             __loc_target_link_overwrite;
+        else
+            FILE_PATH \
+<<'EVTEST_GRAB_SERVICE'
+/etc/systemd/system/evtest-grab.service
+EVTEST_GRAB_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<'EVTEST_GRAB_SERVICE'
+/etc/systemd/system/multi-user.target.wants/evtest-grab.service
+EVTEST_GRAB_SERVICE
+
+            __loc_delete;
         fi
 
         FILE_PATH \
