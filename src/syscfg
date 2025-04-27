@@ -7449,6 +7449,7 @@ CONFIG
 _initramfs_conf() {
     if [ "$arch_linux" != 1 ]; then
         info -w -1 'Nothing to be done.'
+
         return 0
     fi
 
