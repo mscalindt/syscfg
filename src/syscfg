@@ -9181,10 +9181,12 @@ nameserver 127.0.0.1
 RESOLV_CONF
         fi
 
-        FILE \
+        if [ "$dns0" = dnsmasq ]; then
+            FILE \
 <<'RESOLV_CONF'
 options trust-ad
 RESOLV_CONF
+        fi
 
         __file_write;
         __loc_chattr 'i'
