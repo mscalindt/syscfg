@@ -6267,6 +6267,7 @@ _conf_4() {
     _alsa_conf;
     _autostart;
     _env;
+    _hostname;
     _hosts;
     _iwd_conf;
     _pipewire_conf;
@@ -7381,20 +7382,22 @@ SETTINGS_INI
 }
 
 _hostname() {
-    if [ "$m533ia" != 1 ]; then
-        info -w -1 'Nothing to be done.'
-        return 0
-    fi
-
     FILE_PATH \
 <<'HOSTNAME'
 /etc/hostname
 HOSTNAME
 
-    FILE \
+    if [ "$m533ia" = 1 ]; then
+        FILE \
 <<'HOSTNAME'
 m533ia
 HOSTNAME
+    else
+        FILE \
+<<HOSTNAME
+$hostname
+HOSTNAME
+    fi
 
     __file_write;
 }
@@ -11335,6 +11338,7 @@ main() {
     wm='sway'
 
     # Data
+    hostname='generic'
     user='mscalindt'
 
     # Locations
@@ -11434,7 +11438,7 @@ main() {
     readonly tmpd tmpf logf always_write backup force silent m533ia \
              arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
              qt_theme display_server wm bg de user home efi_mnt arch_mirlist \
-             polkit_agent ops audio_server
+             polkit_agent ops audio_server hostname
 
     { args_min 1 "$#" && main_assert_ops "$@"; } || {
         if [ "$#" -eq 0 ]; then
