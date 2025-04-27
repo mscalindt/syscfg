@@ -4332,6 +4332,69 @@ Exec=/usr/bin/true
 ORG_FREEDESKTOP_PORTAL_DOCUMENTS_SERVICE
 
             __file_write;
+        else
+            FILE_PATH \
+<<'RTKIT_DAEMON_SERVICE'
+/etc/systemd/system/rtkit-daemon.service
+RTKIT_DAEMON_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<AT_SPI_DBUS_BUS_SERVICE
+$home/.config/systemd/user/at-spi-dbus-bus.service
+AT_SPI_DBUS_BUS_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<PIPEWIRE_SOCKET
+$home/.config/systemd/user/pipewire.socket
+PIPEWIRE_SOCKET
+
+            __loc_delete;
+
+            FILE_PATH \
+<<PIPEWIRE_PULSE_SOCKET
+$home/.config/systemd/user/pipewire-pulse.socket
+PIPEWIRE_PULSE_SOCKET
+
+            __loc_delete;
+
+            FILE_PATH \
+<<ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_GTK_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.impl.portal.desktop.gtk.service
+ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_GTK_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_WLR_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.impl.portal.desktop.wlr.service
+ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_WLR_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<ORG_FREEDESKTOP_IMPL_PORTAL_PERMISSIONSTORE_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.impl.portal.PermissionStore.service
+ORG_FREEDESKTOP_IMPL_PORTAL_PERMISSIONSTORE_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<ORG_FREEDESKTOP_PORTAL_DESKTOP_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.portal.Desktop.service
+ORG_FREEDESKTOP_PORTAL_DESKTOP_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<ORG_FREEDESKTOP_PORTAL_DOCUMENTS_SERVICE
+$home/.local/share/dbus-1/services/org.freedesktop.portal.Documents.service
+ORG_FREEDESKTOP_PORTAL_DOCUMENTS_SERVICE
+
+            __loc_delete;
         fi
     elif [ "init" = none ] || [ ! "$init" ]; then
         FILE_PATH \
@@ -9135,6 +9198,13 @@ Depends = dash
 DASHBINSH_HOOK
 
         __file_write;
+    else
+        FILE_PATH \
+<<'DASHBINSH_HOOK'
+/usr/share/libalpm/hooks/dashbinsh.hook
+DASHBINSH_HOOK
+
+        __loc_delete;
     fi
 }
 
@@ -9369,6 +9439,13 @@ SYSTEMD_HANDLER
 
         __file_write;
         __file_executable;
+    else
+        FILE_PATH \
+<<SYSTEMD_HANDLER
+$home/.config/sway/systemd-handler
+SYSTEMD_HANDLER
+
+        __loc_delete;
     fi
 
     FILE_PATH \
