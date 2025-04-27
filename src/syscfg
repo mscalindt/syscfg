@@ -3802,6 +3802,20 @@ DNSMASQ_SERVICE
 
                 __loc_target_link_overwrite;
             fi
+        elif [ "dns" = none ] || [ ! "$dns" ]; then
+            FILE_PATH \
+<<'DNSMASQ_SERVICE'
+/etc/systemd/system/dnsmasq.service
+DNSMASQ_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<'DNSMASQ_SERVICE'
+/etc/systemd/system/multi-user.target.wants/dnsmasq.service
+DNSMASQ_SERVICE
+
+            __loc_delete;
         fi
 
         if [ "$m533ia" = 1 ]; then
