@@ -9063,6 +9063,12 @@ _reflector() {
 }
 
 _reflector_bg() {
+    if [ "$arch_linux" != 1 ]; then
+        info -w -1 'Nothing to be done.'
+
+        return 0
+    fi
+
     cmd 'reflector' || ENOCMD 'reflector'
 
     FILE_PATH \
