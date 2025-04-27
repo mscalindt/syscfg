@@ -9109,6 +9109,12 @@ MIRRORLIST
 }
 
 _reflector_de() {
+    if [ "$arch_linux" != 1 ]; then
+        info -w -1 'Nothing to be done.'
+
+        return 0
+    fi
+
     cmd 'reflector' || ENOCMD 'reflector'
 
     FILE_PATH \
