@@ -6313,21 +6313,21 @@ $home/.syscfg_env/browser
 BROWSER
 
     if [ "$browser" = firefox ]; then
-        if [ "$server" = wayland ]; then
+        if [ "$display_server" = wayland ]; then
             FILE \
 <<'BROWSER'
 MOZ_ENABLE_WAYLAND=1
 BROWSER
 
             __file_write_overwrite;
-        elif [ "$server" = x11 ]; then
+        elif [ "$display_server" = x11 ]; then
             FILE \
 <<'BROWSER'
 MOZ_ENABLE_WAYLAND=0
 BROWSER
 
             __file_write_overwrite;
-        elif [ "$server" = none ] || [ ! "$server" ]; then
+        elif [ "$display_server" = none ] || [ ! "$display_server" ]; then
             __loc_delete;
         fi
     fi
@@ -6349,31 +6349,31 @@ QT_THEME
     fi
 
     FILE_PATH \
-<<SERVER
-$home/.syscfg_env/server
-SERVER
+<<DISPLAY_SERVER
+$home/.syscfg_env/display_server
+DISPLAY_SERVER
 
-    if [ "$server" = wayland ]; then
+    if [ "$display_server" = wayland ]; then
         FILE \
-<<'SERVER'
+<<'DISPLAY_SERVER'
 QT_QPA_PLATFORM=wayland
 QT_WAYLAND_DISABLE_WINDOWDECORATION=1
 SDL_VIDEODRIVER=wayland
 GDK_BACKEND=wayland
 GTK_USE_PORTAL=1
-SERVER
+DISPLAY_SERVER
 
         __file_write_overwrite;
-    elif [ "$server" = x11 ]; then
+    elif [ "$display_server" = x11 ]; then
         FILE \
-<<'SERVER'
+<<'DISPLAY_SERVER'
 QT_QPA_PLATFORM=xcb
 SDL_VIDEODRIVER=x11
 GDK_BACKEND=x11
-SERVER
+DISPLAY_SERVER
 
         __file_write_overwrite;
-    elif [ "$server" = none ] || [ ! "$server" ]; then
+    elif [ "$display_server" = none ] || [ ! "$display_server" ]; then
         __loc_delete;
     fi
 
@@ -11170,6 +11170,8 @@ main() {
     audio_server='pipewire'
     # Web browser; currently supported: firefox, none
     browser='firefox'
+    # Display server; currently supported: wayland, x11, none
+    display_server='wayland'
     # DNS; currently supported: localhost, none
     dns='localhost'
     # Dedicated DNS (stub) resolver (localhost); currently supported: dnsmasq
@@ -11178,8 +11180,6 @@ main() {
     init='systemd'
     # QT theme engine; currently supported: kvantum, none
     qt_theme='kvantum'
-    # Display server; currently supported: wayland, x11, none
-    server='wayland'
     # Desktop environment / window manager; currently supported: sway, xfce4,
     # none
     wm='sway'
@@ -11283,7 +11283,7 @@ main() {
 
     readonly tmpd tmpf logf always_write backup force silent m533ia \
              arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
-             qt_theme server wm bg de user home efi_mnt arch_mirlist \
+             qt_theme display_server wm bg de user home efi_mnt arch_mirlist \
              polkit_agent ops audio_server
 
     { args_min 1 "$#" && main_assert_ops "$@"; } || {
