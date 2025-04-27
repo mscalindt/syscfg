@@ -6479,6 +6479,13 @@ SWAY_LOG
         __loc_empty;
         __loc_chmod '0644'
         __loc_chown "$user"
+    else
+        FILE_PATH \
+<<'SWAY_LOG'
+/var/log/sway.log
+SWAY_LOG
+
+        __loc_delete;
     fi
 }
 
