@@ -9155,13 +9155,6 @@ MIRRORLIST
 }
 
 _resolv_conf() {
-    if [ "$dns" = localhost ] || [ "$dns" = none ] || [ ! "$dns" ]; then
-        :
-    else
-        info -w -1 'Nothing to be done.'
-        return 0
-    fi
-
     FILE_PATH \
 <<'RESOLV_CONF'
 /etc/resolv.conf
