@@ -8136,6 +8136,7 @@ LOCALE_GEN
 _makepkg_conf() {
     if [ "$arch_linux" != 1 ]; then
         info -w -1 'Nothing to be done.'
+
         return 0
     fi
 
