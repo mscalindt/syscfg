@@ -9411,13 +9411,6 @@ CONFIG
 
 CONFIG
 
-    if [ "$polkit_agent" ]; then
-        FILE \
-<<CONFIG
-exec $polkit_agent
-CONFIG
-    fi
-
     if [ "$arch_linux" = 1 ]; then
         FILE \
 <<'CONFIG'
@@ -9452,6 +9445,10 @@ dbus-update-activation-environment --systemd \
 systemctl --user start \
     xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-wlr \
     xdg-document-portal xdg-permission-store
+
+if [ -f /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 ]; then
+    exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+fi
 SYSTEMD_HANDLER
 
         __file_write;
@@ -11345,7 +11342,6 @@ main() {
     home='/home/mscalindt'
     efi_mnt='/efi'
     arch_mirlist='/etc/pacman.d/mirrorlist'
-    polkit_agent='/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1'
 
     # Operations
     ops=
@@ -11438,7 +11434,7 @@ main() {
     readonly tmpd tmpf logf always_write backup force silent m533ia \
              arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
              qt_theme display_server wm bg de user home efi_mnt arch_mirlist \
-             polkit_agent ops audio_server hostname
+             ops audio_server hostname
 
     { args_min 1 "$#" && main_assert_ops "$@"; } || {
         if [ "$#" -eq 0 ]; then
