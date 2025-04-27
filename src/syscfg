@@ -6330,6 +6330,8 @@ BROWSER
         elif [ "$display_server" = none ] || [ ! "$display_server" ]; then
             __loc_delete;
         fi
+    elif [ "browser" = none ] || [ ! "$browser" ]; then
+        __loc_delete;
     fi
 
     FILE_PATH \
