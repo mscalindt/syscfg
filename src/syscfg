@@ -3905,12 +3905,13 @@ EVTEST_GRAB_SERVICE
             __loc_delete;
         fi
 
-        FILE_PATH \
+        if [ "$wland" = iwd ]; then
+            FILE_PATH \
 <<'IWD_SERVICE'
 /etc/systemd/system/iwd.service
 IWD_SERVICE
 
-        FILE \
+            FILE \
 <<'IWD_SERVICE'
 [Unit]
 Description=Wireless service
@@ -3922,19 +3923,34 @@ ExecStart=/usr/lib/iwd/iwd
 WantedBy=multi-user.target
 IWD_SERVICE
 
-        __file_write;
+            __file_write;
 
-        FILE_PATH \
+            FILE_PATH \
 <<'IWD_SERVICE'
 /etc/systemd/system/iwd.service
 IWD_SERVICE
 
-        FILE_PATH_TARGET \
+            FILE_PATH_TARGET \
 <<'IWD_SERVICE'
 /etc/systemd/system/multi-user.target.wants/iwd.service
 IWD_SERVICE
 
-        __loc_target_link_overwrite;
+            __loc_target_link_overwrite;
+        elif [ "wland" = none ] || [ ! "$wland" ]; then
+            FILE_PATH \
+<<'IWD_SERVICE'
+/etc/systemd/system/iwd.service
+IWD_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<'IWD_SERVICE'
+/etc/systemd/system/multi-user.target.wants/iwd.service
+IWD_SERVICE
+
+            __loc_delete;
+        fi
 
         FILE_PATH \
 <<MOC_SERVICE
@@ -11339,6 +11355,8 @@ main() {
     init='systemd'
     # QT theme engine; currently supported: kvantum, none
     qt_theme='kvantum'
+    # WLAN daemon; currently supported: iwd, none
+    wland='iwd'
     # Desktop environment / window manager; currently supported: sway, xfce4,
     # none
     wm='sway'
@@ -11443,7 +11461,7 @@ main() {
     readonly tmpd tmpf logf always_write backup force silent m533ia \
              arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
              qt_theme display_server wm bg de user home efi_mnt arch_mirlist \
-             ops audio_server hostname
+             ops audio_server hostname wland
 
     { args_min 1 "$#" && main_assert_ops "$@"; } || {
         if [ "$#" -eq 0 ]; then
