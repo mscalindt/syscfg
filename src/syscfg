@@ -3914,12 +3914,13 @@ MOC_SERVICE
 
         __loc_target_link_overwrite;
 
-        FILE_PATH \
+        if [ "$audio_server" = pipewire ]; then
+            FILE_PATH \
 <<PIPEWIRE_SERVICE
 $home/.config/systemd/user/pipewire.service
 PIPEWIRE_SERVICE
 
-        FILE \
+            FILE \
 <<'PIPEWIRE_SERVICE'
 [Unit]
 Description=PipeWire Multimedia Service
@@ -3931,26 +3932,26 @@ ExecStart=/usr/bin/pipewire
 WantedBy=default.target
 PIPEWIRE_SERVICE
 
-        __file_write;
+            __file_write;
 
-        FILE_PATH \
+            FILE_PATH \
 <<PIPEWIRE_SERVICE
 $home/.config/systemd/user/pipewire.service
 PIPEWIRE_SERVICE
 
-        FILE_PATH_TARGET \
+            FILE_PATH_TARGET \
 <<PIPEWIRE_SERVICE
 $home/.config/systemd/user/default.target.wants/pipewire.service
 PIPEWIRE_SERVICE
 
-        __loc_target_link_overwrite;
+            __loc_target_link_overwrite;
 
-        FILE_PATH \
+            FILE_PATH \
 <<PIPEWIRE_MEDIA_SESSION_SERVICE
 $home/.config/systemd/user/pipewire-media-session.service
 PIPEWIRE_MEDIA_SESSION_SERVICE
 
-        FILE \
+            FILE \
 <<'PIPEWIRE_MEDIA_SESSION_SERVICE'
 [Unit]
 Description=PipeWire Media Session Manager
@@ -3965,26 +3966,26 @@ ExecStart=/usr/bin/pipewire-media-session
 WantedBy=pipewire.service
 PIPEWIRE_MEDIA_SESSION_SERVICE
 
-        __file_write;
+            __file_write;
 
-        FILE_PATH \
+            FILE_PATH \
 <<PIPEWIRE_MEDIA_SESSION_SERVICE
 $home/.config/systemd/user/pipewire-media-session.service
 PIPEWIRE_MEDIA_SESSION_SERVICE
 
-        FILE_PATH_TARGET \
+            FILE_PATH_TARGET \
 <<PIPEWIRE_MEDIA_SESSION_SERVICE
 $home/.config/systemd/user/pipewire.service.wants/pipewire-media-session.service
 PIPEWIRE_MEDIA_SESSION_SERVICE
 
-        __loc_target_link_overwrite;
+            __loc_target_link_overwrite;
 
-        FILE_PATH \
+            FILE_PATH \
 <<PIPEWIRE_PULSE_SERVICE
 $home/.config/systemd/user/pipewire-pulse.service
 PIPEWIRE_PULSE_SERVICE
 
-        FILE \
+            FILE \
 <<'PIPEWIRE_PULSE_SERVICE'
 [Unit]
 Description=PipeWire PulseAudio
@@ -3998,19 +3999,62 @@ ExecStart=/usr/bin/pipewire-pulse
 WantedBy=pipewire.service
 PIPEWIRE_PULSE_SERVICE
 
-        __file_write;
+            __file_write;
 
-        FILE_PATH \
+            FILE_PATH \
 <<PIPEWIRE_PULSE_SERVICE
 $home/.config/systemd/user/pipewire-pulse.service
 PIPEWIRE_PULSE_SERVICE
 
-        FILE_PATH_TARGET \
+            FILE_PATH_TARGET \
 <<PIPEWIRE_PULSE_SERVICE
 $home/.config/systemd/user/pipewire.service.wants/pipewire-pulse.service
 PIPEWIRE_PULSE_SERVICE
 
-        __loc_target_link_overwrite;
+            __loc_target_link_overwrite;
+        elif [ "audio_server" = none ] || [ ! "$audio_server" ]; then
+            FILE_PATH \
+<<PIPEWIRE_SERVICE
+$home/.config/systemd/user/pipewire.service
+PIPEWIRE_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<PIPEWIRE_SERVICE
+$home/.config/systemd/user/default.target.wants/pipewire.service
+PIPEWIRE_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<PIPEWIRE_MEDIA_SESSION_SERVICE
+$home/.config/systemd/user/pipewire-media-session.service
+PIPEWIRE_MEDIA_SESSION_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<PIPEWIRE_MEDIA_SESSION_SERVICE
+$home/.config/systemd/user/pipewire.service.wants/pipewire-media-session.service
+PIPEWIRE_MEDIA_SESSION_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<PIPEWIRE_PULSE_SERVICE
+$home/.config/systemd/user/pipewire-pulse.service
+PIPEWIRE_PULSE_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<PIPEWIRE_PULSE_SERVICE
+$home/.config/systemd/user/pipewire.service.wants/pipewire-pulse.service
+PIPEWIRE_PULSE_SERVICE
+
+            __loc_delete;
+        fi
 
         FILE_PATH \
 <<XDG_DESKTOP_PORTAL_SERVICE
@@ -4142,24 +4186,40 @@ AT_SPI_DBUS_BUS_SERVICE
 /dev/null
 NULL
 
-            FILE_PATH_TARGET \
+            if [ "$audio_server" = pipewire ]; then
+                FILE_PATH_TARGET \
 <<PIPEWIRE_SOCKET
 $home/.config/systemd/user/pipewire.socket
 PIPEWIRE_SOCKET
 
-            __loc_target_link_overwrite;
+                __loc_target_link_overwrite;
 
-            FILE_PATH \
+                FILE_PATH \
 <<'NULL'
 /dev/null
 NULL
 
-            FILE_PATH_TARGET \
+                FILE_PATH_TARGET \
 <<PIPEWIRE_PULSE_SOCKET
 $home/.config/systemd/user/pipewire-pulse.socket
 PIPEWIRE_PULSE_SOCKET
 
-            __loc_target_link_overwrite;
+                __loc_target_link_overwrite;
+            elif [ "audio_server" = none ] || [ ! "$audio_server" ]; then
+                FILE_PATH \
+<<PIPEWIRE_SOCKET
+$home/.config/systemd/user/pipewire.socket
+PIPEWIRE_SOCKET
+
+                __loc_delete;
+
+                FILE_PATH \
+<<PIPEWIRE_PULSE_SOCKET
+$home/.config/systemd/user/pipewire-pulse.socket
+PIPEWIRE_PULSE_SOCKET
+
+                __loc_delete;
+            fi
 
             FILE_PATH \
 <<ORG_FREEDESKTOP_IMPL_PORTAL_DESKTOP_GTK_SERVICE
@@ -11106,6 +11166,8 @@ main() {
     de=1
 
     # Software
+    # Audio server; currently supported: pipewire, none
+    audio_server='pipewire'
     # Web browser; currently supported: firefox, none
     browser='firefox'
     # DNS; currently supported: localhost, none
@@ -11222,7 +11284,7 @@ main() {
     readonly tmpd tmpf logf always_write backup force silent m533ia \
              arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
              qt_theme server wm bg de user home efi_mnt arch_mirlist \
-             polkit_agent ops
+             polkit_agent ops audio_server
 
     { args_min 1 "$#" && main_assert_ops "$@"; } || {
         if [ "$#" -eq 0 ]; then
