@@ -3801,6 +3801,20 @@ DNSMASQ_SERVICE
 DNSMASQ_SERVICE
 
                 __loc_target_link_overwrite;
+            elif [ "dns0" = none ] || [ ! "$dns0" ]; then
+                FILE_PATH \
+<<'DNSMASQ_SERVICE'
+/etc/systemd/system/dnsmasq.service
+DNSMASQ_SERVICE
+
+                __loc_delete;
+
+                FILE_PATH \
+<<'DNSMASQ_SERVICE'
+/etc/systemd/system/multi-user.target.wants/dnsmasq.service
+DNSMASQ_SERVICE
+
+                __loc_delete;
             fi
         elif [ "dns" = none ] || [ ! "$dns" ]; then
             FILE_PATH \
@@ -11190,7 +11204,8 @@ main() {
     display_server='wayland'
     # DNS; currently supported: localhost, none
     dns='localhost'
-    # Dedicated DNS (stub) resolver (localhost); currently supported: dnsmasq
+    # Dedicated DNS (stub) resolver (localhost); currently supported: dnsmasq,
+    # none
     dns0='dnsmasq'
     # Init system; currently supported: systemd, none
     init='systemd'
