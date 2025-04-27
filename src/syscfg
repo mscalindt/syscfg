@@ -3764,6 +3764,20 @@ BLUETOOTH_SERVICE
 BLUETOOTH_SERVICE
 
             __loc_target_link_overwrite;
+        else
+            FILE_PATH \
+<<'BLUETOOTH_SERVICE'
+/etc/systemd/system/bluetooth.service
+BLUETOOTH_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<'BLUETOOTH_SERVICE'
+/etc/systemd/system/multi-user.target.wants/bluetooth.service
+BLUETOOTH_SERVICE
+
+            __loc_delete;
         fi
 
         if [ "$dns" = localhost ]; then
@@ -10124,6 +10138,13 @@ table.insert (bluez_monitor.rules, {
 99_BLUEZ_LUA
 
         __file_write;
+    else
+        FILE_PATH \
+<<'99_BLUEZ_LUA'
+/etc/wireplumber/bluetooth.lua.d/99-bluez.lua
+99_BLUEZ_LUA
+
+        __loc_delete;
     fi
 }
 
