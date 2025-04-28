@@ -4144,12 +4144,13 @@ PIPEWIRE_PULSE_SERVICE
             __loc_delete;
         fi
 
-        FILE_PATH \
+        if [ "$portal" = 1 ]; then
+            FILE_PATH \
 <<XDG_DESKTOP_PORTAL_SERVICE
 $home/.config/systemd/user/xdg-desktop-portal.service
 XDG_DESKTOP_PORTAL_SERVICE
 
-        FILE \
+            FILE \
 <<'XDG_DESKTOP_PORTAL_SERVICE'
 [Unit]
 Description=Portal service
@@ -4162,14 +4163,14 @@ ExecStart=/usr/lib/xdg-desktop-portal
 Slice=session.slice
 XDG_DESKTOP_PORTAL_SERVICE
 
-        __file_write;
+            __file_write;
 
-        FILE_PATH \
+            FILE_PATH \
 <<XDG_DESKTOP_PORTAL_GTK_SERVICE
 $home/.config/systemd/user/xdg-desktop-portal-gtk.service
 XDG_DESKTOP_PORTAL_GTK_SERVICE
 
-        FILE \
+            FILE \
 <<'XDG_DESKTOP_PORTAL_GTK_SERVICE'
 [Unit]
 Description=Portal service (GTK/GNOME implementation)
@@ -4182,14 +4183,14 @@ ExecStart=/usr/lib/xdg-desktop-portal-gtk
 Slice=session.slice
 XDG_DESKTOP_PORTAL_GTK_SERVICE
 
-        __file_write;
+            __file_write;
 
-        FILE_PATH \
+            FILE_PATH \
 <<XDG_DESKTOP_PORTAL_WLR_SERVICE
 $home/.config/systemd/user/xdg-desktop-portal-wlr.service
 XDG_DESKTOP_PORTAL_WLR_SERVICE
 
-        FILE \
+            FILE \
 <<'XDG_DESKTOP_PORTAL_WLR_SERVICE'
 [Unit]
 Description=Portal service (wlroots implementation)
@@ -4202,14 +4203,14 @@ ExecStart=/usr/lib/xdg-desktop-portal-wlr
 Slice=session.slice
 XDG_DESKTOP_PORTAL_WLR_SERVICE
 
-        __file_write;
+            __file_write;
 
-        FILE_PATH \
+            FILE_PATH \
 <<XDG_DOCUMENT_PORTAL_SERVICE
 $home/.config/systemd/user/xdg-document-portal.service
 XDG_DOCUMENT_PORTAL_SERVICE
 
-        FILE \
+            FILE \
 <<'XDG_DOCUMENT_PORTAL_SERVICE'
 [Unit]
 Description=flatpak document portal service
@@ -4222,14 +4223,14 @@ ExecStart=/usr/lib/xdg-document-portal
 Slice=session.slice
 XDG_DOCUMENT_PORTAL_SERVICE
 
-        __file_write;
+            __file_write;
 
-        FILE_PATH \
+            FILE_PATH \
 <<XDG_PERMISSION_STORE_SERVICE
 $home/.config/systemd/user/xdg-permission-store.service
 XDG_PERMISSION_STORE_SERVICE
 
-        FILE \
+            FILE \
 <<'XDG_PERMISSION_STORE_SERVICE'
 [Unit]
 Description=sandboxed app permission store
@@ -4242,7 +4243,43 @@ ExecStart=/usr/lib/xdg-permission-store
 Slice=session.slice
 XDG_PERMISSION_STORE_SERVICE
 
-        __file_write;
+            __file_write;
+        else
+            FILE_PATH \
+<<XDG_DESKTOP_PORTAL_SERVICE
+$home/.config/systemd/user/xdg-desktop-portal.service
+XDG_DESKTOP_PORTAL_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<XDG_DESKTOP_PORTAL_GTK_SERVICE
+$home/.config/systemd/user/xdg-desktop-portal-gtk.service
+XDG_DESKTOP_PORTAL_GTK_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<XDG_DESKTOP_PORTAL_WLR_SERVICE
+$home/.config/systemd/user/xdg-desktop-portal-wlr.service
+XDG_DESKTOP_PORTAL_WLR_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<XDG_DOCUMENT_PORTAL_SERVICE
+$home/.config/systemd/user/xdg-document-portal.service
+XDG_DOCUMENT_PORTAL_SERVICE
+
+            __loc_delete;
+
+            FILE_PATH \
+<<XDG_PERMISSION_STORE_SERVICE
+$home/.config/systemd/user/xdg-permission-store.service
+XDG_PERMISSION_STORE_SERVICE
+
+            __loc_delete;
+        fi
 
         if [ "$arch_linux" = 1 ]; then
             FILE_PATH \
@@ -6514,8 +6551,19 @@ QT_QPA_PLATFORM=wayland
 QT_WAYLAND_DISABLE_WINDOWDECORATION=1
 SDL_VIDEODRIVER=wayland
 GDK_BACKEND=wayland
+DISPLAY_SERVER
+
+        if [ "$portal" = 1 ]; then
+            FILE \
+<<'DISPLAY_SERVER'
 GTK_USE_PORTAL=1
 DISPLAY_SERVER
+        else
+            FILE \
+<<'DISPLAY_SERVER'
+GTK_USE_PORTAL=0
+DISPLAY_SERVER
+        fi
 
         __file_write_overwrite;
     elif [ "$display_server" = x11 ]; then
@@ -9481,10 +9529,20 @@ systemctl --user import-environment \
 dbus-update-activation-environment --systemd \
     DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP \
     DESKTOP_SESSION
+SYSTEMD_HANDLER
+
+        if [ "$portal" = 1 ]; then
+            FILE \
+<<'SYSTEMD_HANDLER'
 
 systemctl --user start \
     xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-wlr \
     xdg-document-portal xdg-permission-store
+SYSTEMD_HANDLER
+        fi
+
+        FILE \
+<<'SYSTEMD_HANDLER'
 
 if [ -f /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 ]; then
     exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
@@ -11348,6 +11406,8 @@ main() {
     gaming=0
     # Configure and prefer IPv6 over IPv4:
     ipv6=0
+    # XDG portals support (D-Bus dependent protocols)
+    portal=1
 
     # Location switches
     # Bulgaria:
@@ -11479,7 +11539,7 @@ main() {
     readonly tmpd tmpf logf always_write backup force silent m533ia \
              arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
              qt_theme display_server wm bg de user home efi_mnt arch_mirlist \
-             ops audio_server hostname wland audio_playerd
+             ops audio_server hostname wland audio_playerd portal
 
     { args_min 1 "$#" && main_assert_ops "$@"; } || {
         if [ "$#" -eq 0 ]; then
