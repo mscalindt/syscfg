@@ -2544,8 +2544,9 @@ loc_link_ptr() {
 #! .params:
 # <"$1"> - absolute path
 #! .uses:
-# [user] $ - the user name
+# [gid] $ - the numerical user primary group ID
 # [home] $ - the user directory
+# [uid] $ - the numerical user ID
 #! .rc:
 # (0) success
 # (*) error
@@ -2561,15 +2562,15 @@ loc_own_user() {
     chattr_remove "$1"
 
     if dir "$1"; then
-        chown -RP -- "$user":"$user" "$1"
+        chown -RP -- "$uid":"$gid" "$1"
     else
-        chown -P -- "$user":"$user" "$1"
+        chown -P -- "$uid":"$gid" "$1"
     fi
 
     set -- "${1%/*}"
     set -- "${1%"${1##*[!/]}"}"
     until [ "$1" = "$home" ]; do
-        chown -P -- "$user":"$user" "$1"
+        chown -P -- "$uid":"$gid" "$1"
 
         set -- "${1%/*}"
         set -- "${1%"${1##*[!/]}"}"
@@ -3402,24 +3403,12 @@ __loc_chown() {
     chattr_remove "$FILE_PATH"
 
     if [ "$silent_cmd" = 0 ]; then
-        if [ "$(id -gn "$user")" = "$user" ]; then
-            if ! chown -R "$user":"$user" "$FILE_PATH"; then
-                EPERMS "$FILE_PATH"
-            fi
-        else
-            if ! chown -R "$user" "$FILE_PATH"; then
-                EPERMS "$FILE_PATH"
-            fi
+        if ! chown -R "$uid":"$gid" "$FILE_PATH"; then
+            EPERMS "$FILE_PATH"
         fi
     else
-        if [ "$(id -gn "$user")" = "$user" ]; then
-            if ! chown -R "$user":"$user" "$FILE_PATH" > /dev/null 2>&1; then
-                EPERMS "$FILE_PATH"
-            fi
-        else
-            if ! chown -R "$user" "$FILE_PATH" > /dev/null 2>&1; then
-                EPERMS "$FILE_PATH"
-            fi
+        if ! chown -R "$uid":"$gid" "$FILE_PATH" > /dev/null 2>&1; then
+            EPERMS "$FILE_PATH"
         fi
     fi
 }
@@ -11448,7 +11437,10 @@ main() {
     wm='sway'
 
     # Data
+    gid='1000'
+    group='mscalindt'
     hostname='generic'
+    uid='1000'
     user='mscalindt'
 
     # Locations
@@ -11549,7 +11541,8 @@ main() {
     readonly tmpd tmpf logf always_write backup force silent m533ia \
              arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
              qt_theme display_server wm bg de user home efi_mnt arch_mirlist \
-             ops audio_server hostname wland audio_playerd portal silent_cmd
+             ops audio_server hostname wland audio_playerd portal silent_cmd \
+             gid group uid
 
     { args_min 1 "$#" && main_assert_ops "$@"; } || {
         if [ "$#" -eq 0 ]; then
