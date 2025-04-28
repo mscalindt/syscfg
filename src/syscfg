@@ -3480,7 +3480,11 @@ __loc_delete() {
             exit 201
         fi
     else
-        loc_delete "$FILE_PATH" > /dev/null 2>&1
+        if ! loc_delete "$FILE_PATH" > /dev/null 2>&1; then
+            err -r -1 'Removal error:'
+            err -r -- '> '; err - - "$FILE_PATH"
+            exit 201
+        fi
     fi
 }
 
