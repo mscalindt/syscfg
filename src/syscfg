@@ -2920,7 +2920,7 @@ __file_executable() {
 
     file "$FILE_PATH" || ENOTFILE "$FILE_PATH"
 
-    if [ "$silent" = 0 ]; then
+    if [ "$silent_cmd" = 0 ]; then
         if ! chmod +x "$FILE_PATH"; then
             EPERMS "$FILE_PATH"
         fi
@@ -3275,7 +3275,7 @@ __loc_chattr() {
         exit 222
     fi
 
-    if [ "$silent" = 0 ]; then
+    if [ "$silent_cmd" = 0 ]; then
         if ! chattr +"$1" "$FILE_PATH"; then
             EFSFLAG "$FILE_PATH"
         fi
@@ -3338,7 +3338,7 @@ __loc_chmod() {
 
     chattr_remove "$FILE_PATH"
 
-    if [ "$silent" = 0 ]; then
+    if [ "$silent_cmd" = 0 ]; then
         if ! chmod "$1" "$FILE_PATH"; then
             EPERMS "$FILE_PATH"
         fi
@@ -3401,7 +3401,7 @@ __loc_chown() {
 
     chattr_remove "$FILE_PATH"
 
-    if [ "$silent" = 0 ]; then
+    if [ "$silent_cmd" = 0 ]; then
         if [ "$(id -gn "$user")" = "$user" ]; then
             if ! chown -R "$user":"$user" "$FILE_PATH"; then
                 EPERMS "$FILE_PATH"
@@ -3530,7 +3530,9 @@ __loc_empty() {
         if [ "$silent" = 0 ]; then
             info -w -1 'Will empty:'
             info -w -- 'D '; info - - "$FILE_PATH"
+        fi
 
+        if [ "$silent_cmd" = 0 ]; then
             if ! rm -rf "$FILE_PATH"/*; then
                 errF 235 - 'rm: Failed.'
             fi
@@ -6123,7 +6125,7 @@ _clk_sync() {
     cmd 'hwclock' || ENOCMD 'hwclock'
     cmd 'ntpd' || ENOCMD 'ntpd'
 
-    if [ "$silent" = 0 ]; then
+    if [ "$silent_cmd" = 0 ]; then
         info -w - 'ntpd:'
 
         if ! ntpd -gGLnq pool.ntp.org; then
@@ -7261,7 +7263,7 @@ _grub() {
                 done
             fi
 
-            if [ "$silent" = 0 ]; then
+            if [ "$silent_cmd" = 0 ]; then
                 if ! rm -rf "$@"; then
                     errF 235 - 'rm: Failed.'
                 fi
@@ -7273,7 +7275,7 @@ _grub() {
         fi
     fi
 
-    if [ "$silent" = 0 ]; then
+    if [ "$silent_cmd" = 0 ]; then
         info -w - 'grub-install:'
 
         if ! grub-install --target=x86_64-efi \
@@ -7360,7 +7362,7 @@ GRUB
 
     __file_write_overwrite;
 
-    if [ "$silent" = 0 ]; then
+    if [ "$silent_cmd" = 0 ]; then
         info -w - 'grub-mkconfig:'
 
         if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg; then
@@ -7562,7 +7564,7 @@ MKINITCPIO_CONF
 
     __file_write_overwrite;
 
-    if [ "$silent" = 0 ]; then
+    if [ "$silent_cmd" = 0 ]; then
         info -w - 'mkinitcpio:'
 
         if ! mkinitcpio -P; then
@@ -8200,7 +8202,7 @@ LOCALE_GEN
 
     __file_write;
 
-    if [ "$silent" = 0 ]; then
+    if [ "$silent_cmd" = 0 ]; then
         info -w - 'locale-gen:'
 
         if ! locale-gen; then
@@ -8375,7 +8377,7 @@ _nvram_clr() {
     set -- '/sys/firmware/efi/efivars'/Boot*
 
     if cmd 'chattr'; then
-        if [ "$silent" = 0 ]; then
+        if [ "$silent_cmd" = 0 ]; then
             if ! chattr -ia "$@"; then
                 EFSFLAG "$@"
             fi
@@ -8392,7 +8394,7 @@ _nvram_clr() {
         printf "%s\n" '/sys/firmware/efi/efivars'/Boot0*
     fi
 
-    if [ "$silent" = 0 ]; then
+    if [ "$silent_cmd" = 0 ]; then
         if ! rm -f '/sys/firmware/efi/efivars'/BootOrder* \
                    '/sys/firmware/efi/efivars'/Boot0*; then
             errF 235 - 'rm: Failed.'
@@ -10117,7 +10119,7 @@ LOCALTIME
 
     __loc_target_link_overwrite;
 
-    if [ "$silent" = 0 ]; then
+    if [ "$silent_cmd" = 0 ]; then
         if ! hwclock -w; then
             errF 235 - 'hwclock: Failed to set the system clock.'
         fi
@@ -10144,7 +10146,7 @@ LOCALTIME
 
     __loc_target_link_overwrite;
 
-    if [ "$silent" = 0 ]; then
+    if [ "$silent_cmd" = 0 ]; then
         if ! hwclock -w; then
             errF 235 - 'hwclock: Failed to set the system clock.'
         fi
@@ -11388,6 +11390,8 @@ main() {
     force=0
     # Disable logging; not recommended:
     silent=0
+    # Disable command output:
+    silent_cmd=0
 
     # Device switches
     # ASUS VivoBook S15 X521IA-M533IA (AMD):
@@ -11525,6 +11529,7 @@ main() {
     # Enable gaming from cmdline:       ^GG as $1
     # Enable ipv6 from cmdline:         ^I6 as $1
     # Enable silent from cmdline:       ^ST as $1
+    # Enable silent_cmd from cmdline:   ^SC as $1
     while :; do case "$1" in
         '^AE') always_write=1; shift && continue ;;
         '^AQ') audio_hq=1; shift && continue ;;
@@ -11533,13 +11538,14 @@ main() {
         '^GG') gaming=1; shift && continue ;;
         '^I6') ipv6=1; shift && continue ;;
         '^ST') silent=1; shift && continue ;;
+        '^SC') silent_cmd=1; shift && continue ;;
         *) break ;;
     esac done
 
     readonly tmpd tmpf logf always_write backup force silent m533ia \
              arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
              qt_theme display_server wm bg de user home efi_mnt arch_mirlist \
-             ops audio_server hostname wland audio_playerd portal
+             ops audio_server hostname wland audio_playerd portal silent_cmd
 
     { args_min 1 "$#" && main_assert_ops "$@"; } || {
         if [ "$#" -eq 0 ]; then
@@ -11556,6 +11562,7 @@ main() {
         info -w -1 'SWITCH: gaming ^GG'
         info -w -1 'SWITCH: ipv6 ^I6'
         info -w -1 'SWITCH: silent ^ST'
+        info -w -1 'SWITCH: silent_cmd ^SC'
 
         exit 2
     }
