@@ -4029,12 +4029,13 @@ PIPEWIRE_SERVICE
 
             __loc_target_link_overwrite;
 
-            FILE_PATH \
+            if [ "$pipewire_manager" = pipewire ]; then
+                FILE_PATH \
 <<PIPEWIRE_MEDIA_SESSION_SERVICE
 $home/.config/systemd/user/pipewire-media-session.service
 PIPEWIRE_MEDIA_SESSION_SERVICE
 
-            FILE \
+                FILE \
 <<'PIPEWIRE_MEDIA_SESSION_SERVICE'
 [Unit]
 Description=PipeWire Media Session Manager
@@ -4049,19 +4050,34 @@ ExecStart=/usr/bin/pipewire-media-session
 WantedBy=pipewire.service
 PIPEWIRE_MEDIA_SESSION_SERVICE
 
-            __file_write;
+                __file_write;
 
-            FILE_PATH \
+                FILE_PATH \
 <<PIPEWIRE_MEDIA_SESSION_SERVICE
 $home/.config/systemd/user/pipewire-media-session.service
 PIPEWIRE_MEDIA_SESSION_SERVICE
 
-            FILE_PATH_TARGET \
+                FILE_PATH_TARGET \
 <<PIPEWIRE_MEDIA_SESSION_SERVICE
 $home/.config/systemd/user/pipewire.service.wants/pipewire-media-session.service
 PIPEWIRE_MEDIA_SESSION_SERVICE
 
-            __loc_target_link_overwrite;
+                __loc_target_link_overwrite;
+            elif [ "pipewire_manager" = none ] || [ ! "$pipewire_manager" ]; then
+                FILE_PATH \
+<<PIPEWIRE_MEDIA_SESSION_SERVICE
+$home/.config/systemd/user/pipewire-media-session.service
+PIPEWIRE_MEDIA_SESSION_SERVICE
+
+                __loc_delete;
+
+                FILE_PATH \
+<<PIPEWIRE_MEDIA_SESSION_SERVICE
+$home/.config/systemd/user/pipewire.service.wants/pipewire-media-session.service
+PIPEWIRE_MEDIA_SESSION_SERVICE
+
+                __loc_delete;
+            fi
 
             FILE_PATH \
 <<PIPEWIRE_PULSE_SERVICE
@@ -11428,6 +11444,8 @@ main() {
     dns0='dnsmasq'
     # Init system; currently supported: systemd, none
     init='systemd'
+    # Pipewire manager; currently supported: pipewire, none
+    pipewire_manager='pipewire'
     # QT theme engine; currently supported: kvantum, none
     qt_theme='kvantum'
     # WLAN daemon; currently supported: iwd, none
@@ -11542,7 +11560,7 @@ main() {
              arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
              qt_theme display_server wm bg de user home efi_mnt arch_mirlist \
              ops audio_server hostname wland audio_playerd portal silent_cmd \
-             gid group uid
+             gid group uid pipewire_manager
 
     { args_min 1 "$#" && main_assert_ops "$@"; } || {
         if [ "$#" -eq 0 ]; then
