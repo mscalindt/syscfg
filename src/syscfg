@@ -1665,9 +1665,7 @@ libfile() {
             # checks to a total of two. This way, specific line additions
             # can be abbreviated (or not) as desired in the log file,
             # without disabling the logging of other line additions.
-            if [ "$silent" = 0 ]; then
-                LOG_write 1 "$i" "$line"
-            fi
+            LOG_write 1 "$i" "$line"
 
             printf "%s\n" "$line"
         done <<EOF
@@ -1692,14 +1690,12 @@ EOF
             # If $l is 1, it means we are in the first iteration. For the
             # first iteration we log line replace, for the following
             # iterations we log line addition.
-            if [ "$silent" = 0 ]; then
-                if [ "$l" -eq 1 ]; then
-                    if [ "$LINE" != "$line" ]; then
-                        LOG_write 3 "$i" "$LINE" "$line"
-                    fi
-                else
-                    LOG_write 1 "$i" "$line"
+            if [ "$l" -eq 1 ]; then
+                if [ "$LINE" != "$line" ]; then
+                    LOG_write 3 "$i" "$LINE" "$line"
                 fi
+            else
+                LOG_write 1 "$i" "$line"
             fi
 
             printf "%s\n" "$line"
@@ -1783,9 +1779,7 @@ EOF
                     "-1$2"* | \
                     '-2'*"$2" | \
                     '-3'*"$2"*)
-                        if [ "$silent" = 0 ]; then
-                            LOG_write 2 "$i" "$LINE"
-                        fi
+                        LOG_write 2 "$i" "$LINE"
 
                         i=$((i - 1))
 
@@ -2435,33 +2429,28 @@ loc_backup() {
         if dir "$1"; then
             cp -R "$1" "$1".bak"$_i" 2> /dev/null || break
 
-            if [ "$silent" = 0 ]; then
-                info -w - 'loc_backup(): Backup from/to:'
-                info -r -- 'D '; info - - "$1"
-                info -g -- 'D '; info - - "$1".bak"$_i"
-            fi
+            info -w - 'loc_backup(): Backup from/to:'
+            info -r -- 'D '; info - - "$1"
+            info -g -- 'D '; info - - "$1".bak"$_i"
         else
             cp "$1" "$1".bak"$_i" 2> /dev/null || break
 
-            if [ "$silent" = 0 ]; then
-                info -w - 'loc_backup(): Backup from/to:'
-                info -r -- 'F '; info - - "$1"
-                info -g -- 'F '; info - - "$1".bak"$_i"
-            fi
+            info -w - 'loc_backup(): Backup from/to:'
+            info -r -- 'F '; info - - "$1"
+            info -g -- 'F '; info - - "$1".bak"$_i"
         fi
 
         return 0
     done
 
-    if [ "$silent" = 0 ]; then
-        if [ "$_i" -eq 1000 ]; then
-            info -y - 'loc_backup(): Failed; too many .bak files.'
-        else
-            info -y - 'loc_backup(): Backup failed:'
-        fi
-        if dir "$1"; then info -w -- 'D '; else info -w -- 'F '; fi
-        info - - "$1"
+    if [ "$_i" -eq 1000 ]; then
+        info -y - 'loc_backup(): Failed; too many .bak files.'
+    else
+        info -y - 'loc_backup(): Backup failed:'
     fi
+    if dir "$1"; then info -w -- 'D '; else info -w -- 'F '; fi
+    info - - "$1"
+
     return 1
 }
 
@@ -2631,17 +2620,15 @@ __bin_write() {
             fi
         fi
 
-        if [ "$silent" = 0 ]; then
-            info -w -1 'Will write:'
-            info -w -- 'F '; info - - "$FILE_PATH"
+        info -w -1 'Will write:'
+        info -w -- 'F '; info - - "$FILE_PATH"
 
-            (
-                IFS="$LF"' '
-                CC=0; for _octal in $FILE; do CC=$((CC + 1)); done
-                info -w -- 'CC: '; info - - "$CC"
-                info -w -- 'SIZE: '; bytes_size "$CC"
-            )
-        fi
+        (
+            IFS="$LF"' '
+            CC=0; for _octal in $FILE; do CC=$((CC + 1)); done
+            info -w -- 'CC: '; info - - "$CC"
+            info -w -- 'SIZE: '; bytes_size "$CC"
+        )
 
         if ! file_write_octal "$FILE_PATH" "$FILE"; then
             err -r -1 'Write error:'
@@ -2695,17 +2682,15 @@ __bin_write_overwrite() {
             loc_backup "$FILE_PATH"
         fi
 
-        if [ "$silent" = 0 ]; then
-            info -w -1 'Will write:'
-            info -w -- 'F '; info - - "$FILE_PATH"
+        info -w -1 'Will write:'
+        info -w -- 'F '; info - - "$FILE_PATH"
 
-            (
-                IFS="$LF"' '
-                CC=0; for _octal in $FILE; do CC=$((CC + 1)); done
-                info -w -- 'CC: '; info - - "$CC"
-                info -w -- 'SIZE: '; bytes_size "$CC"
-            )
-        fi
+        (
+            IFS="$LF"' '
+            CC=0; for _octal in $FILE; do CC=$((CC + 1)); done
+            info -w -- 'CC: '; info - - "$CC"
+            info -w -- 'SIZE: '; bytes_size "$CC"
+        )
 
         if ! file_write_octal "$FILE_PATH" "$FILE"; then
             err -r -1 'Write error:'
@@ -2769,27 +2754,25 @@ __dir_target_write() {
             fi
         fi
 
-        if [ "$silent" = 0 ]; then
-            info -w -1 'Will copy from/to:'
-            info -w -- 'D '; info - - "$FILE_PATH"
-            info -w -- 'D '; info - - "$FILE_PATH_TARGET"
+        info -w -1 'Will copy from/to:'
+        info -w -- 'D '; info - - "$FILE_PATH"
+        info -w -- 'D '; info - - "$FILE_PATH_TARGET"
 
-            info -w -- '> '
-            find "$FILE_PATH"//. ! -name . | grep -c // 2> /dev/null | \
-                while IFS= read -r _line0; do
-                    printf "%s, " "$_line0"
+        info -w -- '> '
+        find "$FILE_PATH"//. ! -name . | grep -c // 2> /dev/null | \
+            while IFS= read -r _line0; do
+                printf "%s, " "$_line0"
 
-                    info -w -- 'D '
-                    find "$FILE_PATH"//. ! -name . -type d | \
-                        grep -c // 2> /dev/null | \
-                            while IFS= read -r _line1; do
-                                printf "%s, " "$_line1"
+                info -w -- 'D '
+                find "$FILE_PATH"//. ! -name . -type d | \
+                    grep -c // 2> /dev/null | \
+                        while IFS= read -r _line1; do
+                            printf "%s, " "$_line1"
 
-                                info -w -- 'F '
-                                info - - "$((_line0 - _line1))"
-                            done
-                done
-        fi
+                            info -w -- 'F '
+                            info - - "$((_line0 - _line1))"
+                        done
+            done
 
         if ! dir_write "$FILE_PATH" "$FILE_PATH_TARGET"; then
             err -r -1 'Write error:'
@@ -2839,27 +2822,25 @@ __dir_target_write_overwrite() {
             loc_backup "$FILE_PATH_TARGET"
         fi
 
-        if [ "$silent" = 0 ]; then
-            info -w -1 'Will copy from/to:'
-            info -w -- 'D '; info - - "$FILE_PATH"
-            info -w -- 'D '; info - - "$FILE_PATH_TARGET"
+        info -w -1 'Will copy from/to:'
+        info -w -- 'D '; info - - "$FILE_PATH"
+        info -w -- 'D '; info - - "$FILE_PATH_TARGET"
 
-            info -w -- '> '
-            find "$FILE_PATH"//. ! -name . | grep -c // 2> /dev/null | \
-                while IFS= read -r _line0; do
-                    printf "%s, " "$_line0"
+        info -w -- '> '
+        find "$FILE_PATH"//. ! -name . | grep -c // 2> /dev/null | \
+            while IFS= read -r _line0; do
+                printf "%s, " "$_line0"
 
-                    info -w -- 'D '
-                    find "$FILE_PATH"//. ! -name . -type d | \
-                        grep -c // 2> /dev/null | \
-                            while IFS= read -r _line1; do
-                                printf "%s, " "$_line1"
+                info -w -- 'D '
+                find "$FILE_PATH"//. ! -name . -type d | \
+                    grep -c // 2> /dev/null | \
+                        while IFS= read -r _line1; do
+                            printf "%s, " "$_line1"
 
-                                info -w -- 'F '
-                                info - - "$((_line0 - _line1))"
-                            done
-                done
-        fi
+                            info -w -- 'F '
+                            info - - "$((_line0 - _line1))"
+                        done
+            done
 
         if ! dir_write "$FILE_PATH" "$FILE_PATH_TARGET"; then
             err -r -1 'Write error:'
@@ -2981,16 +2962,14 @@ __file_write() {
             fi
         fi
 
-        if [ "$silent" = 0 ]; then
-            if LOG_written; then
-                info -w -1 'Changes:'
-                info -w -- 'F '; info - - "$FILE_PATH"
-                LOG_print;
-            else
-                info -w -1 'Will write:'
-                info -w -- 'F '; info - - "$FILE_PATH"
-                info -w - '0:'; info - -- "$FILE"
-            fi
+        if LOG_written; then
+            info -w -1 'Changes:'
+            info -w -- 'F '; info - - "$FILE_PATH"
+            LOG_print;
+        else
+            info -w -1 'Will write:'
+            info -w -- 'F '; info - - "$FILE_PATH"
+            info -w - '0:'; info - -- "$FILE"
         fi
 
         if ! file_write "$FILE_PATH" "$FILE"; then
@@ -3045,16 +3024,14 @@ __file_write_overwrite() {
             loc_backup "$FILE_PATH"
         fi
 
-        if [ "$silent" = 0 ]; then
-            if LOG_written; then
-                info -w -1 'Changes:'
-                info -w -- 'F '; info - - "$FILE_PATH"
-                LOG_print;
-            else
-                info -w -1 'Will write:'
-                info -w -- 'F '; info - - "$FILE_PATH"
-                info -w - '0:'; info - -- "$FILE"
-            fi
+        if LOG_written; then
+            info -w -1 'Changes:'
+            info -w -- 'F '; info - - "$FILE_PATH"
+            LOG_print;
+        else
+            info -w -1 'Will write:'
+            info -w -- 'F '; info - - "$FILE_PATH"
+            info -w - '0:'; info - -- "$FILE"
         fi
 
         if ! file_write "$FILE_PATH" "$FILE"; then
@@ -3138,11 +3115,9 @@ __file_target_write() {
             fi
         fi
 
-        if [ "$silent" = 0 ]; then
-            info -w -1 'Will copy from/to:'
-            info -w -- 'F '; info - - "$FILE_PATH"
-            info -w -- 'F '; info - - "$FILE_PATH_TARGET"
-        fi
+        info -w -1 'Will copy from/to:'
+        info -w -- 'F '; info - - "$FILE_PATH"
+        info -w -- 'F '; info - - "$FILE_PATH_TARGET"
 
         if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
             err -r -1 'Write error:'
@@ -3206,11 +3181,9 @@ __file_target_write_overwrite() {
             loc_backup "$FILE_PATH_TARGET"
         fi
 
-        if [ "$silent" = 0 ]; then
-            info -w -1 'Will copy from/to:'
-            info -w -- 'F '; info - - "$FILE_PATH"
-            info -w -- 'F '; info - - "$FILE_PATH_TARGET"
-        fi
+        info -w -1 'Will copy from/to:'
+        info -w -- 'F '; info - - "$FILE_PATH"
+        info -w -- 'F '; info - - "$FILE_PATH_TARGET"
 
         if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
             err -r -1 'Write error:'
@@ -3440,40 +3413,32 @@ __loc_delete() {
         fi
     fi
 
-    if [ "$silent" = 0 ]; then
-        info -w -1 'Will delete:'
-        if [ -b "$FILE_PATH" ]; then
-            info -w -- 'B ' # block file
-        elif [ -c "$FILE_PATH" ]; then
-            info -w -- 'C ' # character file
-        elif [ -d "$FILE_PATH" ]; then
-            info -w -- 'D ' # directory
-        elif [ -f "$FILE_PATH" ]; then
-            info -w -- 'F ' # regular file
-        elif [ -h "$FILE_PATH" ]; then
-            info -w -- 'L ' # symbolic link
-        elif [ -p "$FILE_PATH" ]; then
-            info -w -- 'P ' # named pipe
-        elif [ -S "$FILE_PATH" ]; then
-            info -w -- 'S ' # socket
-        elif [ -t "$FILE_PATH" 2> /dev/null ]; then
-            info -w -- 'FD ' # open file descriptor
-        else
-            info -w -- '> '
-        fi
-        info - - "$FILE_PATH"
-
-        if ! loc_delete "$FILE_PATH"; then
-            err -r -1 'Removal error:'
-            err -r -- '> '; err - - "$FILE_PATH"
-            exit 201
-        fi
+    info -w -1 'Will delete:'
+    if [ -b "$FILE_PATH" ]; then
+        info -w -- 'B ' # block file
+    elif [ -c "$FILE_PATH" ]; then
+        info -w -- 'C ' # character file
+    elif [ -d "$FILE_PATH" ]; then
+        info -w -- 'D ' # directory
+    elif [ -f "$FILE_PATH" ]; then
+        info -w -- 'F ' # regular file
+    elif [ -h "$FILE_PATH" ]; then
+        info -w -- 'L ' # symbolic link
+    elif [ -p "$FILE_PATH" ]; then
+        info -w -- 'P ' # named pipe
+    elif [ -S "$FILE_PATH" ]; then
+        info -w -- 'S ' # socket
+    elif [ -t "$FILE_PATH" 2> /dev/null ]; then
+        info -w -- 'FD ' # open file descriptor
     else
-        if ! loc_delete "$FILE_PATH" > /dev/null 2>&1; then
-            err -r -1 'Removal error:'
-            err -r -- '> '; err - - "$FILE_PATH"
-            exit 201
-        fi
+        info -w -- '> '
+    fi
+    info - - "$FILE_PATH"
+
+    if ! loc_delete "$FILE_PATH"; then
+        err -r -1 'Removal error:'
+        err -r -- '> '; err - - "$FILE_PATH"
+        exit 201
     fi
 }
 
@@ -3520,10 +3485,8 @@ __loc_empty() {
     fi
 
     if dir "$FILE_PATH"; then
-        if [ "$silent" = 0 ]; then
-            info -w -1 'Will empty:'
-            info -w -- 'D '; info - - "$FILE_PATH"
-        fi
+        info -w -1 'Will empty:'
+        info -w -- 'D '; info - - "$FILE_PATH"
 
         if [ "$silent_cmd" = 0 ]; then
             if ! rm -rf "$FILE_PATH"/*; then
@@ -3535,33 +3498,21 @@ __loc_empty() {
             fi
         fi
     else
-        if [ "$silent" = 0 ]; then
-            if exist "$FILE_PATH"; then
-                info -w -1 'Will truncate:'
-            else
-                info -w -1 'Will create:'
-            fi
-            info -w -- 'F '; info - - "$FILE_PATH"
-
-            if ! { : > "$FILE_PATH"; }; then
-                if exist "$FILE_PATH"; then
-                    err -r -1 'Truncation error:'
-                else
-                    err -r -1 'Creation error:'
-                fi
-                err -r -- 'F '; err - - "$FILE_PATH"
-                exit 201
-            fi
+        if exist "$FILE_PATH"; then
+            info -w -1 'Will truncate:'
         else
-            if ! { : > "$FILE_PATH"; } > /dev/null 2>&1; then
-                if exist "$FILE_PATH"; then
-                    err -r -1 'Truncation error:'
-                else
-                    err -r -1 'Creation error:'
-                fi
-                err -r -- 'F '; err - - "$FILE_PATH"
-                exit 201
+            info -w -1 'Will create:'
+        fi
+        info -w -- 'F '; info - - "$FILE_PATH"
+
+        if ! { : > "$FILE_PATH"; }; then
+            if exist "$FILE_PATH"; then
+                err -r -1 'Truncation error:'
+            else
+                err -r -1 'Creation error:'
             fi
+            err -r -- 'F '; err - - "$FILE_PATH"
+            exit 201
         fi
     fi
 }
@@ -3598,11 +3549,9 @@ __loc_target_link_overwrite() {
             loc_backup "$FILE_PATH_TARGET"
         fi
 
-        if [ "$silent" = 0 ]; then
-            info -w -1 'Will symbolic link source/target:'
-            info -w -- '? '; info - - "$FILE_PATH"
-            info -w -- 'L '; info - - "$FILE_PATH_TARGET"
-        fi
+        info -w -1 'Will symbolic link source/target:'
+        info -w -- '? '; info - - "$FILE_PATH"
+        info -w -- 'L '; info - - "$FILE_PATH_TARGET"
 
         if ! loc_link "$FILE_PATH" "$FILE_PATH_TARGET"; then
             err -r -1 'Write error:'
@@ -6935,9 +6884,7 @@ PROFILES_INI
             while IFS= read -r line; do
                 i=$((i + 1))
 
-                if [ "$silent" = 0 ]; then
-                    LOG_write 1 "$i" "$line"
-                fi
+                LOG_write 1 "$i" "$line"
 
                 printf "%s\n" "$line"
             done <<EOF
@@ -7010,9 +6957,7 @@ PROFILES_INI
             while IFS= read -r line; do
                 i=$((i + 1))
 
-                if [ "$silent" = 0 ]; then
-                    LOG_write 1 "$i" "$line"
-                fi
+                LOG_write 1 "$i" "$line"
 
                 printf "%s\n" "$line"
             done <<EOF
@@ -7258,19 +7203,17 @@ _grub() {
         set -- "$efi_mnt"/*
 
         if exist "$1"; then
-            if [ "$silent" = 0 ]; then
-                info -w -1 'Will delete:'
-                for arg in "$@"; do
-                    if [ -d "$arg" ]; then
-                        info -w -- 'D '
-                    elif [ -f "$arg" ]; then
-                        info -w -- 'F '
-                    else
-                        info -w -- '> '
-                    fi
-                    info - - "$arg"
-                done
-            fi
+            info -w -1 'Will delete:'
+            for arg in "$@"; do
+                if [ -d "$arg" ]; then
+                    info -w -- 'D '
+                elif [ -f "$arg" ]; then
+                    info -w -- 'F '
+                else
+                    info -w -- '> '
+                fi
+                info - - "$arg"
+            done
 
             if [ "$silent_cmd" = 0 ]; then
                 if ! rm -rf "$@"; then
@@ -8397,11 +8340,9 @@ _nvram_clr() {
         fi
     fi
 
-    if [ "$silent" = 0 ]; then
-        info -w -1 'Will delete:'
-        printf "%s\n" '/sys/firmware/efi/efivars'/BootOrder*
-        printf "%s\n" '/sys/firmware/efi/efivars'/Boot0*
-    fi
+    info -w -1 'Will delete:'
+    printf "%s\n" '/sys/firmware/efi/efivars'/BootOrder*
+    printf "%s\n" '/sys/firmware/efi/efivars'/Boot0*
 
     if [ "$silent_cmd" = 0 ]; then
         if ! rm -f '/sys/firmware/efi/efivars'/BootOrder* \
@@ -8465,9 +8406,7 @@ PACMAN_CONF
             while IFS= read -r line; do
                 i=$((i + 1))
 
-                if [ "$silent" = 0 ]; then
-                    LOG_write 1 "$i" "$line"
-                fi
+                LOG_write 1 "$i" "$line"
 
                 printf "%s\n" "$line"
             done <<EOF
@@ -8483,14 +8422,12 @@ EOF
                     i=$((i + 1))
                 fi
 
-                if [ "$silent" = 0 ]; then
-                    if [ "$l" -eq 1 ]; then
-                        if [ "$LINE" != "$line" ]; then
-                            LOG_write 3 "$i" "$LINE" "$line"
-                        fi
-                    else
-                        LOG_write 1 "$i" "$line"
+                if [ "$l" -eq 1 ]; then
+                    if [ "$LINE" != "$line" ]; then
+                        LOG_write 3 "$i" "$LINE" "$line"
                     fi
+                else
+                    LOG_write 1 "$i" "$line"
                 fi
 
                 printf "%s\n" "$line"
@@ -8597,14 +8534,12 @@ SU
                     i=$((i + 1))
                 fi
 
-                if [ "$silent" = 0 ]; then
-                    if [ "$l" -eq 1 ]; then
-                        if [ "$LINE" != "$line" ]; then
-                            LOG_write 3 "$i" "$LINE" "$line"
-                        fi
-                    else
-                        LOG_write 1 "$i" "$line"
+                if [ "$l" -eq 1 ]; then
+                    if [ "$LINE" != "$line" ]; then
+                        LOG_write 3 "$i" "$LINE" "$line"
                     fi
+                else
+                    LOG_write 1 "$i" "$line"
                 fi
 
                 printf "%s\n" "$line"
@@ -8660,14 +8595,12 @@ SYSTEM_AUTH
                     i=$((i + 1))
                 fi
 
-                if [ "$silent" = 0 ]; then
-                    if [ "$l" -eq 1 ]; then
-                        if [ "$LINE" != "$line" ]; then
-                            LOG_write 3 "$i" "$LINE" "$line"
-                        fi
-                    else
-                        LOG_write 1 "$i" "$line"
+                if [ "$l" -eq 1 ]; then
+                    if [ "$LINE" != "$line" ]; then
+                        LOG_write 3 "$i" "$LINE" "$line"
                     fi
+                else
+                    LOG_write 1 "$i" "$line"
                 fi
 
                 printf "%s\n" "$line"
@@ -11397,8 +11330,6 @@ main() {
     backup=0
     # Force successful operation at all costs (file overwrite/removal):
     force=0
-    # Disable logging; not recommended:
-    silent=0
     # Disable command output:
     silent_cmd=0
 
@@ -11542,7 +11473,6 @@ main() {
     # Enable force from cmdline:        ^FE as $1
     # Enable gaming from cmdline:       ^GG as $1
     # Enable ipv6 from cmdline:         ^I6 as $1
-    # Enable silent from cmdline:       ^ST as $1
     # Enable silent_cmd from cmdline:   ^SC as $1
     while :; do case "$1" in
         '^AE') always_write=1; shift && continue ;;
@@ -11551,12 +11481,11 @@ main() {
         '^FE') force=1; shift && continue ;;
         '^GG') gaming=1; shift && continue ;;
         '^I6') ipv6=1; shift && continue ;;
-        '^ST') silent=1; shift && continue ;;
         '^SC') silent_cmd=1; shift && continue ;;
         *) break ;;
     esac done
 
-    readonly tmpd tmpf logf always_write backup force silent m533ia \
+    readonly tmpd tmpf logf always_write backup force m533ia \
              arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
              qt_theme display_server wm bg de user home efi_mnt arch_mirlist \
              ops audio_server hostname wland audio_playerd portal silent_cmd \
@@ -11576,7 +11505,6 @@ main() {
         info -w -1 'SWITCH: force ^FE'
         info -w -1 'SWITCH: gaming ^GG'
         info -w -1 'SWITCH: ipv6 ^I6'
-        info -w -1 'SWITCH: silent ^ST'
         info -w -1 'SWITCH: silent_cmd ^SC'
 
         exit 2
