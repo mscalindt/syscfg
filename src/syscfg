@@ -8666,29 +8666,6 @@ CLIENT_CONF
     __file_write;
 
     FILE_PATH \
-<<'CLIENT_RT_CONF'
-/etc/pipewire/client-rt.conf.d/client-rt.conf
-CLIENT_RT_CONF
-
-    if [ "$audio_hq" = 1 ]; then
-        FILE \
-<<'CLIENT_RT_CONF'
-stream.properties = {
-    resample.quality = 15
-}
-CLIENT_RT_CONF
-    else
-        FILE \
-<<'CLIENT_RT_CONF'
-stream.properties = {
-    resample.quality = 11
-}
-CLIENT_RT_CONF
-    fi
-
-    __file_write;
-
-    FILE_PATH \
 <<'MINIMAL_CONF'
 /etc/pipewire/minimal.conf.d/minimal.conf
 MINIMAL_CONF
