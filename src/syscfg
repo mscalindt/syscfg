@@ -8658,7 +8658,7 @@ CLIENT_CONF
         FILE \
 <<'CLIENT_CONF'
 stream.properties = {
-    resample.quality = 11
+    resample.quality = 9
 }
 CLIENT_CONF
     fi
@@ -8697,7 +8697,7 @@ PIPEWIRE_PULSE_CONF
         FILE \
 <<'PIPEWIRE_PULSE_CONF'
 stream.properties = {
-    resample.quality = 11
+    resample.quality = 9
 }
 PIPEWIRE_PULSE_CONF
     fi
