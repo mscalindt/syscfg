@@ -8680,29 +8680,6 @@ PIPEWIRE_CONF
     __file_write;
 
     FILE_PATH \
-<<'PIPEWIRE_AVB_CONF'
-/etc/pipewire/pipewire-pulse.conf.d/pipewire-avb.conf
-PIPEWIRE_AVB_CONF
-
-    if [ "$audio_hq" = 1 ]; then
-        FILE \
-<<'PIPEWIRE_AVB_CONF'
-stream.properties = {
-    resample.quality = 15
-}
-PIPEWIRE_AVB_CONF
-    else
-        FILE \
-<<'PIPEWIRE_AVB_CONF'
-stream.properties = {
-    resample.quality = 11
-}
-PIPEWIRE_AVB_CONF
-    fi
-
-    __file_write;
-
-    FILE_PATH \
 <<'PIPEWIRE_PULSE_CONF'
 /etc/pipewire/pipewire-pulse.conf.d/pipewire-pulse.conf
 PIPEWIRE_PULSE_CONF
