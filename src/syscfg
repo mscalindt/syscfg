@@ -8647,21 +8647,29 @@ _pipewire_conf() {
 /etc/pipewire/client.conf.d/client.conf
 CLIENT_CONF
 
+    FILE \
+<<'CLIENT_CONF'
+stream.properties = {
+    node.latency = 1024/44100
+    node.rate = 44100
+CLIENT_CONF
+
     if [ "$audio_hq" = 1 ]; then
         FILE \
 <<'CLIENT_CONF'
-stream.properties = {
     resample.quality = 15
-}
 CLIENT_CONF
     else
         FILE \
 <<'CLIENT_CONF'
-stream.properties = {
     resample.quality = 9
-}
 CLIENT_CONF
     fi
+
+    FILE \
+<<'CLIENT_CONF'
+}
+CLIENT_CONF
 
     __file_write;
 
@@ -8689,21 +8697,29 @@ PIPEWIRE_CONF
 /etc/pipewire/pipewire-pulse.conf.d/pipewire-pulse.conf
 PIPEWIRE_PULSE_CONF
 
+    FILE \
+<<'PIPEWIRE_PULSE_CONF'
+stream.properties = {
+    node.latency = 1024/44100
+    node.rate = 44100
+PIPEWIRE_PULSE_CONF
+
     if [ "$audio_hq" = 1 ]; then
         FILE \
 <<'PIPEWIRE_PULSE_CONF'
-stream.properties = {
     resample.quality = 15
-}
 PIPEWIRE_PULSE_CONF
     else
         FILE \
 <<'PIPEWIRE_PULSE_CONF'
-stream.properties = {
     resample.quality = 9
-}
 PIPEWIRE_PULSE_CONF
     fi
+
+    FILE \
+<<'PIPEWIRE_PULSE_CONF'
+}
+PIPEWIRE_PULSE_CONF
 
     __file_write;
 }
