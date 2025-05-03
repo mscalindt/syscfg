@@ -8673,7 +8673,8 @@ PIPEWIRE_CONF
     FILE \
 <<'PIPEWIRE_CONF'
 context.properties = {
-    default.clock.allowed-rates = [ 44100 48000 96000 192000 ]
+    default.clock.rate = 44100
+    default.clock.allowed-rates = [ 44100 ]
 }
 PIPEWIRE_CONF
 
