@@ -10118,7 +10118,7 @@ main() {
     # Temporary per-function log file (cleared on func exit):
     logf="${TMPDIR:-/tmp}/syscfg_logf"
 
-    # Enable always_write from cmdline:    ^AE as $1
+    # Enable always_write from cmdline:    ^AW as $1
     # Enable audio_hq_resamp from cmdline: ^AQ as $1
     # Enable force_write from cmdline:     ^FW as $1
     # Enable gaming from cmdline:          ^GG as $1
@@ -10126,7 +10126,7 @@ main() {
     # Enable silent_cmd from cmdline:      ^SC as $1
     # Enable silent_write from cmdline:    ^SW as $1
     while :; do case "$1" in
-        '^AE') always_write=1; shift && continue ;;
+        '^AW') always_write=1; shift && continue ;;
         '^AQ') audio_hq_resamp=1; shift && continue ;;
         '^FW') force_write=1; shift && continue ;;
         '^GG') gaming=1; shift && continue ;;
@@ -10150,7 +10150,7 @@ main() {
         fi
 
         ifs_map "$ops" info -w -1
-        info -w -1 'SWITCH: always_write ^AE'
+        info -w -1 'SWITCH: always_write ^AW'
         info -w -1 'SWITCH: audio_hq_resamp ^AQ'
         info -w -1 'SWITCH: force_write ^FW'
         info -w -1 'SWITCH: gaming ^GG'
