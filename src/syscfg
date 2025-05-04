@@ -6300,6 +6300,7 @@ _conf_4() {
     _hosts;
     _iwd_conf;
     _pipewire_conf;
+    _pipewire_media_session_conf;
     _reflector;
     _resolv_conf;
     _sh;
