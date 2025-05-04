@@ -9948,34 +9948,19 @@ main_assert_ops() {
 }
 
 err_handler() {
+    trap - INT TERM EXIT
+
     # env cleanup
     if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ]; then
         chattr -R -ia "$tmpd" "$tmpf" "$logf" > /dev/null 2>&1 || :
         rm -rf "$tmpd" "$tmpf" "$logf"
     fi
 
-    # These return codes signify that output has already been written and
-    # exit has already been invoked. (pre-func)
-    # Executed cleanup above, no more fuss needed here.
-    case $1 in
-        201|202|217|220|221|222|230|231|232|233|234|235)
-            err -r -1 "${opd}(): Failed. (RC = $1)"
-
-            return 0
-        ;;
-    esac
-
-    if [ "$1" -eq 130 ]; then
-        trap - TERM EXIT
-        info -y - "${LF}Operation cancelled: ${opd}()"
-        exit 130
+    if [ "$2" = INT ]; then
+        err -r -1 "${0##*/}: Received INT signal. ($1)"; kill -2 "$$"
+    else
+        err -r -1 "${0##*/}: Received $2 signal. ($1)"; exit "$1"
     fi
-
-    if [ "$1" -eq 127 ]; then
-        errF 127 - "Operation unhandled: ${opd}()"
-    fi
-
-    errF "$1" -1 "${opd}(): Unhandled error. (RC = $1)"
 }
 
 main() {
@@ -10186,7 +10171,9 @@ main() {
         esac
 
         # use '|| :' to validate a command failure
-        trap "err_handler \$?" INT TERM EXIT
+        trap "err_handler \$? INT" INT
+        trap "err_handler \$? TERM" TERM
+        trap "err_handler \$? EXIT" EXIT
         set -e
 
         # env setup
