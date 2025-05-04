@@ -10197,8 +10197,10 @@ main() {
         # env reset
         FILE=; FILE_PATH_TARGET=
         umask 022
-        chattr -R -ia "$tmpd" "$tmpf" "$logf" > /dev/null 2>&1 || :
-        rm -rf "$tmpd" "$tmpf" "$logf"
+        if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ]; then
+            chattr -R -ia "$tmpd" "$tmpf" "$logf" > /dev/null 2>&1 || :
+            rm -rf "$tmpd" "$tmpf" "$logf"
+        fi
 
         trap - INT TERM EXIT
         set +e
