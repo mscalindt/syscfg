@@ -8789,6 +8789,7 @@ MEDIA_SESSION_CONF
 <<'MEDIA_SESSION_CONF'
 context.properties = {
     support.dbus = true
+    default-profile.restore-bluetooth = true
 }
 
 context.spa-libs = {
@@ -8799,7 +8800,6 @@ context.spa-libs = {
 }
 
 context.modules = [
-    # order matters :)
     { name = libpipewire-module-protocol-native }
     { name = libpipewire-module-client-node }
     { name = libpipewire-module-client-device }
@@ -8810,6 +8810,16 @@ context.modules = [
 
 session.modules = {
     default = [
+        alsa-monitor
+        alsa-seq
+        default-nodes
+        default-profile
+        default-routes
+        metadata
+        policy-node
+        restore-stream
+        streams-follow-default
+        v4l2
 MEDIA_SESSION_CONF
 
     if [ "$bluetooth" = 1 ]; then
@@ -8829,48 +8839,85 @@ MEDIA_SESSION_CONF
 
     FILE \
 <<'MEDIA_SESSION_CONF'
-        policy-node
-        v4l2
-    ]
-    with-audio = [
-        alsa-monitor
-        alsa-seq
-        default-nodes
-        default-profile
-        default-routes
-        metadata
-    ]
-    with-alsa = [
-        with-audio
-    ]
-    with-jack = [
-        with-audio
-    ]
-MEDIA_SESSION_CONF
-
-    FILE \
-<<'MEDIA_SESSION_CONF'
-    with-pulseaudio = [
-MEDIA_SESSION_CONF
-
-    if [ "$bluetooth" = 1 ]; then
-        FILE \
-<<'MEDIA_SESSION_CONF'
-        bluez5
-        bluez5-autoswitch
-MEDIA_SESSION_CONF
-    fi
-
-    FILE \
-<<'MEDIA_SESSION_CONF'
-        restore-stream
-        streams-follow-default
-        with-audio
     ]
 }
 MEDIA_SESSION_CONF
 
     __file_write;
+
+    if [ "$bluetooth" = 1 ]; then
+        FILE_PATH \
+<<'BLUEZ_MONITOR_CONF'
+/etc/pipewire/media-session.d/bluez-monitor.conf
+BLUEZ_MONITOR_CONF
+
+        FILE \
+<<'BLUEZ_MONITOR_CONF'
+properties = {
+    bluez5.enable-sbc-xq = false
+    bluez5.enable-msbc = false
+    bluez5.enable-hw-volume = true
+    bluez5.enable-faststream = false
+
+    bluez5.codecs = [ aac ]
+
+    bluez5.default.rate = 44100  # 44.100 kHz
+}
+
+rules = [
+    {
+        matches = [
+            {
+                device.name = "~bluez_card.*"
+            }
+        ]
+        actions = {
+            update-props = {
+                bluez5.auto-connect = [ a2dp_sink ]
+                bluez5.a2dp.aac.bitratemode = 0  # CBR 256 kbps
+                bluez5.profile = a2dp-sink
+                bluez5.autoswitch-profile = false
+            }
+        }
+    }
+    {
+        matches = [
+            {
+                node.name = "~bluez_input.*"
+            }
+            {
+                node.name = "~bluez_output.*"
+            }
+        ]
+        actions = {
+            update-props = {
+                node.pause-on-idle = false
+BLUEZ_MONITOR_CONF
+
+        if [ "$audio_hq" = 1 ]; then
+            FILE \
+<<'BLUEZ_MONITOR_CONF'
+                resample.quality = 15
+BLUEZ_MONITOR_CONF
+        else
+            FILE \
+<<'BLUEZ_MONITOR_CONF'
+                resample.quality = 9
+BLUEZ_MONITOR_CONF
+        fi
+
+        FILE \
+<<'BLUEZ_MONITOR_CONF'
+                session.suspend-timeout-seconds = 0
+                bluez5.media-source-role = playback
+            }
+        }
+    }
+]
+BLUEZ_MONITOR_CONF
+
+        __file_write;
+    fi
 }
 
 _pulseaudio_conf() {
