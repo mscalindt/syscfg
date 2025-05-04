@@ -3613,7 +3613,7 @@ _alsa_conf() {
 /etc/asound.conf
 ASOUND_CONF
 
-    if [ "$audio_hq" = 1 ]; then
+    if [ "$audio_hq_resamp" = 1 ]; then
         FILE \
 <<'ASOUND_CONF'
 defaults.pcm.rate_converter "speexrate_best"
@@ -8603,7 +8603,7 @@ stream.properties = {
     node.latency = 1024/44100  # 44.1k with ~23.2ms
 CLIENT_CONF
 
-    if [ "$audio_hq" = 1 ]; then
+    if [ "$audio_hq_resamp" = 1 ]; then
         FILE \
 <<'CLIENT_CONF'
     resample.quality = 15
@@ -8695,7 +8695,7 @@ stream.properties = {
     node.latency = 1024/44100  # 44.1k with ~23.2ms
 PIPEWIRE_PULSE_CONF
 
-    if [ "$audio_hq" = 1 ]; then
+    if [ "$audio_hq_resamp" = 1 ]; then
         FILE \
 <<'PIPEWIRE_PULSE_CONF'
     resample.quality = 15
@@ -8830,7 +8830,7 @@ rules = [
                 node.pause-on-idle = false
 BLUEZ_MONITOR_CONF
 
-        if [ "$audio_hq" = 1 ]; then
+        if [ "$audio_hq_resamp" = 1 ]; then
             FILE \
 <<'BLUEZ_MONITOR_CONF'
                 resample.quality = 15
@@ -10163,8 +10163,8 @@ main() {
     arch_linux=1
 
     # Software switches
-    # Configure audio configs for highest possible quality:
-    audio_hq=0
+    # Configure highest audio resampling quality possible when resampling:
+    audio_hq_resamp=0
     # Bluetooth support (D-Bus dependent)
     bluetooth=1
     # Configure specific applications to be suited for gaming
@@ -10283,16 +10283,16 @@ main() {
     # Temporary per-function log file (cleared on func exit):
     logf="${TMPDIR:-/tmp}/syscfg_logf"
 
-    # Enable always_write from cmdline: ^AE as $1
-    # Enable audio_hq from cmdline:     ^AQ as $1
-    # Enable backup from cmdline:       ^BP as $1
-    # Enable force from cmdline:        ^FE as $1
-    # Enable gaming from cmdline:       ^GG as $1
-    # Enable ipv6 from cmdline:         ^I6 as $1
-    # Enable silent_cmd from cmdline:   ^SC as $1
+    # Enable always_write from cmdline:    ^AE as $1
+    # Enable audio_hq_resamp from cmdline: ^AQ as $1
+    # Enable backup from cmdline:          ^BP as $1
+    # Enable force from cmdline:           ^FE as $1
+    # Enable gaming from cmdline:          ^GG as $1
+    # Enable ipv6 from cmdline:            ^I6 as $1
+    # Enable silent_cmd from cmdline:      ^SC as $1
     while :; do case "$1" in
         '^AE') always_write=1; shift && continue ;;
-        '^AQ') audio_hq=1; shift && continue ;;
+        '^AQ') audio_hq_resamp=1; shift && continue ;;
         '^BP') backup=1; shift && continue ;;
         '^FE') force=1; shift && continue ;;
         '^GG') gaming=1; shift && continue ;;
@@ -10302,10 +10302,10 @@ main() {
     esac done
 
     readonly tmpd tmpf logf always_write backup force m533ia \
-             arch_linux audio_hq bluetooth browser dns dns0 gaming init ipv6 \
-             qt_theme display_server wm bg de user home efi_mnt arch_mirlist \
-             ops audio_server hostname wland audio_playerd portal silent_cmd \
-             gid group uid pipewire_manager
+             arch_linux audio_hq_resamp bluetooth browser dns dns0 gaming init \
+             ipv6 qt_theme display_server wm bg de user home efi_mnt \
+             arch_mirlist ops audio_server hostname wland audio_playerd portal \
+             silent_cmd gid group uid pipewire_manager
 
     { args_min 1 "$#" && main_assert_ops "$@"; } || {
         if [ "$#" -eq 0 ]; then
@@ -10316,7 +10316,7 @@ main() {
 
         ifs_map "$ops" info -w -1
         info -w -1 'SWITCH: always_write ^AE'
-        info -w -1 'SWITCH: audio_hq ^AQ'
+        info -w -1 'SWITCH: audio_hq_resamp ^AQ'
         info -w -1 'SWITCH: backup ^BP'
         info -w -1 'SWITCH: force ^FE'
         info -w -1 'SWITCH: gaming ^GG'
