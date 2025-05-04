@@ -6257,12 +6257,6 @@ _conf_3() {
     else
         info -y -1 'Skipped _fuse_conf()'
     fi
-
-    if file '/etc/pulse/default.pa'; then
-        _pulseaudio_conf;
-    else
-        info -y -1 'Skipped _pulseaudio_conf()'
-    fi
 }
 
 # Software configuration - stage 4
@@ -6315,10 +6309,6 @@ _conf_4() {
 
     if file '/etc/mkinitcpio.conf'; then
         _initramfs_conf;
-    fi
-
-    if file '/etc/pulse/default.pa'; then
-        _pulseaudio_conf;
     fi
 }
 
@@ -8887,46 +8877,6 @@ BLUEZ_MONITOR_CONF
     fi
 }
 
-_pulseaudio_conf() {
-    FILE_PATH \
-<<'DAEMON_CONF'
-/etc/pulse/daemon.conf
-DAEMON_CONF
-
-    FILE \
-<<'DAEMON_CONF'
-avoid-resampling = true
-default-sample-format = s24le
-default-sample-rate = 48000
-exit-idle-time = -1
-DAEMON_CONF
-
-    if [ "$audio_hq" = 1 ]; then
-        FILE \
-<<'DAEMON_CONF'
-resample-method = soxr-vhq
-DAEMON_CONF
-    else
-        FILE \
-<<'DAEMON_CONF'
-resample-method = speex-float-8
-DAEMON_CONF
-    fi
-
-    __file_write;
-
-    FILE_PATH \
-<<'DEFAULT_PA'
-/etc/pulse/default.pa
-DEFAULT_PA
-
-    libfile ~0 \
-            'load-module module-suspend-on-idle'
-            '#load-module module-suspend-on-idle'
-
-    __file_write_overwrite;
-}
-
 _ranger_conf() {
     FILE_PATH \
 <<RC_CONF
@@ -10377,7 +10327,6 @@ main() {
     ops="$ops pacman-conf"
     ops="$ops pam-conf"
     ops="$ops pipewire-conf"
-    ops="$ops pulseaudio-conf"
     ops="$ops pipewire-media-session-conf"
     ops="$ops ranger-conf"
     ops="$ops reflector"
