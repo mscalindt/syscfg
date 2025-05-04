@@ -8682,7 +8682,6 @@ CLIENT_CONF
 }
 
 alsa.properties = {
-    alsa.format = S16  # S16LE
     alsa.rate = 44100  # 44.100 kHz
 }
 CLIENT_CONF
@@ -8752,7 +8751,6 @@ pulse.properties = {
     pulse.default.tlength = 88200/44100  # 2s
     pulse.min.quantum = 128/44100  # ~2.9ms
     pulse.idle.timeout = 0  # I guess disables suspend functionality
-    pulse.default.format = S16  # S16LE
 }
 
 stream.properties = {
