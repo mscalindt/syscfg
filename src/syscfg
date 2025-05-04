@@ -2969,7 +2969,9 @@ __file_write() {
         else
             info -w -1 'Will write:'
             info -w -- 'F '; info - - "$FILE_PATH"
-            info -w - '0:'; info - -- "$FILE"
+            if [ "$silent_write" = 0 ]; then
+                info -w - '0:'; info - -- "$FILE"
+            fi
         fi
 
         if ! file_write "$FILE_PATH" "$FILE"; then
@@ -3031,7 +3033,9 @@ __file_write_overwrite() {
         else
             info -w -1 'Will write:'
             info -w -- 'F '; info - - "$FILE_PATH"
-            info -w - '0:'; info - -- "$FILE"
+            if [ "$silent_write" = 0 ]; then
+                info -w - '0:'; info - -- "$FILE"
+            fi
         fi
 
         if ! file_write "$FILE_PATH" "$FILE"; then
@@ -10153,6 +10157,8 @@ main() {
     force=0
     # Disable command output:
     silent_cmd=0
+    # Disable content output of file writes:
+    silent_write=0
 
     # Device switches
     # ASUS VivoBook S15 X521IA-M533IA (AMD):
@@ -10290,6 +10296,7 @@ main() {
     # Enable gaming from cmdline:          ^GG as $1
     # Enable ipv6 from cmdline:            ^I6 as $1
     # Enable silent_cmd from cmdline:      ^SC as $1
+    # Enable silent_write from cmdline:    ^SW as $1
     while :; do case "$1" in
         '^AE') always_write=1; shift && continue ;;
         '^AQ') audio_hq_resamp=1; shift && continue ;;
@@ -10298,6 +10305,7 @@ main() {
         '^GG') gaming=1; shift && continue ;;
         '^I6') ipv6=1; shift && continue ;;
         '^SC') silent_cmd=1; shift && continue ;;
+        '^SW') silent_write=1; shift && continue ;;
         *) break ;;
     esac done
 
@@ -10305,7 +10313,7 @@ main() {
              arch_linux audio_hq_resamp bluetooth browser dns dns0 gaming init \
              ipv6 qt_theme display_server wm bg de user home efi_mnt \
              arch_mirlist ops audio_server hostname wland audio_playerd portal \
-             silent_cmd gid group uid pipewire_manager
+             silent_cmd silent_write gid group uid pipewire_manager
 
     { args_min 1 "$#" && main_assert_ops "$@"; } || {
         if [ "$#" -eq 0 ]; then
@@ -10322,6 +10330,7 @@ main() {
         info -w -1 'SWITCH: gaming ^GG'
         info -w -1 'SWITCH: ipv6 ^I6'
         info -w -1 'SWITCH: silent_cmd ^SC'
+        info -w -1 'SWITCH: silent_write ^SW'
 
         exit 2
     }
