@@ -10165,6 +10165,12 @@ main() {
 '
     readonly LF
 
+    # past env cleanup from SIGKILL or something else
+    if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ]; then
+        chattr -R -ia "$tmpd" "$tmpf" "$logf" > /dev/null 2>&1 || :
+        rm -rf "$tmpd" "$tmpf" "$logf"
+    fi
+
     while [ "$1" ]; do
         opd="_$1"; case "$opd" in
             *'-'*) replchar_posix '-' '_' "$opd" && opd="$_str" ;;
