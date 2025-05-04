@@ -2384,77 +2384,6 @@ files_equiv() {
 }
 
 #! .desc:
-# Create a backup (copy) of a file/directory
-#! .params:
-# <"$1"> - absolute path
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input
-#.
-loc_backup() {
-    args_eq 1 "$#" || return 255
-
-    exist "$1" || return 0
-
-    if dir "$1"; then
-        :
-    elif file "$1"; then
-        :
-    else
-        return 0
-    fi
-
-    [ ! -h "$1" ] || return 0
-
-    if [ "$force" = 1 ]; then
-        # Intentionally ignore errors here; if chattr was used on some of the
-        # files, it probably is very intentional. Make it act as a feature to
-        # protect backups so that the code logic remains simple.
-        rm -rf "$1".bak* 2> /dev/null || :
-    fi
-
-    _i=1; _j=00; while [ "$_i" -lt 1000 ]; do
-        case $_i in
-            10|100) _j="${_j%?}" ;;
-        esac
-
-        _i="$_j$_i"
-        if exist "$1".bak"$_i"; then
-            _i="${_i#"$_j"}"
-            _i=$((_i + 1))
-            continue
-        fi
-
-        if dir "$1"; then
-            cp -R "$1" "$1".bak"$_i" 2> /dev/null || break
-
-            info -w - 'loc_backup(): Backup from/to:'
-            info -r -- 'D '; info - - "$1"
-            info -g -- 'D '; info - - "$1".bak"$_i"
-        else
-            cp "$1" "$1".bak"$_i" 2> /dev/null || break
-
-            info -w - 'loc_backup(): Backup from/to:'
-            info -r -- 'F '; info - - "$1"
-            info -g -- 'F '; info - - "$1".bak"$_i"
-        fi
-
-        return 0
-    done
-
-    if [ "$_i" -eq 1000 ]; then
-        info -y - 'loc_backup(): Failed; too many .bak files.'
-    else
-        info -y - 'loc_backup(): Backup failed:'
-    fi
-    if dir "$1"; then info -w -- 'D '; else info -w -- 'F '; fi
-    info - - "$1"
-
-    return 1
-}
-
-#! .desc:
 # Permanently delete a file/directory
 #! .params:
 # <"$1"> - absolute path
@@ -2603,21 +2532,11 @@ __bin_write() {
         fi
 
         if [ "$force" = 1 ]; then
-            if [ "$backup" = 1 ]; then
-                loc_backup "$FILE_PATH"
-            fi
-
             loc_delete "$FILE_PATH"
         fi
 
         if exist "$FILE_PATH"; then
             EEXIST "$FILE_PATH"
-        fi
-
-        if [ "$force" = 0 ]; then
-            if [ "$backup" = 1 ]; then
-                loc_backup "$FILE_PATH"
-            fi
         fi
 
         info -w -1 'Will write:'
@@ -2678,10 +2597,6 @@ __bin_write_overwrite() {
             fi
         fi
 
-        if [ "$backup" = 1 ]; then
-            loc_backup "$FILE_PATH"
-        fi
-
         info -w -1 'Will write:'
         info -w -- 'F '; info - - "$FILE_PATH"
 
@@ -2737,21 +2652,11 @@ __dir_target_write() {
 
     while :; do
         if [ "$force" = 1 ]; then
-            if [ "$backup" = 1 ]; then
-                loc_backup "$FILE_PATH_TARGET"
-            fi
-
             loc_delete "$FILE_PATH_TARGET"
         fi
 
         if exist "$FILE_PATH_TARGET"; then
             EEXIST "$FILE_PATH_TARGET"
-        fi
-
-        if [ "$force" = 0 ]; then
-            if [ "$backup" = 1 ]; then
-                loc_backup "$FILE_PATH_TARGET"
-            fi
         fi
 
         info -w -1 'Will copy from/to:'
@@ -2818,10 +2723,6 @@ __dir_target_write_overwrite() {
     readable "$FILE_PATH" || EREAD "$FILE_PATH"
 
     while :; do
-        if [ "$backup" = 1 ]; then
-            loc_backup "$FILE_PATH_TARGET"
-        fi
-
         info -w -1 'Will copy from/to:'
         info -w -- 'D '; info - - "$FILE_PATH"
         info -w -- 'D '; info - - "$FILE_PATH_TARGET"
@@ -2945,21 +2846,11 @@ __file_write() {
         fi
 
         if [ "$force" = 1 ]; then
-            if [ "$backup" = 1 ]; then
-                loc_backup "$FILE_PATH"
-            fi
-
             loc_delete "$FILE_PATH"
         fi
 
         if exist "$FILE_PATH"; then
             EEXIST "$FILE_PATH"
-        fi
-
-        if [ "$force" = 0 ]; then
-            if [ "$backup" = 1 ]; then
-                loc_backup "$FILE_PATH"
-            fi
         fi
 
         if LOG_written; then
@@ -3020,10 +2911,6 @@ __file_write_overwrite() {
                 info -g -- 'F '; info - - "$FILE_PATH"
                 break
             fi
-        fi
-
-        if [ "$backup" = 1 ]; then
-            loc_backup "$FILE_PATH"
         fi
 
         if LOG_written; then
@@ -3102,21 +2989,11 @@ __file_target_write() {
         fi
 
         if [ "$force" = 1 ]; then
-            if [ "$backup" = 1 ]; then
-                loc_backup "$FILE_PATH_TARGET"
-            fi
-
             loc_delete "$FILE_PATH_TARGET"
         fi
 
         if exist "$FILE_PATH_TARGET"; then
             EEXIST "$FILE_PATH_TARGET"
-        fi
-
-        if [ "$force" = 0 ]; then
-            if [ "$backup" = 1 ]; then
-                loc_backup "$FILE_PATH_TARGET"
-            fi
         fi
 
         info -w -1 'Will copy from/to:'
@@ -3179,10 +3056,6 @@ __file_target_write_overwrite() {
                     break
                 fi
             fi
-        fi
-
-        if [ "$backup" = 1 ]; then
-            loc_backup "$FILE_PATH_TARGET"
         fi
 
         info -w -1 'Will copy from/to:'
@@ -3411,12 +3284,6 @@ __loc_delete() {
         return 0
     fi
 
-    if [ "$backup" = 1 ]; then
-        if dir "$FILE_PATH" || file "$FILE_PATH"; then
-            loc_backup "$FILE_PATH"
-        fi
-    fi
-
     info -w -1 'Will delete:'
     if [ -b "$FILE_PATH" ]; then
         info -w -- 'B ' # block file
@@ -3484,10 +3351,6 @@ __loc_empty() {
         exit 222
     fi
 
-    if [ "$backup" = 1 ]; then
-        loc_backup "$FILE_PATH"
-    fi
-
     if dir "$FILE_PATH"; then
         info -w -1 'Will empty:'
         info -w -- 'D '; info - - "$FILE_PATH"
@@ -3549,10 +3412,6 @@ __loc_target_link_overwrite() {
     fi
 
     while :; do
-        if [ "$backup" = 1 ]; then
-            loc_backup "$FILE_PATH_TARGET"
-        fi
-
         info -w -1 'Will symbolic link source/target:'
         info -w -- '? '; info - - "$FILE_PATH"
         info -w -- 'L '; info - - "$FILE_PATH_TARGET"
@@ -10151,8 +10010,6 @@ main() {
     # Control switches
     # Always write files, even if the remote/fs content matches ours.
     always_write=0
-    # Backup locations before respective write/delete:
-    backup=0
     # Force successful operation at all costs (file overwrite/removal):
     force=0
     # Disable command output:
@@ -10291,7 +10148,6 @@ main() {
 
     # Enable always_write from cmdline:    ^AE as $1
     # Enable audio_hq_resamp from cmdline: ^AQ as $1
-    # Enable backup from cmdline:          ^BP as $1
     # Enable force from cmdline:           ^FE as $1
     # Enable gaming from cmdline:          ^GG as $1
     # Enable ipv6 from cmdline:            ^I6 as $1
@@ -10300,7 +10156,6 @@ main() {
     while :; do case "$1" in
         '^AE') always_write=1; shift && continue ;;
         '^AQ') audio_hq_resamp=1; shift && continue ;;
-        '^BP') backup=1; shift && continue ;;
         '^FE') force=1; shift && continue ;;
         '^GG') gaming=1; shift && continue ;;
         '^I6') ipv6=1; shift && continue ;;
@@ -10309,7 +10164,7 @@ main() {
         *) break ;;
     esac done
 
-    readonly tmpd tmpf logf always_write backup force m533ia \
+    readonly tmpd tmpf logf always_write force m533ia \
              arch_linux audio_hq_resamp bluetooth browser dns dns0 gaming init \
              ipv6 qt_theme display_server wm bg de user home efi_mnt \
              arch_mirlist ops audio_server hostname wland audio_playerd portal \
@@ -10325,7 +10180,6 @@ main() {
         ifs_map "$ops" info -w -1
         info -w -1 'SWITCH: always_write ^AE'
         info -w -1 'SWITCH: audio_hq_resamp ^AQ'
-        info -w -1 'SWITCH: backup ^BP'
         info -w -1 'SWITCH: force ^FE'
         info -w -1 'SWITCH: gaming ^GG'
         info -w -1 'SWITCH: ipv6 ^I6'
