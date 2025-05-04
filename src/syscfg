@@ -28,36 +28,6 @@ IFS_save() {
 }
 
 #! .desc:
-# Check for maximum argument count in $#
-#! .params:
-# <$1> - N
-# <"$2"> - $#
-#! .rc:
-# (0) valid
-# (1) invalid
-# (255) bad input
-#.
-args_max() {
-    # Check if $1 is a natural number
-    case :"$1${1#*[!0123456789]}" in
-        : | :0*) return 255 ;;
-        :"$1$1") : ;;
-        *) return 255 ;;
-    esac
-
-    # Check if $2 is a whole number
-    case :"$2${2#*[!0123456789]}" in
-        :) return 255 ;;
-        :00) : ;;
-        :0*) return 255 ;;
-        :"$2$2") : ;;
-        *) return 255 ;;
-    esac
-
-    [ "$2" -le "$1" ]
-}
-
-#! .desc:
 # Check for minimum argument count in $#
 #! .params:
 # <$1> - N
