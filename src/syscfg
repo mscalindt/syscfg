@@ -6141,7 +6141,6 @@ _conf_1() {
     _sway_conf;
     _swaylock_conf;
     _sysctl_conf;
-    _wireplumber_conf;
     _xdg_conf;
     _xorg_conf;
 }
@@ -6306,7 +6305,6 @@ _conf_4() {
     _sh;
     _sway_conf;
     _tz;
-    _wireplumber_conf;
     _xfce4_conf;
     _xorg_conf;
 
@@ -10107,98 +10105,6 @@ LOCALTIME
     fi
 }
 
-_wireplumber_conf() {
-    FILE_PATH \
-<<'99_ALSA_LUA'
-/etc/wireplumber/main.lua.d/99-alsa.lua
-99_ALSA_LUA
-
-    FILE \
-<<'99_ALSA_LUA'
-table.insert (alsa_monitor.rules, {
-    matches = {
-        {
-            { "node.name", "matches", "alsa_input.*" },
-        },
-        {
-            { "node.name", "matches", "alsa_output.*" },
-        },
-    },
-    apply_properties = {
-        ["session.suspend-timeout-seconds"] = 0,
-        ["resample.disable"] = true,
-99_ALSA_LUA
-
-    if [ "$audio_hq" = 1 ]; then
-        FILE \
-<<'99_ALSA_LUA'
-        ["resample.quality"] = 15,
-99_ALSA_LUA
-    else
-        FILE \
-<<'99_ALSA_LUA'
-        ["resample.quality"] = 11,
-99_ALSA_LUA
-    fi
-
-    FILE \
-<<'99_ALSA_LUA'
-    },
-})
-99_ALSA_LUA
-
-    __file_write;
-
-    if [ "$bluetooth" = 1 ]; then
-        FILE_PATH \
-<<'99_BLUEZ_LUA'
-/etc/wireplumber/bluetooth.lua.d/99-bluez.lua
-99_BLUEZ_LUA
-
-        FILE \
-<<'99_BLUEZ_LUA'
-table.insert (bluez_monitor.rules, {
-    matches = {
-        {
-            { "node.name", "matches", "bluez_input..*" },
-        },
-        {
-            { "node.name", "matches", "bluez_output..*" },
-        },
-    },
-    apply_properties = {
-        ["session.suspend-timeout-seconds"] = 0,
-99_BLUEZ_LUA
-
-        if [ "$audio_hq" = 1 ]; then
-            FILE \
-<<'99_BLUEZ_LUA'
-        ["resample.quality"] = 15,
-99_BLUEZ_LUA
-        else
-            FILE \
-<<'99_BLUEZ_LUA'
-        ["resample.quality"] = 11,
-99_BLUEZ_LUA
-        fi
-
-        FILE \
-<<'99_BLUEZ_LUA'
-    },
-})
-99_BLUEZ_LUA
-
-        __file_write;
-    else
-        FILE_PATH \
-<<'99_BLUEZ_LUA'
-/etc/wireplumber/bluetooth.lua.d/99-bluez.lua
-99_BLUEZ_LUA
-
-        __loc_delete;
-    fi
-}
-
 _xdg_conf() {
     FILE_PATH \
 <<MIMEAPPS_LIST
@@ -11461,7 +11367,6 @@ main() {
     ops="$ops swaylock-conf"
     ops="$ops sysctl-conf"
     ops="$ops tz"
-    ops="$ops wireplumber-conf"
     ops="$ops xdg-conf"
     ops="$ops xfce4-conf"
     ops="$ops xorg-conf"
