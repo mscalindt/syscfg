@@ -28,36 +28,6 @@ IFS_save() {
 }
 
 #! .desc:
-# Check for minimum argument count in $#
-#! .params:
-# <$1> - N
-# <"$2"> - $#
-#! .rc:
-# (0) valid
-# (1) invalid
-# (255) bad input
-#.
-args_min() {
-    # Check if $1 is a natural number
-    case :"$1${1#*[!0123456789]}" in
-        : | :0*) return 255 ;;
-        :"$1$1") : ;;
-        *) return 255 ;;
-    esac
-
-    # Check if $2 is a whole number
-    case :"$2${2#*[!0123456789]}" in
-        :) return 255 ;;
-        :00) : ;;
-        :0*) return 255 ;;
-        :"$2$2") : ;;
-        *) return 255 ;;
-    esac
-
-    [ "$2" -ge "$1" ]
-}
-
-#! .desc:
 # Check if a command exists
 #! .params:
 # <"$1"> - command
@@ -274,7 +244,7 @@ writable() {
 # (255) bad input
 #.
 err() {
-    args_min 3 "$#" || return 255
+    assert -min "$#" 3 || return 255
 
     case $1 in
         '-') _color= ;;
@@ -357,7 +327,7 @@ err() {
 # (255) bad input
 #.
 errF() {
-    args_min 3 "$#" || return 255
+    assert -min "$#" 3 || return 255
 
     # Check if $1 is a whole number
     case :"$1${1#*[!0123456789]}" in
@@ -455,7 +425,7 @@ errF() {
 # (255) bad input
 #.
 info() {
-    args_min 3 "$#" || return 255
+    assert -min "$#" 3 || return 255
 
     case $1 in
         '-') _color= ;;
@@ -1125,7 +1095,7 @@ octal_decode() {
 # (255) bad input
 #.
 rc() {
-    args_min 1 "$#" || return 255
+    assert -min "$#" 1 || return 255
 
     if cmd "$1"; then
         "$@" > /dev/null 2>&1
@@ -1237,7 +1207,7 @@ ENOENT() { err -r -1 'ENOENT:'; }
 # (255) bad input
 #.
 EEXIST() {
-    args_min 1 "$#" || return 255
+    assert -min "$#" 1 || return 255
 
     err -r -1 'EEXIST:'
 
@@ -1278,7 +1248,7 @@ EEXIST() {
 # (255) bad input
 #.
 ENOTDIR() {
-    args_min 1 "$#" || return 255
+    assert -min "$#" 1 || return 255
 
     err -r -1 'ENOTDIR:'
 
@@ -1317,7 +1287,7 @@ ENOTDIR() {
 # (255) bad input
 #.
 EISDIR() {
-    args_min 1 "$#" || return 255
+    assert -min "$#" 1 || return 255
 
     err -r -1 'EISDIR:'
 
@@ -1370,7 +1340,7 @@ ENOCMD() {
 # (255) bad input
 #.
 EREAD() {
-    args_min 1 "$#" || return 255
+    assert -min "$#" 1 || return 255
 
     err -r -1 'EREAD:'
 
@@ -1411,7 +1381,7 @@ EREAD() {
 # (255) bad input
 #.
 ENOTFILE() {
-    args_min 1 "$#" || return 255
+    assert -min "$#" 1 || return 255
 
     err -r -1 'ENOTFILE:'
 
@@ -1450,7 +1420,7 @@ ENOTFILE() {
 # (255) bad input
 #.
 EFSFLAG() {
-    args_min 1 "$#" || return 255
+    assert -min "$#" 1 || return 255
 
     err -r -1 'EFSFLAG:'
 
@@ -1491,7 +1461,7 @@ EFSFLAG() {
 # (255) bad input
 #.
 EPERMS() {
-    args_min 1 "$#" || return 255
+    assert -min "$#" 1 || return 255
 
     err -r -1 'EPERMS:'
 
@@ -1586,7 +1556,7 @@ EERROR() {
 # (255) bad input/usage
 #.
 libfile() {
-    args_min 2 "$#" || return 255
+    assert -min "$#" 2 || return 255
 
     if [ ! "$FILE" ]; then
         if ! __FILE_PATH_preload; then
@@ -1676,7 +1646,7 @@ EOF
             # +2 - {S} pre-line & {+} post-line; $2 & $3 respectively
             # +3 - {A} pre-line & {+} post-line; $2 & $3 respectively
             '+0'|'+1'|'+2'|'+3')
-                args_min 3 "$#" || exit 255
+                assert -min "$#" 3 || exit 255
 
                 case "$2" in
                     *"$LF"*) exit 255 ;;
@@ -1733,7 +1703,7 @@ EOF
             # ~2 - {S} pre-line {~} post-line; $2 & $3 respectively
             # ~3 - {A} pre-line {~} post-line; $2 & $3 respectively
             '~0'|'~1'|'~2'|'~3')
-                args_min 3 "$#" || exit 255
+                assert -min "$#" 3 || exit 255
 
                 case "$2" in
                     *"$LF"*) exit 255 ;;
@@ -1762,7 +1732,7 @@ EOF
             # ~~2 - {S} pre-line {~} post-line | {+} post-line; $2 & $3
             # ~~3 - {A} pre-line {~} post-line | {+} post-line; $2 & $3
             '~~1'|'~~2'|'~~3')
-                args_min 3 "$#" || exit 255
+                assert -min "$#" 3 || exit 255
 
                 case "$2" in
                     *"$LF"*) exit 255 ;;
@@ -1794,7 +1764,7 @@ EOF
             # ~~~2 - {S} pre-line & match {~} post-line; $3 & $2 & $4
             # ~~~3 - {A} pre-line & match {~} post-line; $3 & $2 & $4
             '~~~1'|'~~~2'|'~~~3')
-                args_min 4 "$#" || exit 255
+                assert -min "$#" 4 || exit 255
 
                 case "$2$3" in
                     *"$LF"*) exit 255 ;;
@@ -1855,7 +1825,7 @@ EOF
                 shift 2
             ;;
             '~~1'|'~~2'|'~~3')
-                args_min 3 "$#" || exit 255
+                assert -min "$#" 3 || exit 255
 
                 case "$2" in
                     *"$LF"*) exit 255 ;;
@@ -1986,7 +1956,7 @@ LOG_print() {
 # (255) bad call | bad input
 #.
 LOG_write() {
-    args_min 2 "$#" || return 255
+    assert -min "$#" 2 || return 255
 
     if [ "$1" = 1 ] || [ "$1" = 2 ]; then
         assert -eq "$#" 3 || return 255
@@ -9847,7 +9817,7 @@ INDEX_THEME
 # (255) bad input
 #.
 main_assert_args() {
-    args_min 1 "$#" || return 255
+    assert -min "$#" 1 || return 255
 
     for _arg in "$@"; do
         [ "$_arg" ] || return 255
@@ -9873,7 +9843,7 @@ main_assert_args() {
 # (255) bad input
 #.
 main_assert_ops() {
-    args_min 1 "$#" || return 255
+    assert -min "$#" 1 || return 255
 
     for _opd in "$@"; do
         [ "$_opd" ] || return 255
@@ -10065,7 +10035,7 @@ main() {
              arch_mirlist ops audio_server hostname wland audio_playerd portal \
              silent_cmd silent_write gid group uid pipewire_manager
 
-    { args_min 1 "$#" && main_assert_ops "$@"; } || {
+    { assert -min "$#" 1 && main_assert_ops "$@"; } || {
         if [ "$#" -eq 0 ]; then
             err -r -1 'No operation has been specified.'
         else
