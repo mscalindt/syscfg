@@ -10165,7 +10165,7 @@ main() {
     # Software switches
     # Configure audio configs for highest possible quality:
     audio_hq=0
-    # Bluetooth support
+    # Bluetooth support (D-Bus dependent)
     bluetooth=1
     # Configure specific applications to be suited for gaming
     gaming=0
