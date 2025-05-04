@@ -28,38 +28,6 @@ IFS_save() {
 }
 
 #! .desc:
-# Check argument count in $#
-#! .params:
-# <$1> - N
-# <"$2"> - $#
-#! .rc:
-# (0) valid
-# (1) invalid
-# (255) bad input
-#.
-args_eq() {
-    # Check if $1 is a whole number
-    case :"$1${1#*[!0123456789]}" in
-        :) return 255 ;;
-        :00) : ;;
-        :0*) return 255 ;;
-        :"$1$1") : ;;
-        *) return 255 ;;
-    esac
-
-    # Check if $2 is a whole number
-    case :"$2${2#*[!0123456789]}" in
-        :) return 255 ;;
-        :00) : ;;
-        :0*) return 255 ;;
-        :"$2$2") : ;;
-        *) return 255 ;;
-    esac
-
-    [ "$1" -eq "$2" ]
-}
-
-#! .desc:
 # Check for maximum argument count in $#
 #! .params:
 # <$1> - N
@@ -129,7 +97,7 @@ args_min() {
 # (255) bad input
 #.
 cmd() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     command -v "$1" > /dev/null 2>&1
 }
@@ -144,7 +112,7 @@ cmd() {
 # (255) bad input
 #.
 dir() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     [ -d "$1" ]
 }
@@ -159,7 +127,7 @@ dir() {
 # (255) bad input
 #.
 exist() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     [ -e "$1" ]
 }
@@ -174,7 +142,7 @@ exist() {
 # (255) bad input
 #.
 file() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     [ -f "$1" ]
 }
@@ -190,7 +158,7 @@ file() {
 # (255) bad input
 #.
 is_octal() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     IFS_save;
 
@@ -223,7 +191,7 @@ is_uefi() {
 # (255) bad input
 #.
 readable() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     [ -r "$1" ]
 }
@@ -239,7 +207,7 @@ readable() {
 # (255) bad input
 #.
 str() {
-    args_eq 2 "$#" || return 255
+    assert -eq "$#" 2 || return 255
 
     case "$2" in
         *"$1"*) return 0 ;;
@@ -259,7 +227,7 @@ str() {
 # (255) bad input
 #.
 str_pfix() {
-    args_eq 2 "$#" || return 255
+    assert -eq "$#" 2 || return 255
 
     case "$2" in
         "$1"*) return 0 ;;
@@ -279,7 +247,7 @@ str_pfix() {
 # (255) bad input
 #.
 str_sfix() {
-    args_eq 2 "$#" || return 255
+    assert -eq "$#" 2 || return 255
 
     case "$2" in
         *"$1") return 0 ;;
@@ -298,7 +266,7 @@ str_sfix() {
 # (255) bad input
 #.
 writable() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     [ -w "$1" ]
 }
@@ -1050,7 +1018,7 @@ assert() {
 # (255) bad input
 #.
 bytes_size() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     awk -v 'bytes'="$1" '
 	function hsize(x, base) {
@@ -1087,7 +1055,7 @@ bytes_size() {
 # (255) bad input
 #.
 chattr_remove() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     cmd 'chattr' || return 0
 
@@ -1138,7 +1106,7 @@ ifs_map() {
 # (255) bad input
 #.
 mkdir_parents() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     if str_sfix '/' "$1"; then
         set -- "${1%?}"
@@ -1165,7 +1133,7 @@ mkdir_parents() {
 # (255) bad input
 #.
 octal_decode() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     IFS_save;
 
@@ -1266,7 +1234,7 @@ replchar_posix() {
 # (255) bad input
 #.
 unmount() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     cmd 'umount' && exist "$1" && dir "$1" || return 0
 
@@ -1416,7 +1384,7 @@ EINVAL() { err -r -1 'EINVAL:'; }
 # (255) bad input
 #.
 ENOCMD() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     err -r -1 "ENOCMD: $1"
 
@@ -1594,7 +1562,7 @@ EPERMS() {
 # (255) bad input
 #.
 EERROR() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     errF 235 -1 "EERROR: $1"
 }
@@ -1890,7 +1858,7 @@ EOF
             ;;
         esac; done
 
-        args_eq 0 "$#" || exit 255
+        assert -eq "$#" 0 || exit 255
 
         # Print the line as-is since no match was found.
         printf "%s\n" "$LINE"
@@ -1954,7 +1922,7 @@ EOF
             ;;
         esac; done
 
-        args_eq 0 "$#" || exit 255
+        assert -eq "$#" 0 || exit 255
     }
 
     FILE=$(
@@ -2051,7 +2019,7 @@ LOG_write() {
     args_min 2 "$#" || return 255
 
     if [ "$1" = 1 ] || [ "$1" = 2 ]; then
-        args_eq 3 "$#" || return 255
+        assert -eq "$#" 3 || return 255
 
         # Check if $2 is a natural number
         case "$2:${2#*[!0123456789]}" in
@@ -2060,7 +2028,7 @@ LOG_write() {
             *) return 255 ;;
         esac
     elif [ "$1" = 3 ]; then
-        args_eq 4 "$#" || return 255
+        assert -eq "$#" 4 || return 255
 
         # Check if $2 is a natural number
         case "$2:${2#*[!0123456789]}" in
@@ -2157,7 +2125,7 @@ FILE() {
 # (255) bad input
 #.
 FILE_preload() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     file "$1" || return 255
     readable "$1" || return 255
@@ -2216,7 +2184,7 @@ FILE_PATH_TARGET() {
 # (255) bad input
 #.
 bin_equiv() {
-    args_eq 2 "$#" || return 255
+    assert -eq "$#" 2 || return 255
 
     file "$1" || return 255
 
@@ -2240,7 +2208,7 @@ bin_equiv() {
 # (255) bad input
 #.
 dir_write() {
-    args_eq 2 "$#" || return 255
+    assert -eq "$#" 2 || return 255
 
     dir "$1" || return 255
 
@@ -2267,7 +2235,7 @@ dir_write() {
 # (255) bad input
 #.
 file_copy() {
-    args_eq 2 "$#" || return 255
+    assert -eq "$#" 2 || return 255
 
     file "$1" || return 255
 
@@ -2295,7 +2263,7 @@ file_copy() {
 # (255) bad input
 #.
 file_equiv() {
-    args_eq 2 "$#" || return 255
+    assert -eq "$#" 2 || return 255
 
     file "$1" || return 255
 
@@ -2320,7 +2288,7 @@ file_equiv() {
 # (255) bad input
 #.
 file_write() {
-    args_eq 2 "$#" || return 255
+    assert -eq "$#" 2 || return 255
 
     if exist "$1"; then
         chattr_remove "$1"
@@ -2345,7 +2313,7 @@ file_write() {
 # (255) bad input
 #.
 file_write_octal() {
-    args_eq 2 "$#" || return 255
+    assert -eq "$#" 2 || return 255
 
     if exist "$1"; then
         chattr_remove "$1"
@@ -2373,7 +2341,7 @@ file_write_octal() {
 # (255) bad input
 #.
 files_equiv() {
-    args_eq 2 "$#" || return 255
+    assert -eq "$#" 2 || return 255
 
     file "$1" || return 255
     file "$2" || return 255
@@ -2393,7 +2361,7 @@ files_equiv() {
 # (255) bad $1
 #.
 loc_delete() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     exist "$1" || return 0
 
@@ -2414,7 +2382,7 @@ loc_delete() {
 # (255) bad input
 #.
 loc_link() {
-    args_eq 2 "$#" || return 255
+    assert -eq "$#" 2 || return 255
 
     { [ -e "$1" ] || [ -h "$1" ]; } || return 255
 
@@ -2439,7 +2407,7 @@ loc_link() {
 # (255) bad input
 #.
 loc_link_ptr() {
-    args_eq 2 "$#" || return 255
+    assert -eq "$#" 2 || return 255
 
     if file "$1"; then
         :
@@ -2471,7 +2439,7 @@ loc_link_ptr() {
 # (255) bad input
 #.
 loc_own_user() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     set -- "${1%"${1##*[!/]}"}"
 
@@ -3086,7 +3054,7 @@ __file_target_write_overwrite() {
 # (255) bad input/usage
 #.
 __loc_chattr() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     cmd 'chattr' || return 0
 
@@ -3149,7 +3117,7 @@ __loc_chattr() {
 # (255) bad input/usage
 #.
 __loc_chmod() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
@@ -3212,7 +3180,7 @@ __loc_chmod() {
 # (255) bad input/usage
 #.
 __loc_chown() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     if [ ! "$FILE_PATH" ]; then
         err -r -1 'Missing FILE_PATH.'
@@ -3438,7 +3406,7 @@ __loc_target_link_overwrite() {
 # (255) bad input
 #.
 __git_get() {
-    args_eq 1 "$#" || return 255
+    assert -eq "$#" 1 || return 255
 
     info -w -1 '__git_get():'
     info -w -- 'U '; info - - "$1"
