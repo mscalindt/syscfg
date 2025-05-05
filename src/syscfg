@@ -9998,10 +9998,10 @@ main() {
         esac
 
         # use '|| :' to validate a command failure
+        set -e
         trap "err_handler \$? INT" INT
         trap "err_handler \$? TERM" TERM
         trap "err_handler \$? EXIT" EXIT
-        set -e
 
         # env setup
         { mkdir -p "$tmpd" && chmod 0700 "$tmpd"; } || {
