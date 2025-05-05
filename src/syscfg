@@ -10004,7 +10004,7 @@ main() {
         set -e
 
         # env setup
-        { mkdir -p "$tmpd"; } || {
+        { mkdir -p "$tmpd" && chmod 0700 "$tmpd"; } || {
             set -- "$?"
             err -r - "Cannot create tmpd: $tmpd"
             exit "$1"
