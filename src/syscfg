@@ -219,25 +219,37 @@ writable() {
 #! .params:
 # <$1> - color(
 #     '-'  - none
-#     '-bk' - black
-#     '-r' - red
-#     '-g' - green
-#     '-y' - yellow
-#     '-be' - blue
-#     '-m' - magenta
-#     '-c' - cyan
-#     '-w' - white
+#     '-black' - bold (`1;`) foreground (`3X`) black (`0`)
+#     '-red' - bold (`1;`) foreground (`3X`) red (`1`)
+#     '-green' - bold (`1;`) foreground (`3X`) green (`2`)
+#     '-yellow' - bold (`1;`) foreground (`3X`) yellow (`3`)
+#     '-blue' - bold (`1;`) foreground (`3X`) blue (`4`)
+#     '-magenta' - bold (`1;`) foreground (`3X`) magenta (`5`)
+#     '-cyan' - bold (`1;`) foreground (`3X`) cyan (`6`)
+#     '-white' - bold (`1;`) foreground (`3X`) white (`7`)
 #     .
 # )
-# <$2> - type(
+# <$2> - format(
 #     '-' - raw
-#     '--' - raw, no newline
+#     '--' - raw; no <newline>
 #     .
 # )
-# <"$3"+> - text
-#! .rc:
-# (0) success
-# (255) bad input
+# <"$3">+ - text
+#! .uses.var.err:
+# [NO_COLOR] $ - environment variable;
+#                disable color
+#! .uses.fn:
+# <err> ('$@');
+#       Print formatted text
+#! .rc.fn:
+# (err) (0) success
+# (err) (*) error
+#! .desc.ext:
+# The colors are bold, foreground text, escape sequences of ANSI.
+#
+# The usage of color results in undefined behavior. For strict POSIX
+# compatibility, specify `-` for $1 or set variable `NO_COLOR`
+# to a non-empty value.
 #.
 _err() {
     _clr="$1"
@@ -253,93 +265,40 @@ _err() {
 #! .params:
 # <$1> - color(
 #     '-'  - none
-#     '-bk' - black
-#     '-r' - red
-#     '-g' - green
-#     '-y' - yellow
-#     '-be' - blue
-#     '-m' - magenta
-#     '-c' - cyan
-#     '-w' - white
+#     '-black' - bold (`1;`) foreground (`3X`) black (`0`)
+#     '-red' - bold (`1;`) foreground (`3X`) red (`1`)
+#     '-green' - bold (`1;`) foreground (`3X`) green (`2`)
+#     '-yellow' - bold (`1;`) foreground (`3X`) yellow (`3`)
+#     '-blue' - bold (`1;`) foreground (`3X`) blue (`4`)
+#     '-magenta' - bold (`1;`) foreground (`3X`) magenta (`5`)
+#     '-cyan' - bold (`1;`) foreground (`3X`) cyan (`6`)
+#     '-white' - bold (`1;`) foreground (`3X`) white (`7`)
 #     .
 # )
-# <$2> - type(
+# <$2> - format(
 #     '-' - raw
-#     '--' - raw, no newline
-#     '-1' - %H%M%S date fmt
-#     '-2' - %H%M%S date fmt, no newline
+#     '--' - raw; no <newline>
 #     .
 # )
-# <"$3"+> - text
-#! .uses:
-# [NO_COLOR] $ - this environment variable disables colored output
-#! .rc:
-# (0) success
-# (255) bad input
+# <"$3">+ - text
+#! .uses.var.info:
+# [NO_COLOR] $ - environment variable;
+#                disable color
+#! .uses.fn:
+# <info> ('$@');
+#        Print formatted text
+#! .rc.fn:
+# (info) (0) success
+# (info) (*) error
+#! .desc.ext:
+# The colors are bold, foreground text, escape sequences of ANSI.
+#
+# The usage of color results in undefined behavior. For strict POSIX
+# compatibility, specify `-` for $1 or set variable `NO_COLOR`
+# to a non-empty value.
 #.
 err() {
-    assert -min "$#" 3 || return 255
-
-    case $1 in
-        '-') _color= ;;
-        '-bk') _color='\033[1;30m' ;;
-        '-r') _color='\033[1;31m' ;;
-        '-g') _color='\033[1;32m' ;;
-        '-y') _color='\033[1;33m' ;;
-        '-be') _color='\033[1;34m' ;;
-        '-m') _color='\033[1;35m' ;;
-        '-c') _color='\033[1;36m' ;;
-        '-w') _color='\033[1;37m' ;;
-        *) return 255 ;;
-    esac
-
-    if [ "$NO_COLOR" ]; then
-        case $2 in
-            '-')
-                shift 2
-                printf "%s\n" "$*" >&2
-            ;;
-            '--')
-                shift 2
-                printf "%s" "$*" >&2
-            ;;
-            '-1')
-                shift 2
-                printf "[%s] =>>: %s\n" "$(date "+%H:%M:%S")" "$*" >&2
-            ;;
-            '-2')
-                shift 2
-                printf "[%s] =>>: %s" "$(date "+%H:%M:%S")" "$*" >&2
-            ;;
-            *)
-                return 255
-            ;;
-        esac
-    else
-        case $2 in
-            '-')
-                shift 2
-                printf "%b%s%b\n" "$_color" "$*" '\033[0m' >&2
-            ;;
-            '--')
-                shift 2
-                printf "%b%s%b" "$_color" "$*" '\033[0m' >&2
-            ;;
-            '-1')
-                shift 2
-                printf "%b[%s] =>>: %b%s%b\n" "$_color" "$(date "+%H:%M:%S")" \
-                                              '\033[1;37m' "$*" '\033[0m' >&2
-            ;;
-            '-2')
-                shift 2
-                printf "%b[%s] =>>: %b%s%b" "$_color" "$(date "+%H:%M:%S")" \
-                                            '\033[1;37m' "$*" '\033[0m' >&2
-            ;;
-            *)
-                return 255
-            ;;
-        esac
-    fi
+    info "$@" >&2
 }
 
 #! .desc:
@@ -347,25 +306,37 @@ err() {
 #! .params:
 # <$1> - color(
 #     '-'  - none
-#     '-bk' - black
-#     '-r' - red
-#     '-g' - green
-#     '-y' - yellow
-#     '-be' - blue
-#     '-m' - magenta
-#     '-c' - cyan
-#     '-w' - white
+#     '-black' - bold (`1;`) foreground (`3X`) black (`0`)
+#     '-red' - bold (`1;`) foreground (`3X`) red (`1`)
+#     '-green' - bold (`1;`) foreground (`3X`) green (`2`)
+#     '-yellow' - bold (`1;`) foreground (`3X`) yellow (`3`)
+#     '-blue' - bold (`1;`) foreground (`3X`) blue (`4`)
+#     '-magenta' - bold (`1;`) foreground (`3X`) magenta (`5`)
+#     '-cyan' - bold (`1;`) foreground (`3X`) cyan (`6`)
+#     '-white' - bold (`1;`) foreground (`3X`) white (`7`)
 #     .
 # )
-# <$2> - type(
+# <$2> - format(
 #     '-' - raw
-#     '--' - raw, no newline
+#     '--' - raw; no <newline>
 #     .
 # )
-# <"$3"+> - text
+# <"$3">+ - text
+#! .uses.var.info:
+# [NO_COLOR] $ - environment variable;
+#                disable color
+#! .uses.fn:
+# <info> ('$@');
+#        Print formatted text
 #! .rc:
-# (0) success
-# (255) bad input
+# (info) (0) success
+# (info) (*) error
+#! .desc.ext:
+# The colors are bold, foreground text, escape sequences of ANSI.
+#
+# The usage of color results in undefined behavior. For strict POSIX
+# compatibility, specify `-` for $1 or set variable `NO_COLOR`
+# to a non-empty value.
 #.
 _info() {
     _clr="$1"
@@ -377,97 +348,63 @@ _info() {
 }
 
 #! .desc:
-# Print formatted text to stdout
+# Print formatted text
 #! .params:
 # <$1> - color(
 #     '-'  - none
-#     '-bk' - black
-#     '-r' - red
-#     '-g' - green
-#     '-y' - yellow
-#     '-be' - blue
-#     '-m' - magenta
-#     '-c' - cyan
-#     '-w' - white
+#     '-black' - bold (`1;`) foreground (`3X`) black (`0`)
+#     '-red' - bold (`1;`) foreground (`3X`) red (`1`)
+#     '-green' - bold (`1;`) foreground (`3X`) green (`2`)
+#     '-yellow' - bold (`1;`) foreground (`3X`) yellow (`3`)
+#     '-blue' - bold (`1;`) foreground (`3X`) blue (`4`)
+#     '-magenta' - bold (`1;`) foreground (`3X`) magenta (`5`)
+#     '-cyan' - bold (`1;`) foreground (`3X`) cyan (`6`)
+#     '-white' - bold (`1;`) foreground (`3X`) white (`7`)
 #     .
 # )
-# <$2> - type(
+# <$2> - format(
 #     '-' - raw
-#     '--' - raw, no newline
-#     '-1' - %H%M%S date fmt
-#     '-2' - %H%M%S date fmt, no newline
+#     '--' - raw; no <newline>
 #     .
 # )
-# <"$3"+> - text
-#! .uses:
-# [NO_COLOR] $ - this environment variable disables colored output
+# <"$3">+ - text
+#! .uses.var:
+# [NO_COLOR] $ - environment variable;
+#                disable color
 #! .rc:
 # (0) success
-# (255) bad input
+# (*) error
+# (255) bad input / error
+#! .desc.ext:
+# The colors are bold, foreground text, escape sequences of ANSI.
+#
+# The usage of color results in undefined behavior. For strict POSIX
+# compatibility, specify `-` for $1 or set variable `NO_COLOR`
+# to a non-empty value.
 #.
 info() {
-    assert -min "$#" 3 || return 255
-
-    case $1 in
-        '-') _color= ;;
-        '-bk') _color='\033[1;30m' ;;
-        '-r') _color='\033[1;31m' ;;
-        '-g') _color='\033[1;32m' ;;
-        '-y') _color='\033[1;33m' ;;
-        '-be') _color='\033[1;34m' ;;
-        '-m') _color='\033[1;35m' ;;
-        '-c') _color='\033[1;36m' ;;
-        '-w') _color='\033[1;37m' ;;
+    _reset='\033[0m'; case $1 in
+        '-') _color=; _reset= ;;
+        '-black') _color='\033[1;30m' ;;
+        '-red') _color='\033[1;31m' ;;
+        '-green') _color='\033[1;32m' ;;
+        '-yellow') _color='\033[1;33m' ;;
+        '-blue') _color='\033[1;34m' ;;
+        '-magenta') _color='\033[1;35m' ;;
+        '-cyan') _color='\033[1;36m' ;;
+        '-white') _color='\033[1;37m' ;;
         *) return 255 ;;
     esac
 
-    if [ "$NO_COLOR" ]; then
-        case $2 in
-            '-')
-                shift 2
-                printf "%s\n" "$*"
-            ;;
-            '--')
-                shift 2
-                printf "%s" "$*"
-            ;;
-            '-1')
-                shift 2
-                printf "[%s] =>>: %s\n" "$(date "+%H:%M:%S")" "$*"
-            ;;
-            '-2')
-                shift 2
-                printf "[%s] =>>: %s" "$(date "+%H:%M:%S")" "$*"
-            ;;
-            *)
-                return 255
-            ;;
-        esac
-    else
-        case $2 in
-            '-')
-                shift 2
-                printf "%b%s%b\n" "$_color" "$*" '\033[0m'
-            ;;
-            '--')
-                shift 2
-                printf "%b%s%b" "$_color" "$*" '\033[0m'
-            ;;
-            '-1')
-                shift 2
-                printf "%b[%s] =>>: %b%s%b\n" "$_color" "$(date "+%H:%M:%S")" \
-                                              '\033[1;37m' "$*" '\033[0m'
-            ;;
-            '-2')
-                shift 2
-                printf "%b[%s] =>>: %b%s%b" "$_color" "$(date "+%H:%M:%S")" \
-                                            '\033[1;37m' "$*" '\033[0m'
-            ;;
-            *)
-                return 255
-            ;;
-        esac
-    fi
+    _format="$2"
+
+    [ ! "$NO_COLOR" ] || { _color=; _reset=; }
+
+    shift 2; case "$_format" in
+        '-') printf "%b%s%b\n" "$_color" "$*" "$_reset" ;;
+        '--') printf "%b%s%b" "$_color" "$*" "$_reset" ;;
+        *) return 255 ;;
+    esac
 }
 
 # END output_functions
@@ -1170,14 +1107,14 @@ unmount() {
 #! .rc:
 # 201
 #.
-EPERM() { _err -r -- 'EPERM:'; }
+EPERM() { _err -red -- 'EPERM:'; }
 
 #! .desc:
 # ENOENT: "No such file or directory"
 #! .rc:
 # 202
 #.
-ENOENT() { _err -r - 'ENOENT:'; }
+ENOENT() { _err -red - 'ENOENT:'; }
 
 #! .desc:
 # EEXIST: "Already exists"
@@ -1190,27 +1127,27 @@ ENOENT() { _err -r - 'ENOENT:'; }
 EEXIST() {
     assert -min "$#" 1 || return 255
 
-    _err -r - 'EEXIST:'
+    _err -red - 'EEXIST:'
 
     while [ "$1" ]; do
         if [ -b "$1" ]; then
-            err -r -- 'B ' # block file
+            err -red -- 'B ' # block file
         elif [ -c "$1" ]; then
-            err -r -- 'C ' # character file
+            err -red -- 'C ' # character file
         elif [ -d "$1" ]; then
-            err -r -- 'D ' # directory
+            err -red -- 'D ' # directory
         elif [ -f "$1" ]; then
-            err -r -- 'F ' # regular file
+            err -red -- 'F ' # regular file
         elif [ -h "$1" ]; then
-            err -r -- 'L ' # symbolic link
+            err -red -- 'L ' # symbolic link
         elif [ -p "$1" ]; then
-            err -r -- 'P ' # named pipe
+            err -red -- 'P ' # named pipe
         elif [ -S "$1" ]; then
-            err -r -- 'S ' # socket
+            err -red -- 'S ' # socket
         elif [ -t "$1" 2> /dev/null ]; then
-            err -r -- 'FD ' # open file descriptor
+            err -red -- 'FD ' # open file descriptor
         elif [ -e "$1" ]; then
-            err -r -- '> '
+            err -red -- '> '
         fi
         err - - "$1"
 
@@ -1231,25 +1168,25 @@ EEXIST() {
 ENOTDIR() {
     assert -min "$#" 1 || return 255
 
-    _err -r - 'ENOTDIR:'
+    _err -red - 'ENOTDIR:'
 
     while [ "$1" ]; do
         if [ -b "$1" ]; then
-            err -r -- 'B ' # block file
+            err -red -- 'B ' # block file
         elif [ -c "$1" ]; then
-            err -r -- 'C ' # character file
+            err -red -- 'C ' # character file
         elif [ -f "$1" ]; then
-            err -r -- 'F ' # regular file
+            err -red -- 'F ' # regular file
         elif [ -h "$1" ]; then
-            err -r -- 'L ' # symbolic link
+            err -red -- 'L ' # symbolic link
         elif [ -p "$1" ]; then
-            err -r -- 'P ' # named pipe
+            err -red -- 'P ' # named pipe
         elif [ -S "$1" ]; then
-            err -r -- 'S ' # socket
+            err -red -- 'S ' # socket
         elif [ -t "$1" 2> /dev/null ]; then
-            err -r -- 'FD ' # open file descriptor
+            err -red -- 'FD ' # open file descriptor
         elif [ -e "$1" ]; then
-            err -r -- '> '
+            err -red -- '> '
         fi
         err - - "$1"
 
@@ -1270,13 +1207,13 @@ ENOTDIR() {
 EISDIR() {
     assert -min "$#" 1 || return 255
 
-    _err -r - 'EISDIR:'
+    _err -red - 'EISDIR:'
 
     while [ "$1" ]; do
         if dir "$1"; then
-            err -r -- 'D ';
+            err -red -- 'D ';
         elif exist "$1"; then
-            err -r -- '> '
+            err -red -- '> '
         fi
         err - - "$1"
 
@@ -1291,7 +1228,7 @@ EISDIR() {
 #! .rc:
 # 222
 #.
-EINVAL() { _err -r - 'EINVAL:'; }
+EINVAL() { _err -red - 'EINVAL:'; }
 
 # END std_err_functions; 201-222
 # START custom_err_functions; 230-235
@@ -1307,7 +1244,7 @@ EINVAL() { _err -r - 'EINVAL:'; }
 ENOCMD() {
     assert -eq "$#" 1 || return 255
 
-    _err -r - "ENOCMD: $1"
+    _err -red - "ENOCMD: $1"
 
     exit 230
 }
@@ -1323,27 +1260,27 @@ ENOCMD() {
 EREAD() {
     assert -min "$#" 1 || return 255
 
-    _err -r - 'EREAD:'
+    _err -red - 'EREAD:'
 
     while [ "$1" ]; do
         if [ -b "$1" ]; then
-            err -r -- 'B ' # block file
+            err -red -- 'B ' # block file
         elif [ -c "$1" ]; then
-            err -r -- 'C ' # character file
+            err -red -- 'C ' # character file
         elif [ -d "$1" ]; then
-            err -r -- 'D ' # directory
+            err -red -- 'D ' # directory
         elif [ -f "$1" ]; then
-            err -r -- 'F ' # regular file
+            err -red -- 'F ' # regular file
         elif [ -h "$1" ]; then
-            err -r -- 'L ' # symbolic link
+            err -red -- 'L ' # symbolic link
         elif [ -p "$1" ]; then
-            err -r -- 'P ' # named pipe
+            err -red -- 'P ' # named pipe
         elif [ -S "$1" ]; then
-            err -r -- 'S ' # socket
+            err -red -- 'S ' # socket
         elif [ -t "$1" 2> /dev/null ]; then
-            err -r -- 'FD ' # open file descriptor
+            err -red -- 'FD ' # open file descriptor
         elif [ -e "$1" ]; then
-            err -r -- '> '
+            err -red -- '> '
         fi
         err - - "$1"
 
@@ -1364,25 +1301,25 @@ EREAD() {
 ENOTFILE() {
     assert -min "$#" 1 || return 255
 
-    _err -r - 'ENOTFILE:'
+    _err -red - 'ENOTFILE:'
 
     while [ "$1" ]; do
         if [ -b "$1" ]; then
-            err -r -- 'B ' # block file
+            err -red -- 'B ' # block file
         elif [ -c "$1" ]; then
-            err -r -- 'C ' # character file
+            err -red -- 'C ' # character file
         elif [ -d "$1" ]; then
-            err -r -- 'D ' # directory
+            err -red -- 'D ' # directory
         elif [ -h "$1" ]; then
-            err -r -- 'L ' # symbolic link
+            err -red -- 'L ' # symbolic link
         elif [ -p "$1" ]; then
-            err -r -- 'P ' # named pipe
+            err -red -- 'P ' # named pipe
         elif [ -S "$1" ]; then
-            err -r -- 'S ' # socket
+            err -red -- 'S ' # socket
         elif [ -t "$1" 2> /dev/null ]; then
-            err -r -- 'FD ' # open file descriptor
+            err -red -- 'FD ' # open file descriptor
         elif [ -e "$1" ]; then
-            err -r -- '> '
+            err -red -- '> '
         fi
         err - - "$1"
 
@@ -1403,27 +1340,27 @@ ENOTFILE() {
 EFSFLAG() {
     assert -min "$#" 1 || return 255
 
-    _err -r - 'EFSFLAG:'
+    _err -red - 'EFSFLAG:'
 
     while [ "$1" ]; do
         if [ -b "$1" ]; then
-            err -r -- 'B ' # block file
+            err -red -- 'B ' # block file
         elif [ -c "$1" ]; then
-            err -r -- 'C ' # character file
+            err -red -- 'C ' # character file
         elif [ -d "$1" ]; then
-            err -r -- 'D ' # directory
+            err -red -- 'D ' # directory
         elif [ -f "$1" ]; then
-            err -r -- 'F ' # regular file
+            err -red -- 'F ' # regular file
         elif [ -h "$1" ]; then
-            err -r -- 'L ' # symbolic link
+            err -red -- 'L ' # symbolic link
         elif [ -p "$1" ]; then
-            err -r -- 'P ' # named pipe
+            err -red -- 'P ' # named pipe
         elif [ -S "$1" ]; then
-            err -r -- 'S ' # socket
+            err -red -- 'S ' # socket
         elif [ -t "$1" 2> /dev/null ]; then
-            err -r -- 'FD ' # open file descriptor
+            err -red -- 'FD ' # open file descriptor
         elif [ -e "$1" ]; then
-            err -r -- '> '
+            err -red -- '> '
         fi
         err - - "$1"
 
@@ -1444,27 +1381,27 @@ EFSFLAG() {
 EPERMS() {
     assert -min "$#" 1 || return 255
 
-    _err -r - 'EPERMS:'
+    _err -red - 'EPERMS:'
 
     while [ "$1" ]; do
         if [ -b "$1" ]; then
-            err -r -- 'B ' # block file
+            err -red -- 'B ' # block file
         elif [ -c "$1" ]; then
-            err -r -- 'C ' # character file
+            err -red -- 'C ' # character file
         elif [ -d "$1" ]; then
-            err -r -- 'D ' # directory
+            err -red -- 'D ' # directory
         elif [ -f "$1" ]; then
-            err -r -- 'F ' # regular file
+            err -red -- 'F ' # regular file
         elif [ -h "$1" ]; then
-            err -r -- 'L ' # symbolic link
+            err -red -- 'L ' # symbolic link
         elif [ -p "$1" ]; then
-            err -r -- 'P ' # named pipe
+            err -red -- 'P ' # named pipe
         elif [ -S "$1" ]; then
-            err -r -- 'S ' # socket
+            err -red -- 'S ' # socket
         elif [ -t "$1" 2> /dev/null ]; then
-            err -r -- 'FD ' # open file descriptor
+            err -red -- 'FD ' # open file descriptor
         elif [ -e "$1" ]; then
-            err -r -- '> '
+            err -red -- '> '
         fi
         err - - "$1"
 
@@ -1485,7 +1422,7 @@ EPERMS() {
 EERROR() {
     assert -eq "$#" 1 || return 255
 
-    _err -r - "EERROR: $1"; exit 235
+    _err -red - "EERROR: $1"; exit 235
 }
 
 # END custom_err_functions; 230-235
@@ -2396,26 +2333,26 @@ loc_own_user() {
 #.
 __bin_write() {
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE" ]; then
-        _info -w - 'Empty FILE. Write cancelled:'
-        info -w -- 'F '; info - - "$FILE_PATH"
+        _info -white - 'Empty FILE. Write cancelled:'
+        info -white -- 'F '; info - - "$FILE_PATH"
         return 0
     fi
 
     if ! is_octal "$FILE"; then
-        _err -r - 'Bad FILE; expected octal.'
+        _err -red - 'Bad FILE; expected octal.'
         return 255
     fi
 
     while :; do
         if [ "$always_write" = 0 ]; then
             if bin_equiv "$FILE_PATH" "$FILE"; then
-                _info -w - 'Write avoided:'
-                info -g -- 'F '; info - - "$FILE_PATH"
+                _info -white - 'Write avoided:'
+                info -green -- 'F '; info - - "$FILE_PATH"
                 break
             fi
         fi
@@ -2428,19 +2365,19 @@ __bin_write() {
             EEXIST "$FILE_PATH"
         fi
 
-        _info -w - 'Will write:'
-        info -w -- 'F '; info - - "$FILE_PATH"
+        _info -white - 'Will write:'
+        info -white -- 'F '; info - - "$FILE_PATH"
 
         (
             IFS="$LF"' '
             CC=0; for _octal in $FILE; do CC=$((CC + 1)); done
-            info -w -- 'CC: '; info - - "$CC"
-            info -w -- 'SIZE: '; bytes_size "$CC"
+            info -white -- 'CC: '; info - - "$CC"
+            info -white -- 'SIZE: '; bytes_size "$CC"
         )
 
         if ! file_write_octal "$FILE_PATH" "$FILE"; then
-            _err -r - 'Write error:'
-            err -r -- 'F '; err - - "$FILE_PATH"
+            _err -red - 'Write error:'
+            err -red -- 'F '; err - - "$FILE_PATH"
             exit 201
         fi
     break; done
@@ -2462,43 +2399,43 @@ __bin_write() {
 #.
 __bin_write_overwrite() {
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE" ]; then
-        _info -w - 'Empty FILE. Write cancelled:'
-        info -w -- 'F '; info - - "$FILE_PATH"
+        _info -white - 'Empty FILE. Write cancelled:'
+        info -white -- 'F '; info - - "$FILE_PATH"
         return 0
     fi
 
     if ! is_octal "$FILE"; then
-        _err -r - 'Bad FILE; expected octal.'
+        _err -red - 'Bad FILE; expected octal.'
         return 255
     fi
 
     while :; do
         if [ "$always_write" = 0 ]; then
             if bin_equiv "$FILE_PATH" "$FILE"; then
-                _info -w - 'Write avoided:'
-                info -g -- 'F '; info - - "$FILE_PATH"
+                _info -white - 'Write avoided:'
+                info -green -- 'F '; info - - "$FILE_PATH"
                 break
             fi
         fi
 
-        _info -w - 'Will write:'
-        info -w -- 'F '; info - - "$FILE_PATH"
+        _info -white - 'Will write:'
+        info -white -- 'F '; info - - "$FILE_PATH"
 
         (
             IFS="$LF"' '
             CC=0; for _octal in $FILE; do CC=$((CC + 1)); done
-            info -w -- 'CC: '; info - - "$CC"
-            info -w -- 'SIZE: '; bytes_size "$CC"
+            info -white -- 'CC: '; info - - "$CC"
+            info -white -- 'SIZE: '; bytes_size "$CC"
         )
 
         if ! file_write_octal "$FILE_PATH" "$FILE"; then
-            _err -r - 'Write error:'
-            err -r -- 'F '; err - - "$FILE_PATH"
+            _err -red - 'Write error:'
+            err -red -- 'F '; err - - "$FILE_PATH"
             exit 201
         fi
     break; done
@@ -2520,18 +2457,18 @@ __bin_write_overwrite() {
 #.
 __dir_target_write() {
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE_PATH_TARGET" ]; then
-        _err -r - 'Missing FILE_PATH_TARGET.'
+        _err -red - 'Missing FILE_PATH_TARGET.'
         return 255
     fi
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -r -- 'D '; err - - "$FILE_PATH"
+        err -red -- 'D '; err - - "$FILE_PATH"
         exit 202
     fi
 
@@ -2548,29 +2485,29 @@ __dir_target_write() {
             EEXIST "$FILE_PATH_TARGET"
         fi
 
-        _info -w - 'Will copy from/to:'
-        info -w -- 'D '; info - - "$FILE_PATH"
-        info -w -- 'D '; info - - "$FILE_PATH_TARGET"
+        _info -white - 'Will copy from/to:'
+        info -white -- 'D '; info - - "$FILE_PATH"
+        info -white -- 'D '; info - - "$FILE_PATH_TARGET"
 
-        info -w -- '> '
+        info -white -- '> '
         find "$FILE_PATH"//. ! -name . | grep -c // 2> /dev/null | \
             while IFS= read -r _line0; do
                 printf "%s, " "$_line0"
 
-                info -w -- 'D '
+                info -white -- 'D '
                 find "$FILE_PATH"//. ! -name . -type d | \
                     grep -c // 2> /dev/null | \
                         while IFS= read -r _line1; do
                             printf "%s, " "$_line1"
 
-                            info -w -- 'F '
+                            info -white -- 'F '
                             info - - "$((_line0 - _line1))"
                         done
             done
 
         if ! dir_write "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            _err -r - 'Write error:'
-            err -r -- 'D '; err - - "$FILE_PATH_TARGET"
+            _err -red - 'Write error:'
+            err -red -- 'D '; err - - "$FILE_PATH_TARGET"
             exit 201
         fi
     break; done
@@ -2592,18 +2529,18 @@ __dir_target_write() {
 #.
 __dir_target_write_overwrite() {
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE_PATH_TARGET" ]; then
-        _err -r - 'Missing FILE_PATH_TARGET.'
+        _err -red - 'Missing FILE_PATH_TARGET.'
         return 255
     fi
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -r -- 'D '; err - - "$FILE_PATH"
+        err -red -- 'D '; err - - "$FILE_PATH"
         exit 202
     fi
 
@@ -2612,29 +2549,29 @@ __dir_target_write_overwrite() {
     readable "$FILE_PATH" || EREAD "$FILE_PATH"
 
     while :; do
-        _info -w - 'Will copy from/to:'
-        info -w -- 'D '; info - - "$FILE_PATH"
-        info -w -- 'D '; info - - "$FILE_PATH_TARGET"
+        _info -white - 'Will copy from/to:'
+        info -white -- 'D '; info - - "$FILE_PATH"
+        info -white -- 'D '; info - - "$FILE_PATH_TARGET"
 
-        info -w -- '> '
+        info -white -- '> '
         find "$FILE_PATH"//. ! -name . | grep -c // 2> /dev/null | \
             while IFS= read -r _line0; do
                 printf "%s, " "$_line0"
 
-                info -w -- 'D '
+                info -white -- 'D '
                 find "$FILE_PATH"//. ! -name . -type d | \
                     grep -c // 2> /dev/null | \
                         while IFS= read -r _line1; do
                             printf "%s, " "$_line1"
 
-                            info -w -- 'F '
+                            info -white -- 'F '
                             info - - "$((_line0 - _line1))"
                         done
             done
 
         if ! dir_write "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            _err -r - 'Write error:'
-            err -r -- 'D '; err - - "$FILE_PATH_TARGET"
+            _err -red - 'Write error:'
+            err -red -- 'D '; err - - "$FILE_PATH_TARGET"
             exit 201
         fi
     break; done
@@ -2656,13 +2593,13 @@ __dir_target_write_overwrite() {
 #.
 __FILE_PATH_preload() {
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -r -- 'F '; err - - "$FILE_PATH"
+        err -red -- 'F '; err - - "$FILE_PATH"
         exit 202
     fi
 
@@ -2680,13 +2617,13 @@ __FILE_PATH_preload() {
 #.
 __file_executable() {
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -r -- 'F '; err - - "$FILE_PATH"
+        err -red -- 'F '; err - - "$FILE_PATH"
         exit 202
     fi
 
@@ -2715,21 +2652,21 @@ __file_executable() {
 #.
 __file_write() {
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE" ]; then
-        _info -w - 'Empty FILE. Write cancelled:'
-        info -w -- 'F '; info - - "$FILE_PATH"
+        _info -white - 'Empty FILE. Write cancelled:'
+        info -white -- 'F '; info - - "$FILE_PATH"
         return 0
     fi
 
     while :; do
         if [ "$always_write" = 0 ]; then
             if file_equiv "$FILE_PATH" "$FILE"; then
-                _info -w - 'Write avoided:'
-                info -g -- 'F '; info - - "$FILE_PATH"
+                _info -white - 'Write avoided:'
+                info -green -- 'F '; info - - "$FILE_PATH"
                 break
             fi
         fi
@@ -2743,20 +2680,20 @@ __file_write() {
         fi
 
         if LOG_written; then
-            _info -w - 'Changes:'
-            info -w -- 'F '; info - - "$FILE_PATH"
+            _info -white - 'Changes:'
+            info -white -- 'F '; info - - "$FILE_PATH"
             LOG_print;
         else
-            _info -w - 'Will write:'
-            info -w -- 'F '; info - - "$FILE_PATH"
+            _info -white - 'Will write:'
+            info -white -- 'F '; info - - "$FILE_PATH"
             if [ "$silent_write" = 0 ]; then
-                info -w - '0:'; info - -- "$FILE"
+                info -white - '0:'; info - -- "$FILE"
             fi
         fi
 
         if ! file_write "$FILE_PATH" "$FILE"; then
-            _err -r - 'Write error:'
-            err -r -- 'F '; err - - "$FILE_PATH"
+            _err -red - 'Write error:'
+            err -red -- 'F '; err - - "$FILE_PATH"
             exit 201
         fi
     break; done
@@ -2783,40 +2720,40 @@ __file_write() {
 #.
 __file_write_overwrite() {
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE" ]; then
-        _info -w - 'Empty FILE. Write cancelled:'
-        info -w -- 'F '; info - - "$FILE_PATH"
+        _info -white - 'Empty FILE. Write cancelled:'
+        info -white -- 'F '; info - - "$FILE_PATH"
         return 0
     fi
 
     while :; do
         if [ "$always_write" = 0 ]; then
             if file_equiv "$FILE_PATH" "$FILE"; then
-                _info -w - 'Write avoided:'
-                info -g -- 'F '; info - - "$FILE_PATH"
+                _info -white - 'Write avoided:'
+                info -green -- 'F '; info - - "$FILE_PATH"
                 break
             fi
         fi
 
         if LOG_written; then
-            _info -w - 'Changes:'
-            info -w -- 'F '; info - - "$FILE_PATH"
+            _info -white - 'Changes:'
+            info -white -- 'F '; info - - "$FILE_PATH"
             LOG_print;
         else
-            _info -w - 'Will write:'
-            info -w -- 'F '; info - - "$FILE_PATH"
+            _info -white - 'Will write:'
+            info -white -- 'F '; info - - "$FILE_PATH"
             if [ "$silent_write" = 0 ]; then
-                info -w - '0:'; info - -- "$FILE"
+                info -white - '0:'; info - -- "$FILE"
             fi
         fi
 
         if ! file_write "$FILE_PATH" "$FILE"; then
-            _err -r - 'Write error:'
-            err -r -- 'F '; err - - "$FILE_PATH"
+            _err -red - 'Write error:'
+            err -red -- 'F '; err - - "$FILE_PATH"
             exit 201
         fi
     break; done
@@ -2826,7 +2763,7 @@ __file_write_overwrite() {
     fi
 
     if ! LOG_clear; then
-        _err -r - 'Log clear error.'
+        _err -red - 'Log clear error.'
         exit 201
     fi
 }
@@ -2843,18 +2780,18 @@ __file_write_overwrite() {
 #.
 __file_target_write() {
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE_PATH_TARGET" ]; then
-        _err -r - 'Missing FILE_PATH_TARGET.'
+        _err -red - 'Missing FILE_PATH_TARGET.'
         return 255
     fi
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -r -- 'F '; err - - "$FILE_PATH"
+        err -red -- 'F '; err - - "$FILE_PATH"
         exit 202
     fi
 
@@ -2866,12 +2803,12 @@ __file_target_write() {
         if [ "$always_write" = 0 ]; then
             if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
                 if [ -h "$FILE_PATH_TARGET" ]; then
-                    _info -w - 'Write avoided:'
-                    info -g -- 'L '; info - - "$FILE_PATH_TARGET"
+                    _info -white - 'Write avoided:'
+                    info -green -- 'L '; info - - "$FILE_PATH_TARGET"
                     break
                 else
-                    _info -w - 'Write avoided:'
-                    info -g -- 'F '; info - - "$FILE_PATH_TARGET"
+                    _info -white - 'Write avoided:'
+                    info -green -- 'F '; info - - "$FILE_PATH_TARGET"
                     break
                 fi
             fi
@@ -2885,13 +2822,13 @@ __file_target_write() {
             EEXIST "$FILE_PATH_TARGET"
         fi
 
-        _info -w - 'Will copy from/to:'
-        info -w -- 'F '; info - - "$FILE_PATH"
-        info -w -- 'F '; info - - "$FILE_PATH_TARGET"
+        _info -white - 'Will copy from/to:'
+        info -white -- 'F '; info - - "$FILE_PATH"
+        info -white -- 'F '; info - - "$FILE_PATH_TARGET"
 
         if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            _err -r - 'Write error:'
-            err -r -- 'F '; err - - "$FILE_PATH_TARGET"
+            _err -red - 'Write error:'
+            err -red -- 'F '; err - - "$FILE_PATH_TARGET"
             exit 201
         fi
     break; done
@@ -2913,18 +2850,18 @@ __file_target_write() {
 #.
 __file_target_write_overwrite() {
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE_PATH_TARGET" ]; then
-        _err -r - 'Missing FILE_PATH_TARGET.'
+        _err -red - 'Missing FILE_PATH_TARGET.'
         return 255
     fi
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -r -- 'F '; err - - "$FILE_PATH"
+        err -red -- 'F '; err - - "$FILE_PATH"
         exit 202
     fi
 
@@ -2936,24 +2873,24 @@ __file_target_write_overwrite() {
         if [ "$always_write" = 0 ]; then
             if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
                 if [ -h "$FILE_PATH_TARGET" ]; then
-                    _info -w - 'Write avoided:'
-                    info -g -- 'L '; info - - "$FILE_PATH_TARGET"
+                    _info -white - 'Write avoided:'
+                    info -green -- 'L '; info - - "$FILE_PATH_TARGET"
                     break
                 else
-                    _info -w - 'Write avoided:'
-                    info -g -- 'F '; info - - "$FILE_PATH_TARGET"
+                    _info -white - 'Write avoided:'
+                    info -green -- 'F '; info - - "$FILE_PATH_TARGET"
                     break
                 fi
             fi
         fi
 
-        _info -w - 'Will copy from/to:'
-        info -w -- 'F '; info - - "$FILE_PATH"
-        info -w -- 'F '; info - - "$FILE_PATH_TARGET"
+        _info -white - 'Will copy from/to:'
+        info -white -- 'F '; info - - "$FILE_PATH"
+        info -white -- 'F '; info - - "$FILE_PATH_TARGET"
 
         if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            _err -r - 'Write error:'
-            err -r -- 'F '; err - - "$FILE_PATH_TARGET"
+            _err -red - 'Write error:'
+            err -red -- 'F '; err - - "$FILE_PATH_TARGET"
             exit 201
         fi
     break; done
@@ -2980,13 +2917,13 @@ __loc_chattr() {
     cmd 'chattr' || return 0
 
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -r -- 'F/D '; err - - "$FILE_PATH"
+        err -red -- 'F/D '; err - - "$FILE_PATH"
         exit 202
     fi
 
@@ -2997,19 +2934,19 @@ __loc_chattr() {
     else
         EINVAL;
         if [ -b "$FILE_PATH" ]; then
-            err -r -- 'B ' # block file
+            err -red -- 'B ' # block file
         elif [ -c "$FILE_PATH" ]; then
-            err -r -- 'C ' # character file
+            err -red -- 'C ' # character file
         elif [ -h "$FILE_PATH" ]; then
-            err -r -- 'L ' # symbolic link
+            err -red -- 'L ' # symbolic link
         elif [ -p "$FILE_PATH" ]; then
-            err -r -- 'P ' # named pipe
+            err -red -- 'P ' # named pipe
         elif [ -S "$FILE_PATH" ]; then
-            err -r -- 'S ' # socket
+            err -red -- 'S ' # socket
         elif [ -t "$FILE_PATH" 2> /dev/null ]; then
-            err -r -- 'FD ' # open file descriptor
+            err -red -- 'FD ' # open file descriptor
         elif [ -e "$FILE_PATH" ]; then
-            err -r -- '> '
+            err -red -- '> '
         fi
         err - - "$FILE_PATH"
         exit 222
@@ -3041,13 +2978,13 @@ __loc_chmod() {
     assert -eq "$#" 1 || return 255
 
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -r -- 'F/D '; err - - "$FILE_PATH"
+        err -red -- 'F/D '; err - - "$FILE_PATH"
         exit 202
     fi
 
@@ -3058,19 +2995,19 @@ __loc_chmod() {
     else
         EINVAL;
         if [ -b "$FILE_PATH" ]; then
-            err -r -- 'B ' # block file
+            err -red -- 'B ' # block file
         elif [ -c "$FILE_PATH" ]; then
-            err -r -- 'C ' # character file
+            err -red -- 'C ' # character file
         elif [ -h "$FILE_PATH" ]; then
-            err -r -- 'L ' # symbolic link
+            err -red -- 'L ' # symbolic link
         elif [ -p "$FILE_PATH" ]; then
-            err -r -- 'P ' # named pipe
+            err -red -- 'P ' # named pipe
         elif [ -S "$FILE_PATH" ]; then
-            err -r -- 'S ' # socket
+            err -red -- 'S ' # socket
         elif [ -t "$FILE_PATH" 2> /dev/null ]; then
-            err -r -- 'FD ' # open file descriptor
+            err -red -- 'FD ' # open file descriptor
         elif [ -e "$FILE_PATH" ]; then
-            err -r -- '> '
+            err -red -- '> '
         fi
         err - - "$FILE_PATH"
         exit 222
@@ -3104,13 +3041,13 @@ __loc_chown() {
     assert -eq "$#" 1 || return 255
 
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -r -- 'F/D '; err - - "$FILE_PATH"
+        err -red -- 'F/D '; err - - "$FILE_PATH"
         exit 202
     fi
 
@@ -3121,19 +3058,19 @@ __loc_chown() {
     else
         EINVAL;
         if [ -b "$FILE_PATH" ]; then
-            err -r -- 'B ' # block file
+            err -red -- 'B ' # block file
         elif [ -c "$FILE_PATH" ]; then
-            err -r -- 'C ' # character file
+            err -red -- 'C ' # character file
         elif [ -h "$FILE_PATH" ]; then
-            err -r -- 'L ' # symbolic link
+            err -red -- 'L ' # symbolic link
         elif [ -p "$FILE_PATH" ]; then
-            err -r -- 'P ' # named pipe
+            err -red -- 'P ' # named pipe
         elif [ -S "$FILE_PATH" ]; then
-            err -r -- 'S ' # socket
+            err -red -- 'S ' # socket
         elif [ -t "$FILE_PATH" 2> /dev/null ]; then
-            err -r -- 'FD ' # open file descriptor
+            err -red -- 'FD ' # open file descriptor
         elif [ -e "$FILE_PATH" ]; then
-            err -r -- '> '
+            err -red -- '> '
         fi
         err - - "$FILE_PATH"
         exit 222
@@ -3163,41 +3100,41 @@ __loc_chown() {
 #.
 __loc_delete() {
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if ! exist "$FILE_PATH"; then
-        _info -w - 'Already deleted:'
-        info -g -- '> '; info - - "$FILE_PATH"
+        _info -white - 'Already deleted:'
+        info -green -- '> '; info - - "$FILE_PATH"
         return 0
     fi
 
-    _info -w - 'Will delete:'
+    _info -white - 'Will delete:'
     if [ -b "$FILE_PATH" ]; then
-        info -w -- 'B ' # block file
+        info -white -- 'B ' # block file
     elif [ -c "$FILE_PATH" ]; then
-        info -w -- 'C ' # character file
+        info -white -- 'C ' # character file
     elif [ -d "$FILE_PATH" ]; then
-        info -w -- 'D ' # directory
+        info -white -- 'D ' # directory
     elif [ -f "$FILE_PATH" ]; then
-        info -w -- 'F ' # regular file
+        info -white -- 'F ' # regular file
     elif [ -h "$FILE_PATH" ]; then
-        info -w -- 'L ' # symbolic link
+        info -white -- 'L ' # symbolic link
     elif [ -p "$FILE_PATH" ]; then
-        info -w -- 'P ' # named pipe
+        info -white -- 'P ' # named pipe
     elif [ -S "$FILE_PATH" ]; then
-        info -w -- 'S ' # socket
+        info -white -- 'S ' # socket
     elif [ -t "$FILE_PATH" 2> /dev/null ]; then
-        info -w -- 'FD ' # open file descriptor
+        info -white -- 'FD ' # open file descriptor
     else
-        info -w -- '> '
+        info -white -- '> '
     fi
     info - - "$FILE_PATH"
 
     if ! loc_delete "$FILE_PATH"; then
-        _err -r - 'Removal error:'
-        err -r -- '> '; err - - "$FILE_PATH"
+        _err -red - 'Removal error:'
+        err -red -- '> '; err - - "$FILE_PATH"
         exit 201
     fi
 }
@@ -3213,7 +3150,7 @@ __loc_delete() {
 #.
 __loc_empty() {
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
@@ -3224,50 +3161,50 @@ __loc_empty() {
     elif exist "$FILE_PATH"; then
         EINVAL;
         if [ -b "$FILE_PATH" ]; then
-            err -r -- 'B ' # block file
+            err -red -- 'B ' # block file
         elif [ -c "$FILE_PATH" ]; then
-            err -r -- 'C ' # character file
+            err -red -- 'C ' # character file
         elif [ -h "$FILE_PATH" ]; then
-            err -r -- 'L ' # symbolic link
+            err -red -- 'L ' # symbolic link
         elif [ -p "$FILE_PATH" ]; then
-            err -r -- 'P ' # named pipe
+            err -red -- 'P ' # named pipe
         elif [ -S "$FILE_PATH" ]; then
-            err -r -- 'S ' # socket
+            err -red -- 'S ' # socket
         elif [ -t "$FILE_PATH" 2> /dev/null ]; then
-            err -r -- 'FD ' # open file descriptor
+            err -red -- 'FD ' # open file descriptor
         fi
         err - - "$FILE_PATH"
         exit 222
     fi
 
     if dir "$FILE_PATH"; then
-        _info -w - 'Will empty:'
-        info -w -- 'D '; info - - "$FILE_PATH"
+        _info -white - 'Will empty:'
+        info -white -- 'D '; info - - "$FILE_PATH"
 
         if [ "$silent_cmd" = 0 ]; then
             if ! rm -rf "$FILE_PATH"/*; then
-                err -r - 'rm: Failed.'; exit 235
+                err -red - 'rm: Failed.'; exit 235
             fi
         else
             if ! rm -rf "$FILE_PATH"/* > /dev/null 2>&1; then
-                err -r - 'rm: Failed.'; exit 235
+                err -red - 'rm: Failed.'; exit 235
             fi
         fi
     else
         if exist "$FILE_PATH"; then
-            _info -w - 'Will truncate:'
+            _info -white - 'Will truncate:'
         else
-            _info -w - 'Will create:'
+            _info -white - 'Will create:'
         fi
-        info -w -- 'F '; info - - "$FILE_PATH"
+        info -white -- 'F '; info - - "$FILE_PATH"
 
         if ! { : > "$FILE_PATH"; }; then
             if exist "$FILE_PATH"; then
-                _err -r - 'Truncation error:'
+                _err -red - 'Truncation error:'
             else
-                _err -r - 'Creation error:'
+                _err -red - 'Creation error:'
             fi
-            err -r -- 'F '; err - - "$FILE_PATH"
+            err -red -- 'F '; err - - "$FILE_PATH"
             exit 201
         fi
     fi
@@ -3285,29 +3222,29 @@ __loc_empty() {
 #.
 __loc_target_link_overwrite() {
     if [ ! "$FILE_PATH" ]; then
-        _err -r - 'Missing FILE_PATH.'
+        _err -red - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE_PATH_TARGET" ]; then
-        _err -r - 'Missing FILE_PATH_TARGET.'
+        _err -red - 'Missing FILE_PATH_TARGET.'
         return 255
     fi
 
     if ! { exist "$FILE_PATH" || [ -h "$FILE_PATH" ]; }; then
         ENOENT;
-        err -r -- 'F '; err - - "$FILE_PATH"
+        err -red -- 'F '; err - - "$FILE_PATH"
         exit 202
     fi
 
     while :; do
-        _info -w - 'Will symbolic link source/target:'
-        info -w -- '? '; info - - "$FILE_PATH"
-        info -w -- 'L '; info - - "$FILE_PATH_TARGET"
+        _info -white - 'Will symbolic link source/target:'
+        info -white -- '? '; info - - "$FILE_PATH"
+        info -white -- 'L '; info - - "$FILE_PATH_TARGET"
 
         if ! loc_link "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            _err -r - 'Write error:'
-            err -r -- 'L '; err - - "$FILE_PATH_TARGET"
+            _err -red - 'Write error:'
+            err -red -- 'L '; err - - "$FILE_PATH_TARGET"
             exit 201
         fi
     break; done
@@ -3329,8 +3266,8 @@ __loc_target_link_overwrite() {
 __git_get() {
     assert -eq "$#" 1 || return 255
 
-    _info -w - '__git_get():'
-    info -w -- 'U '; info - - "$1"
+    _info -white - '__git_get():'
+    info -white -- 'U '; info - - "$1"
 
     set -- "$@" '--depth' '1'
 
@@ -3341,8 +3278,8 @@ __git_get() {
     fi
 
     if ! git clone "$@"; then
-        _err -r - '__git_get(): Clone error:'
-        err -r -- 'U '; err - - "$1"
+        _err -red - '__git_get(): Clone error:'
+        err -red -- 'U '; err - - "$1"
         exit 201
     fi
 }
@@ -5827,22 +5764,22 @@ _clk_sync() {
     cmd 'ntpd' || ENOCMD 'ntpd'
 
     if [ "$silent_cmd" = 0 ]; then
-        info -w - 'ntpd:'
+        info -white - 'ntpd:'
 
         if ! ntpd -gGLnq pool.ntp.org; then
-            err -r - 'ntpd: Failed.'; exit 235
+            err -red - 'ntpd: Failed.'; exit 235
         fi
 
         if ! hwclock -w; then
-            err -r - 'hwclock: Failed to set the system clock.'; exit 235
+            err -red - 'hwclock: Failed to set the system clock.'; exit 235
         fi
     else
         if ! ntpd -gGLnq pool.ntp.org > /dev/null 2>&1; then
-            err -r - 'ntpd: Failed.'; exit 235
+            err -red - 'ntpd: Failed.'; exit 235
         fi
 
         if ! hwclock -w > /dev/null 2>&1; then
-            err -r - 'hwclock: Failed to set the system clock.'; exit 235
+            err -red - 'hwclock: Failed to set the system clock.'; exit 235
         fi
     fi
 }
@@ -5917,19 +5854,19 @@ _conf_2() {
     if file '/etc/dhcpcd.conf'; then
         _dhcpcd_conf;
     else
-        _info -y - 'Skipped _dhcpcd_conf()'
+        _info -yellow - 'Skipped _dhcpcd_conf()'
     fi
 
     if file '/etc/dnsmasq.conf'; then
         _dnsmasq_conf;
     else
-        _info -y - 'Skipped _dnsmasq_conf()'
+        _info -yellow - 'Skipped _dnsmasq_conf()'
     fi
 
     if file '/etc/gai.conf'; then
         _gai_conf;
     else
-        _info -y - 'Skipped _gai_conf()'
+        _info -yellow - 'Skipped _gai_conf()'
     fi
 
     if cmd 'grub-install' && cmd 'grub-mkconfig'; then
@@ -5938,29 +5875,29 @@ _conf_2() {
         if file '/etc/default/grub'; then
             _grub_conf;
         else
-            _info -y - 'Skipped _grub_conf()'
+            _info -yellow - 'Skipped _grub_conf()'
         fi
     else
-        _info -y - 'Skipped _grub()'
-        _info -y - 'Skipped _grub_conf()'
+        _info -yellow - 'Skipped _grub()'
+        _info -yellow - 'Skipped _grub_conf()'
     fi
 
     if file '/etc/mkinitcpio.conf'; then
         _initramfs_conf;
     else
-        _info -y - 'Skipped _initramfs_conf()'
+        _info -yellow - 'Skipped _initramfs_conf()'
     fi
 
     if file '/etc/makepkg.conf'; then
         _makepkg_conf;
     else
-        _info -y - 'Skipped _makepkg_conf()'
+        _info -yellow - 'Skipped _makepkg_conf()'
     fi
 
     if file '/etc/pacman.conf'; then
         _pacman_conf;
     else
-        _info -y - 'Skipped _pacman_conf()'
+        _info -yellow - 'Skipped _pacman_conf()'
     fi
 
     if file '/etc/security/faillock.conf' && \
@@ -5969,7 +5906,7 @@ _conf_2() {
        file '/etc/pam.d/system-auth'; then
         _pam_conf;
     else
-        _info -y - 'Skipped _pam_conf()'
+        _info -yellow - 'Skipped _pam_conf()'
     fi
 }
 
@@ -5994,19 +5931,19 @@ _conf_3() {
     if file '/etc/bluetooth/main.conf'; then
         _bluez_conf;
     else
-        _info -y - 'Skipped _bluez_conf()'
+        _info -yellow - 'Skipped _bluez_conf()'
     fi
 
     if file "$home"/'.mozilla/firefox/profiles.ini'; then
         _firefox_conf;
     else
-        _info -y - 'Skipped _firefox_conf()'
+        _info -yellow - 'Skipped _firefox_conf()'
     fi
 
     if file '/etc/fuse.conf'; then
         _fuse_conf;
     else
-        _info -y - 'Skipped _fuse_conf()'
+        _info -yellow - 'Skipped _fuse_conf()'
     fi
 }
 
@@ -6544,7 +6481,7 @@ PROFILES_INI
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -r -- 'F '; err - - "$FILE_PATH"
+        err -red -- 'F '; err - - "$FILE_PATH"
         exit 202
     fi
 
@@ -6827,7 +6764,7 @@ CPU
 
     if ! exist "$FILE_PATH"/cpu0/cpufreq/scaling_governor; then
         ENOENT;
-        err -r -- 'F '; err - - "$FILE_PATH"/cpu0/cpufreq/scaling_governor
+        err -red -- 'F '; err - - "$FILE_PATH"/cpu0/cpufreq/scaling_governor
         exit 202
     fi
 
@@ -6846,7 +6783,7 @@ SCALING_GOVERNOR
 
         if ! file_equiv "$FILE_PATH" "$FILE"; then
             EERROR 'Failed to set the governor:'
-            err -r -- 'F '; err - - "$FILE_PATH"
+            err -red -- 'F '; err - - "$FILE_PATH"
         fi
     done
 }
@@ -6859,7 +6796,7 @@ CPU
 
     if ! exist "$FILE_PATH"/cpu0/cpufreq/scaling_governor; then
         ENOENT;
-        err -r -- 'F '; err - - "$FILE_PATH"/cpu0/cpufreq/scaling_governor
+        err -red -- 'F '; err - - "$FILE_PATH"/cpu0/cpufreq/scaling_governor
         exit 202
     fi
 
@@ -6878,7 +6815,7 @@ SCALING_GOVERNOR
 
         if ! file_equiv "$FILE_PATH" "$FILE"; then
             EERROR 'Failed to set the governor:'
-            err -r -- 'F '; err - - "$FILE_PATH"
+            err -red -- 'F '; err - - "$FILE_PATH"
         fi
     done
 }
@@ -6890,20 +6827,20 @@ _grub() {
     cmd 'grub-mkconfig' || ENOCMD 'grub-mkconfig'
 
     if [ "$silent_cmd" = 0 ]; then
-        info -w - 'grub-install:'
+        info -white - 'grub-install:'
 
         if ! grub-install --target=x86_64-efi \
                           --efi-directory="$efi_mnt" \
                           --boot-directory="$efi_mnt"/EFI/BOOT \
                           --removable \
                           --no-nvram; then
-            err -r - 'grub-install: Failed.'; exit 235
+            err -red - 'grub-install: Failed.'; exit 235
         fi
 
-        info -w - 'grub-mkconfig:'
+        info -white - 'grub-mkconfig:'
 
         if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg; then
-            err -r - 'grub-mkconfig: Failed.'; exit 235
+            err -red - 'grub-mkconfig: Failed.'; exit 235
         fi
     else
         if ! grub-install --target=x86_64-efi \
@@ -6911,12 +6848,12 @@ _grub() {
                           --boot-directory="$efi_mnt"/EFI/BOOT \
                           --removable \
                           --no-nvram > /dev/null 2>&1; then
-            err -r - 'grub-install: Failed.'; exit 235
+            err -red - 'grub-install: Failed.'; exit 235
         fi
 
         if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg \
              > /dev/null 2>&1; then
-            err -r - 'grub-mkconfig: Failed.'; exit 235
+            err -red - 'grub-mkconfig: Failed.'; exit 235
         fi
     fi
 }
@@ -6977,15 +6914,15 @@ GRUB
     __file_write_overwrite;
 
     if [ "$silent_cmd" = 0 ]; then
-        info -w - 'grub-mkconfig:'
+        info -white - 'grub-mkconfig:'
 
         if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg; then
-            err -r - 'grub-mkconfig: Failed.'; exit 235
+            err -red - 'grub-mkconfig: Failed.'; exit 235
         fi
     else
         if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg \
              > /dev/null 2>&1; then
-            err -r - 'grub-mkconfig: Failed.'; exit 235
+            err -red - 'grub-mkconfig: Failed.'; exit 235
         fi
     fi
 }
@@ -7144,7 +7081,7 @@ CONFIG
 
 _initramfs_conf() {
     if [ "$arch_linux" != 1 ]; then
-        _info -w - 'Nothing to be done.'
+        _info -white - 'Nothing to be done.'
 
         return 0
     fi
@@ -7179,14 +7116,14 @@ MKINITCPIO_CONF
     __file_write_overwrite;
 
     if [ "$silent_cmd" = 0 ]; then
-        info -w - 'mkinitcpio:'
+        info -white - 'mkinitcpio:'
 
         if ! mkinitcpio -P; then
-            err -r - 'mkinitcpio: Failed to regenerate initramfs.'; exit 235
+            err -red - 'mkinitcpio: Failed to regenerate initramfs.'; exit 235
         fi
     else
         if ! mkinitcpio -P > /dev/null 2>&1; then
-            err -r - 'mkinitcpio: Failed to regenerate initramfs.'; exit 235
+            err -red - 'mkinitcpio: Failed to regenerate initramfs.'; exit 235
         fi
     fi
 }
@@ -7817,21 +7754,21 @@ LOCALE_GEN
     __file_write;
 
     if [ "$silent_cmd" = 0 ]; then
-        info -w - 'locale-gen:'
+        info -white - 'locale-gen:'
 
         if ! locale-gen; then
-            err -r - 'locale-gen: Failed to generate locales.'; exit 235
+            err -red - 'locale-gen: Failed to generate locales.'; exit 235
         fi
     else
         if ! locale-gen > /dev/null 2>&1; then
-            err -r - 'locale-gen: Failed to generate locales.'; exit 235
+            err -red - 'locale-gen: Failed to generate locales.'; exit 235
         fi
     fi
 }
 
 _makepkg_conf() {
     if [ "$arch_linux" != 1 ]; then
-        _info -w - 'Nothing to be done.'
+        _info -white - 'Nothing to be done.'
 
         return 0
     fi
@@ -7984,7 +7921,7 @@ _nvram_clr() {
     set -- '/sys/firmware/efi/efivars'/Boot0*
 
     if ! exist "$1"; then
-        _info -w - 'No valid entries have been found.'
+        _info -white - 'No valid entries have been found.'
         return 0
     fi
 
@@ -8002,19 +7939,19 @@ _nvram_clr() {
         fi
     fi
 
-    _info -w - 'Will delete:'
+    _info -white - 'Will delete:'
     printf "%s\n" '/sys/firmware/efi/efivars'/BootOrder*
     printf "%s\n" '/sys/firmware/efi/efivars'/Boot0*
 
     if [ "$silent_cmd" = 0 ]; then
         if ! rm -f '/sys/firmware/efi/efivars'/BootOrder* \
                    '/sys/firmware/efi/efivars'/Boot0*; then
-            err -r - 'rm: Failed.'; exit 235
+            err -red - 'rm: Failed.'; exit 235
         fi
     else
         if ! rm -f '/sys/firmware/efi/efivars'/BootOrder* \
                    '/sys/firmware/efi/efivars'/Boot0* > /dev/null 2>&1; then
-            err -r - 'rm: Failed.'; exit 235
+            err -red - 'rm: Failed.'; exit 235
         fi
     fi
 
@@ -8024,7 +7961,7 @@ _nvram_clr() {
         EERROR 'Entry removal failed.'
     fi
 
-    _info -w - 'The entries were removed; firmware will attempt recovery.'
+    _info -white - 'The entries were removed; firmware will attempt recovery.'
 }
 
 _openal_conf() {
@@ -8043,7 +7980,7 @@ ALSOFT_CONF
 
 _pacman_conf() {
     if [ "$arch_linux" != 1 ]; then
-        _info -w - 'Nothing to be done.'
+        _info -white - 'Nothing to be done.'
 
         return 0
     fi
@@ -8703,7 +8640,7 @@ RIFLE_CONF
 
 _reflector() {
     if [ "$arch_linux" != 1 ]; then
-        _info -w - 'Nothing to be done.'
+        _info -white - 'Nothing to be done.'
 
         return 0
     fi
@@ -8717,7 +8654,7 @@ _reflector() {
 
 _reflector_bg() {
     if [ "$arch_linux" != 1 ]; then
-        _info -w - 'Nothing to be done.'
+        _info -white - 'Nothing to be done.'
 
         return 0
     fi
@@ -8729,7 +8666,7 @@ _reflector_bg() {
 $arch_mirlist
 MIRRORLIST
 
-    _info -w - 'Executing reflector. This may take some time.'
+    _info -white - 'Executing reflector. This may take some time.'
 
     { FILE=$(
         reflector --country Bulgaria \
@@ -8754,8 +8691,8 @@ MIRRORLIST
     if [ "$FILE" ]; then
         FILE="$FILE$LF"
     else
-        err -r - 'reflector: Failed.'
-        err -r - 'Try again on a static network condition.'; exit 235
+        err -red - 'reflector: Failed.'
+        err -red - 'Try again on a static network condition.'; exit 235
     fi
 
     __file_write_overwrite;
@@ -8763,7 +8700,7 @@ MIRRORLIST
 
 _reflector_de() {
     if [ "$arch_linux" != 1 ]; then
-        _info -w - 'Nothing to be done.'
+        _info -white - 'Nothing to be done.'
 
         return 0
     fi
@@ -8775,7 +8712,7 @@ _reflector_de() {
 $arch_mirlist
 MIRRORLIST
 
-    _info -w - 'Executing reflector. This may take some time.'
+    _info -white - 'Executing reflector. This may take some time.'
 
     { FILE=$(
         reflector --country Germany \
@@ -8800,8 +8737,8 @@ MIRRORLIST
     if [ "$FILE" ]; then
         FILE="$FILE$LF"
     else
-        err -r - 'reflector: Failed.'
-        err -r - 'Try again on a static network condition.'; exit 235
+        err -red - 'reflector: Failed.'
+        err -red - 'Try again on a static network condition.'; exit 235
     fi
 
     __file_write_overwrite;
@@ -9668,7 +9605,7 @@ _tz() {
     elif [ "$de" = 1 ]; then
         _tz_de;
     else
-        _info -w - 'Nothing to be done.'
+        _info -white - 'Nothing to be done.'
 
         return 0
     fi
@@ -9692,11 +9629,11 @@ LOCALTIME
 
     if [ "$silent_cmd" = 0 ]; then
         if ! hwclock -w; then
-            err -r - 'hwclock: Failed to set the system clock.'; exit 235
+            err -red - 'hwclock: Failed to set the system clock.'; exit 235
         fi
     else
         if ! hwclock -w > /dev/null 2>&1; then
-            err -r - 'hwclock: Failed to set the system clock.'; exit 235
+            err -red - 'hwclock: Failed to set the system clock.'; exit 235
         fi
     fi
 }
@@ -9719,11 +9656,11 @@ LOCALTIME
 
     if [ "$silent_cmd" = 0 ]; then
         if ! hwclock -w; then
-            err -r - 'hwclock: Failed to set the system clock.'; exit 235
+            err -red - 'hwclock: Failed to set the system clock.'; exit 235
         fi
     else
         if ! hwclock -w > /dev/null 2>&1; then
-            err -r - 'hwclock: Failed to set the system clock.'; exit 235
+            err -red - 'hwclock: Failed to set the system clock.'; exit 235
         fi
     fi
 }
@@ -9846,9 +9783,9 @@ err_handler() {
     fi
 
     if [ "$2" = INT ]; then
-        err -r - "${0##*/}: Received INT signal. ($1)"; kill -2 "$$"
+        err -red - "${0##*/}: Received INT signal. ($1)"; kill -2 "$$"
     else
-        err -r - "${0##*/}: Received $2 signal. ($1)"; exit "$1"
+        err -red - "${0##*/}: Received $2 signal. ($1)"; exit "$1"
     fi
 }
 
@@ -10018,27 +9955,27 @@ main() {
 
     { assert -min "$#" 1 && main_assert_ops "$@"; } || {
         if [ "$#" -eq 0 ]; then
-            err -r - 'No operation has been specified.'
+            err -red - 'No operation has been specified.'
         else
-            err -r - "Unrecognized operation: '$_opd'"
+            err -red - "Unrecognized operation: '$_opd'"
         fi
 
-        ifs_map "$ops" info -w -
-        info -w - 'SWITCH: always_write ^AW'
-        info -w - 'SWITCH: audio_hq_resamp ^AQ'
-        info -w - 'SWITCH: force_write ^FW'
-        info -w - 'SWITCH: gaming ^GG'
-        info -w - 'SWITCH: ipv6 ^I6'
-        info -w - 'SWITCH: silent_cmd ^SC'
-        info -w - 'SWITCH: silent_write ^SW'
+        ifs_map "$ops" info -white -
+        info -white - 'SWITCH: always_write ^AW'
+        info -white - 'SWITCH: audio_hq_resamp ^AQ'
+        info -white - 'SWITCH: force_write ^FW'
+        info -white - 'SWITCH: gaming ^GG'
+        info -white - 'SWITCH: ipv6 ^I6'
+        info -white - 'SWITCH: silent_cmd ^SC'
+        info -white - 'SWITCH: silent_write ^SW'
 
         exit 2
     }
 
     main_assert_args "$@" || {
-        err -r - "Bad argument: '$_arg'."
+        err -red - "Bad argument: '$_arg'."
 
-        info -w - "Allowed characters: 0-9A-Za-z_-"
+        info -white - "Allowed characters: 0-9A-Za-z_-"
 
         exit 2
     }
@@ -10046,7 +9983,7 @@ main() {
     # end arg parsing; main()
 
     [ "$(id -u)" = 0 ] || {
-        err -r - 'Missing root rights.'; exit 1
+        err -red - 'Missing root rights.'; exit 1
     }
 
     LC_ALL=C; export LC_ALL
@@ -10074,21 +10011,21 @@ main() {
         # env setup
         { mkdir -p "$tmpd" && chmod 0700 "$tmpd"; } || {
             set -- "$?"
-            err -r - "Cannot create tmpd: $tmpd"
+            err -red - "Cannot create tmpd: $tmpd"
             exit "$1"
         }
         { : > "$tmpf" && chmod 0600 "$tmpf"; } || {
             set -- "$?"
-            err -r - "Cannot create tmpf: $tmpf"
+            err -red - "Cannot create tmpf: $tmpf"
             exit "$1"
         }
         { : > "$logf" && chmod 0600 "$logf"; } || {
             set -- "$?"
-            err -r - "Cannot create logf: $logf"
+            err -red - "Cannot create logf: $logf"
             exit "$1"
         }
 
-        eval "info -be - \"$1 -> ${opd}()\"; $opd"
+        eval "info -blue - \"$1 -> ${opd}()\"; $opd"
         RC=$?
 
         # env reset
@@ -10102,7 +10039,7 @@ main() {
         trap - INT TERM EXIT
         set +e
 
-        info -g - 'Done! (｡◕‿◕｡)'
+        info -green - 'Done! (｡◕‿◕｡)'
 
         shift
     done; readonly RC
