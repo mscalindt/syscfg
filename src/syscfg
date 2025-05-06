@@ -381,6 +381,99 @@ err() {
 }
 
 #! .desc:
+# Identify the type of an object on the filesystem
+#! .params:
+# <"$1"> - path
+# [$2] - fd(
+#     '-err' - print to stderr; &2
+#     '-info' - print to stdout; &1
+#     .
+# )
+#! .uses.var.err:
+# [NO_COLOR] $ - environment variable;
+#                disable color
+#! .uses.var.info:
+# [NO_COLOR] $ - environment variable;
+#                disable color
+#! .uses.fn:
+# (-err) <err> ('-red' '--' "text");
+#              Print formatted text to stderr
+# (-info) <info> ('-white' '--' "text");
+#                Print formatted text
+#! .sets:
+# (0) <_type> $ - 'B' | 'C' | 'D' | 'F' | 'L' | 'P' | 'S' | '?';
+# (1) <_type> $ - '>';
+#! .rc:
+# (0) success
+# (1) does not exist
+# (255) bad input
+#! .rc.fn:
+# (err) (*) error
+# (info) (*) error
+#! .desc.ext:
+# The function denotes the type of the specified object using a letter.
+# File categorization will take precedence over directory categorization,
+# but exceptions[1] apply. Special file categorization will take precedence
+# over regular file categorization according to implicit POSIX behavior,
+# depicted below in absolute order.
+#
+# `L` means "symbolic link";
+# `B` means "block special file";
+# `C` means "character special file";
+# `S` means "socket";
+# `P` means "FIFO / named pipe";
+# `F` means "regular file";
+# `D` means "directory";
+# `?` means "unrecognized file type"[2];
+# `>` means "does not exist".
+#
+# The usage of color results in undefined behavior. For strict POSIX
+# compatibility, set variable `NO_COLOR` to a non-empty value.
+#
+# For more information, refer to:
+# > "POSIX.1-2024, Volume: Base Definitions, Section: General Concepts,
+#   Subsection: Pathname Resolution".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Utilities,
+#   Utility: test".
+#
+# [1] A trailing slash in the path string can affect the assert, effectively
+#     forcing the type to resolve to a directory or otherwise inexistence.
+#     See the "Pathname Resolution" POSIX reference for details.
+# [2] Practically, on POSIX shells and systems, `?` (unrecognized file type)
+#     should never be returned, but nonetheless exists as a catch-all
+#     on non-POSIX platforms.
+#.
+ftype() {
+    case "$2" in
+        '-err') set -- "$1" 'err' '-red' '--' ;;
+        '-info') set -- "$1" 'info' '-white' '--' ;;
+        *) [ ! "$2" ] || return 255; set -- "$1" ':' ;;
+    esac
+
+    if [ -h "$1" ]; then
+        shift; _type='L'; "$@" 'L' || return "$?"
+    elif [ -b "$1" ]; then
+        shift; _type='B'; "$@" 'B' || return "$?"
+    elif [ -c "$1" ]; then
+        shift; _type='C'; "$@" 'C' || return "$?"
+    elif [ -S "$1" ]; then
+        shift; _type='S'; "$@" 'S' || return "$?"
+    elif [ -p "$1" ]; then
+        shift; _type='P'; "$@" 'P' || return "$?"
+    elif [ -f "$1" ]; then
+        shift; _type='F'; "$@" 'F' || return "$?"
+    elif [ -d "$1" ]; then
+        shift; _type='D'; "$@" 'D' || return "$?"
+    elif [ -e "$1" ]; then
+        shift; _type='?'; "$@" '?' || return "$?"
+    else
+        shift; _type='>'; "$@" '>' || return "$?"; return 1
+    fi
+
+    return 0
+}
+
+#! .desc:
 # Print formatted text
 #! .params:
 # <$1> - color(
@@ -1163,26 +1256,8 @@ EEXIST() {
     _err -red - 'EEXIST:'
 
     while [ "$1" ]; do
-        if [ -b "$1" ]; then
-            err -red -- 'B ' # block file
-        elif [ -c "$1" ]; then
-            err -red -- 'C ' # character file
-        elif [ -d "$1" ]; then
-            err -red -- 'D ' # directory
-        elif [ -f "$1" ]; then
-            err -red -- 'F ' # regular file
-        elif [ -h "$1" ]; then
-            err -red -- 'L ' # symbolic link
-        elif [ -p "$1" ]; then
-            err -red -- 'P ' # named pipe
-        elif [ -S "$1" ]; then
-            err -red -- 'S ' # socket
-        elif [ -t "$1" 2> /dev/null ]; then
-            err -red -- 'FD ' # open file descriptor
-        elif [ -e "$1" ]; then
-            err -red -- '> '
-        fi
-        err - - "$1"
+        ftype "$1" -err
+        err - - " $1"
 
         shift
     done
@@ -1204,24 +1279,8 @@ ENOTDIR() {
     _err -red - 'ENOTDIR:'
 
     while [ "$1" ]; do
-        if [ -b "$1" ]; then
-            err -red -- 'B ' # block file
-        elif [ -c "$1" ]; then
-            err -red -- 'C ' # character file
-        elif [ -f "$1" ]; then
-            err -red -- 'F ' # regular file
-        elif [ -h "$1" ]; then
-            err -red -- 'L ' # symbolic link
-        elif [ -p "$1" ]; then
-            err -red -- 'P ' # named pipe
-        elif [ -S "$1" ]; then
-            err -red -- 'S ' # socket
-        elif [ -t "$1" 2> /dev/null ]; then
-            err -red -- 'FD ' # open file descriptor
-        elif [ -e "$1" ]; then
-            err -red -- '> '
-        fi
-        err - - "$1"
+        ftype "$1" -err
+        err - - " $1"
 
         shift
     done
@@ -1243,12 +1302,8 @@ EISDIR() {
     _err -red - 'EISDIR:'
 
     while [ "$1" ]; do
-        if dir "$1"; then
-            err -red -- 'D ';
-        elif exist "$1"; then
-            err -red -- '> '
-        fi
-        err - - "$1"
+        ftype "$1" -err
+        err - - " $1"
 
         shift
     done
@@ -1296,26 +1351,8 @@ EREAD() {
     _err -red - 'EREAD:'
 
     while [ "$1" ]; do
-        if [ -b "$1" ]; then
-            err -red -- 'B ' # block file
-        elif [ -c "$1" ]; then
-            err -red -- 'C ' # character file
-        elif [ -d "$1" ]; then
-            err -red -- 'D ' # directory
-        elif [ -f "$1" ]; then
-            err -red -- 'F ' # regular file
-        elif [ -h "$1" ]; then
-            err -red -- 'L ' # symbolic link
-        elif [ -p "$1" ]; then
-            err -red -- 'P ' # named pipe
-        elif [ -S "$1" ]; then
-            err -red -- 'S ' # socket
-        elif [ -t "$1" 2> /dev/null ]; then
-            err -red -- 'FD ' # open file descriptor
-        elif [ -e "$1" ]; then
-            err -red -- '> '
-        fi
-        err - - "$1"
+        ftype "$1" -err
+        err - - " $1"
 
         shift
     done
@@ -1337,24 +1374,8 @@ ENOTFILE() {
     _err -red - 'ENOTFILE:'
 
     while [ "$1" ]; do
-        if [ -b "$1" ]; then
-            err -red -- 'B ' # block file
-        elif [ -c "$1" ]; then
-            err -red -- 'C ' # character file
-        elif [ -d "$1" ]; then
-            err -red -- 'D ' # directory
-        elif [ -h "$1" ]; then
-            err -red -- 'L ' # symbolic link
-        elif [ -p "$1" ]; then
-            err -red -- 'P ' # named pipe
-        elif [ -S "$1" ]; then
-            err -red -- 'S ' # socket
-        elif [ -t "$1" 2> /dev/null ]; then
-            err -red -- 'FD ' # open file descriptor
-        elif [ -e "$1" ]; then
-            err -red -- '> '
-        fi
-        err - - "$1"
+        ftype "$1" -err
+        err - - " $1"
 
         shift
     done
@@ -1376,26 +1397,8 @@ EFSFLAG() {
     _err -red - 'EFSFLAG:'
 
     while [ "$1" ]; do
-        if [ -b "$1" ]; then
-            err -red -- 'B ' # block file
-        elif [ -c "$1" ]; then
-            err -red -- 'C ' # character file
-        elif [ -d "$1" ]; then
-            err -red -- 'D ' # directory
-        elif [ -f "$1" ]; then
-            err -red -- 'F ' # regular file
-        elif [ -h "$1" ]; then
-            err -red -- 'L ' # symbolic link
-        elif [ -p "$1" ]; then
-            err -red -- 'P ' # named pipe
-        elif [ -S "$1" ]; then
-            err -red -- 'S ' # socket
-        elif [ -t "$1" 2> /dev/null ]; then
-            err -red -- 'FD ' # open file descriptor
-        elif [ -e "$1" ]; then
-            err -red -- '> '
-        fi
-        err - - "$1"
+        ftype "$1" -err
+        err - - " $1"
 
         shift
     done
@@ -1417,26 +1420,8 @@ EPERMS() {
     _err -red - 'EPERMS:'
 
     while [ "$1" ]; do
-        if [ -b "$1" ]; then
-            err -red -- 'B ' # block file
-        elif [ -c "$1" ]; then
-            err -red -- 'C ' # character file
-        elif [ -d "$1" ]; then
-            err -red -- 'D ' # directory
-        elif [ -f "$1" ]; then
-            err -red -- 'F ' # regular file
-        elif [ -h "$1" ]; then
-            err -red -- 'L ' # symbolic link
-        elif [ -p "$1" ]; then
-            err -red -- 'P ' # named pipe
-        elif [ -S "$1" ]; then
-            err -red -- 'S ' # socket
-        elif [ -t "$1" 2> /dev/null ]; then
-            err -red -- 'FD ' # open file descriptor
-        elif [ -e "$1" ]; then
-            err -red -- '> '
-        fi
-        err - - "$1"
+        ftype "$1" -err
+        err - - " $1"
 
         shift
     done
@@ -2371,8 +2356,9 @@ __bin_write() {
     fi
 
     if [ ! "$FILE" ]; then
-        _info -white - 'Empty FILE. Write cancelled:'
-        info -white -- 'F '; info - - "$FILE_PATH"
+        _info -white - 'Empty FILE. File write cancelled:'
+        ftype "$FILE_PATH" -info
+        info - - " $FILE_PATH"
         return 0
     fi
 
@@ -2384,8 +2370,9 @@ __bin_write() {
     while :; do
         if [ "$always_write" = 0 ]; then
             if bin_equiv "$FILE_PATH" "$FILE"; then
-                _info -white - 'Write avoided:'
-                info -green -- 'F '; info - - "$FILE_PATH"
+                _info -white - 'File write avoided:'
+                ftype "$FILE_PATH" -info
+                info - - " $FILE_PATH"
                 break
             fi
         fi
@@ -2398,8 +2385,9 @@ __bin_write() {
             EEXIST "$FILE_PATH"
         fi
 
-        _info -white - 'Will write:'
-        info -white -- 'F '; info - - "$FILE_PATH"
+        _info -white - 'Will write a file:'
+        ftype "$FILE_PATH" -info
+        info - - " $FILE_PATH"
 
         (
             IFS="$LF"' '
@@ -2409,8 +2397,9 @@ __bin_write() {
         )
 
         if ! file_write_octal "$FILE_PATH" "$FILE"; then
-            _err -red - 'Write error:'
-            err -red -- 'F '; err - - "$FILE_PATH"
+            _err -red - 'File write error:'
+            ftype "$FILE_PATH" -err
+            err - - " $FILE_PATH"
             exit 201
         fi
     break; done
@@ -2437,8 +2426,9 @@ __bin_write_overwrite() {
     fi
 
     if [ ! "$FILE" ]; then
-        _info -white - 'Empty FILE. Write cancelled:'
-        info -white -- 'F '; info - - "$FILE_PATH"
+        _info -white - 'Empty FILE. File write cancelled:'
+        ftype "$FILE_PATH" -info
+        info - - " $FILE_PATH"
         return 0
     fi
 
@@ -2450,14 +2440,16 @@ __bin_write_overwrite() {
     while :; do
         if [ "$always_write" = 0 ]; then
             if bin_equiv "$FILE_PATH" "$FILE"; then
-                _info -white - 'Write avoided:'
-                info -green -- 'F '; info - - "$FILE_PATH"
+                _info -white - 'File write avoided:'
+                ftype "$FILE_PATH" -info
+                info - - " $FILE_PATH"
                 break
             fi
         fi
 
-        _info -white - 'Will write:'
-        info -white -- 'F '; info - - "$FILE_PATH"
+        _info -white - 'Will write a file:'
+        ftype "$FILE_PATH" -info
+        info - - " $FILE_PATH"
 
         (
             IFS="$LF"' '
@@ -2467,8 +2459,9 @@ __bin_write_overwrite() {
         )
 
         if ! file_write_octal "$FILE_PATH" "$FILE"; then
-            _err -red - 'Write error:'
-            err -red -- 'F '; err - - "$FILE_PATH"
+            _err -red - 'File write error:'
+            ftype "$FILE_PATH" -err
+            err - - " $FILE_PATH"
             exit 201
         fi
     break; done
@@ -2501,7 +2494,8 @@ __dir_target_write() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -red -- 'D '; err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 202
     fi
 
@@ -2519,8 +2513,10 @@ __dir_target_write() {
         fi
 
         _info -white - 'Will copy from/to:'
-        info -white -- 'D '; info - - "$FILE_PATH"
-        info -white -- 'D '; info - - "$FILE_PATH_TARGET"
+        ftype "$FILE_PATH" -info
+        info - - " $FILE_PATH"
+        ftype "$FILE_PATH_TARGET" -info
+        info - - " $FILE_PATH_TARGET"
 
         info -white -- '> '
         find "$FILE_PATH"//. ! -name . | grep -c // 2> /dev/null | \
@@ -2539,8 +2535,9 @@ __dir_target_write() {
             done
 
         if ! dir_write "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            _err -red - 'Write error:'
-            err -red -- 'D '; err - - "$FILE_PATH_TARGET"
+            _err -red - 'Directory write error:'
+            ftype "$FILE_PATH_TARGET" -err
+            err - - " $FILE_PATH_TARGET"
             exit 201
         fi
     break; done
@@ -2573,7 +2570,8 @@ __dir_target_write_overwrite() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -red -- 'D '; err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 202
     fi
 
@@ -2583,8 +2581,10 @@ __dir_target_write_overwrite() {
 
     while :; do
         _info -white - 'Will copy from/to:'
-        info -white -- 'D '; info - - "$FILE_PATH"
-        info -white -- 'D '; info - - "$FILE_PATH_TARGET"
+        ftype "$FILE_PATH" -info
+        info - - " $FILE_PATH"
+        ftype "$FILE_PATH_TARGET" -info
+        info - - " $FILE_PATH_TARGET"
 
         info -white -- '> '
         find "$FILE_PATH"//. ! -name . | grep -c // 2> /dev/null | \
@@ -2603,8 +2603,9 @@ __dir_target_write_overwrite() {
             done
 
         if ! dir_write "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            _err -red - 'Write error:'
-            err -red -- 'D '; err - - "$FILE_PATH_TARGET"
+            _err -red - 'Directory write error:'
+            ftype "$FILE_PATH_TARGET" -err
+            err - - " $FILE_PATH_TARGET"
             exit 201
         fi
     break; done
@@ -2632,7 +2633,8 @@ __FILE_PATH_preload() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -red -- 'F '; err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 202
     fi
 
@@ -2656,7 +2658,8 @@ __file_executable() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -red -- 'F '; err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 202
     fi
 
@@ -2690,16 +2693,18 @@ __file_write() {
     fi
 
     if [ ! "$FILE" ]; then
-        _info -white - 'Empty FILE. Write cancelled:'
-        info -white -- 'F '; info - - "$FILE_PATH"
+        _info -white - 'Empty FILE. File write cancelled:'
+        ftype "$FILE_PATH" -info
+        info - - " $FILE_PATH"
         return 0
     fi
 
     while :; do
         if [ "$always_write" = 0 ]; then
             if file_equiv "$FILE_PATH" "$FILE"; then
-                _info -white - 'Write avoided:'
-                info -green -- 'F '; info - - "$FILE_PATH"
+                _info -white - 'File write avoided:'
+                ftype "$FILE_PATH" -info
+                info - - " $FILE_PATH"
                 break
             fi
         fi
@@ -2713,20 +2718,23 @@ __file_write() {
         fi
 
         if LOG_written; then
-            _info -white - 'Changes:'
-            info -white -- 'F '; info - - "$FILE_PATH"
+            _info -white - 'File changes:'
+            ftype "$FILE_PATH" -info
+            info - - " $FILE_PATH"
             LOG_print;
         else
-            _info -white - 'Will write:'
-            info -white -- 'F '; info - - "$FILE_PATH"
+            _info -white - 'Will write a file:'
+            ftype "$FILE_PATH" -info
+            info - - " $FILE_PATH"
             if [ "$silent_write" = 0 ]; then
                 info -white - '0:'; info - -- "$FILE"
             fi
         fi
 
         if ! file_write "$FILE_PATH" "$FILE"; then
-            _err -red - 'Write error:'
-            err -red -- 'F '; err - - "$FILE_PATH"
+            _err -red - 'File write error:'
+            ftype "$FILE_PATH" -err
+            err - - " $FILE_PATH"
             exit 201
         fi
     break; done
@@ -2758,35 +2766,40 @@ __file_write_overwrite() {
     fi
 
     if [ ! "$FILE" ]; then
-        _info -white - 'Empty FILE. Write cancelled:'
-        info -white -- 'F '; info - - "$FILE_PATH"
+        _info -white - 'Empty FILE. File write cancelled:'
+        ftype "$FILE_PATH" -info
+        info - - " $FILE_PATH"
         return 0
     fi
 
     while :; do
         if [ "$always_write" = 0 ]; then
             if file_equiv "$FILE_PATH" "$FILE"; then
-                _info -white - 'Write avoided:'
-                info -green -- 'F '; info - - "$FILE_PATH"
+                _info -white - 'File write avoided:'
+                ftype "$FILE_PATH" -info
+                info - - " $FILE_PATH"
                 break
             fi
         fi
 
         if LOG_written; then
-            _info -white - 'Changes:'
-            info -white -- 'F '; info - - "$FILE_PATH"
+            _info -white - 'File changes:'
+            ftype "$FILE_PATH" -info
+            info - - " $FILE_PATH"
             LOG_print;
         else
-            _info -white - 'Will write:'
-            info -white -- 'F '; info - - "$FILE_PATH"
+            _info -white - 'Will write a file:'
+            ftype "$FILE_PATH" -info
+            info - - " $FILE_PATH"
             if [ "$silent_write" = 0 ]; then
                 info -white - '0:'; info - -- "$FILE"
             fi
         fi
 
         if ! file_write "$FILE_PATH" "$FILE"; then
-            _err -red - 'Write error:'
-            err -red -- 'F '; err - - "$FILE_PATH"
+            _err -red - 'File write error:'
+            ftype "$FILE_PATH" -err
+            err - - " $FILE_PATH"
             exit 201
         fi
     break; done
@@ -2824,7 +2837,8 @@ __file_target_write() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -red -- 'F '; err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 202
     fi
 
@@ -2835,15 +2849,10 @@ __file_target_write() {
     while :; do
         if [ "$always_write" = 0 ]; then
             if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
-                if [ -h "$FILE_PATH_TARGET" ]; then
-                    _info -white - 'Write avoided:'
-                    info -green -- 'L '; info - - "$FILE_PATH_TARGET"
-                    break
-                else
-                    _info -white - 'Write avoided:'
-                    info -green -- 'F '; info - - "$FILE_PATH_TARGET"
-                    break
-                fi
+                _info -white - 'File write avoided:'
+                ftype "$FILE_PATH_TARGET" -info
+                info - - " $FILE_PATH_TARGET"
+                break
             fi
         fi
 
@@ -2856,12 +2865,15 @@ __file_target_write() {
         fi
 
         _info -white - 'Will copy from/to:'
-        info -white -- 'F '; info - - "$FILE_PATH"
-        info -white -- 'F '; info - - "$FILE_PATH_TARGET"
+        ftype "$FILE_PATH" -info
+        info - - " $FILE_PATH"
+        ftype "$FILE_PATH_TARGET" -info
+        info - - " $FILE_PATH_TARGET"
 
         if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            _err -red - 'Write error:'
-            err -red -- 'F '; err - - "$FILE_PATH_TARGET"
+            _err -red - 'File write error:'
+            ftype "$FILE_PATH_TARGET" -err
+            err - - " $FILE_PATH_TARGET"
             exit 201
         fi
     break; done
@@ -2894,7 +2906,8 @@ __file_target_write_overwrite() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -red -- 'F '; err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 202
     fi
 
@@ -2905,25 +2918,23 @@ __file_target_write_overwrite() {
     while :; do
         if [ "$always_write" = 0 ]; then
             if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
-                if [ -h "$FILE_PATH_TARGET" ]; then
-                    _info -white - 'Write avoided:'
-                    info -green -- 'L '; info - - "$FILE_PATH_TARGET"
-                    break
-                else
-                    _info -white - 'Write avoided:'
-                    info -green -- 'F '; info - - "$FILE_PATH_TARGET"
-                    break
-                fi
+                _info -white - 'File write avoided:'
+                ftype "$FILE_PATH_TARGET" -info
+                info - - " $FILE_PATH_TARGET"
+                break
             fi
         fi
 
         _info -white - 'Will copy from/to:'
-        info -white -- 'F '; info - - "$FILE_PATH"
-        info -white -- 'F '; info - - "$FILE_PATH_TARGET"
+        ftype "$FILE_PATH" -info
+        info - - " $FILE_PATH"
+        ftype "$FILE_PATH_TARGET" -info
+        info - - " $FILE_PATH_TARGET"
 
         if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            _err -red - 'Write error:'
-            err -red -- 'F '; err - - "$FILE_PATH_TARGET"
+            _err -red - 'File write error:'
+            ftype "$FILE_PATH_TARGET" -info
+            err - - " $FILE_PATH_TARGET"
             exit 201
         fi
     break; done
@@ -2956,7 +2967,8 @@ __loc_chattr() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -red -- 'F/D '; err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 202
     fi
 
@@ -2966,22 +2978,8 @@ __loc_chattr() {
         :
     else
         EINVAL;
-        if [ -b "$FILE_PATH" ]; then
-            err -red -- 'B ' # block file
-        elif [ -c "$FILE_PATH" ]; then
-            err -red -- 'C ' # character file
-        elif [ -h "$FILE_PATH" ]; then
-            err -red -- 'L ' # symbolic link
-        elif [ -p "$FILE_PATH" ]; then
-            err -red -- 'P ' # named pipe
-        elif [ -S "$FILE_PATH" ]; then
-            err -red -- 'S ' # socket
-        elif [ -t "$FILE_PATH" 2> /dev/null ]; then
-            err -red -- 'FD ' # open file descriptor
-        elif [ -e "$FILE_PATH" ]; then
-            err -red -- '> '
-        fi
-        err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 222
     fi
 
@@ -3017,7 +3015,8 @@ __loc_chmod() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -red -- 'F/D '; err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 202
     fi
 
@@ -3027,22 +3026,8 @@ __loc_chmod() {
         :
     else
         EINVAL;
-        if [ -b "$FILE_PATH" ]; then
-            err -red -- 'B ' # block file
-        elif [ -c "$FILE_PATH" ]; then
-            err -red -- 'C ' # character file
-        elif [ -h "$FILE_PATH" ]; then
-            err -red -- 'L ' # symbolic link
-        elif [ -p "$FILE_PATH" ]; then
-            err -red -- 'P ' # named pipe
-        elif [ -S "$FILE_PATH" ]; then
-            err -red -- 'S ' # socket
-        elif [ -t "$FILE_PATH" 2> /dev/null ]; then
-            err -red -- 'FD ' # open file descriptor
-        elif [ -e "$FILE_PATH" ]; then
-            err -red -- '> '
-        fi
-        err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 222
     fi
 
@@ -3080,7 +3065,8 @@ __loc_chown() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -red -- 'F/D '; err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 202
     fi
 
@@ -3090,22 +3076,8 @@ __loc_chown() {
         :
     else
         EINVAL;
-        if [ -b "$FILE_PATH" ]; then
-            err -red -- 'B ' # block file
-        elif [ -c "$FILE_PATH" ]; then
-            err -red -- 'C ' # character file
-        elif [ -h "$FILE_PATH" ]; then
-            err -red -- 'L ' # symbolic link
-        elif [ -p "$FILE_PATH" ]; then
-            err -red -- 'P ' # named pipe
-        elif [ -S "$FILE_PATH" ]; then
-            err -red -- 'S ' # socket
-        elif [ -t "$FILE_PATH" 2> /dev/null ]; then
-            err -red -- 'FD ' # open file descriptor
-        elif [ -e "$FILE_PATH" ]; then
-            err -red -- '> '
-        fi
-        err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 222
     fi
 
@@ -3139,35 +3111,19 @@ __loc_delete() {
 
     if ! exist "$FILE_PATH"; then
         _info -white - 'Already deleted:'
-        info -green -- '> '; info - - "$FILE_PATH"
+        ftype "$FILE_PATH" -info
+        info - - " $FILE_PATH"
         return 0
     fi
 
     _info -white - 'Will delete:'
-    if [ -b "$FILE_PATH" ]; then
-        info -white -- 'B ' # block file
-    elif [ -c "$FILE_PATH" ]; then
-        info -white -- 'C ' # character file
-    elif [ -d "$FILE_PATH" ]; then
-        info -white -- 'D ' # directory
-    elif [ -f "$FILE_PATH" ]; then
-        info -white -- 'F ' # regular file
-    elif [ -h "$FILE_PATH" ]; then
-        info -white -- 'L ' # symbolic link
-    elif [ -p "$FILE_PATH" ]; then
-        info -white -- 'P ' # named pipe
-    elif [ -S "$FILE_PATH" ]; then
-        info -white -- 'S ' # socket
-    elif [ -t "$FILE_PATH" 2> /dev/null ]; then
-        info -white -- 'FD ' # open file descriptor
-    else
-        info -white -- '> '
-    fi
-    info - - "$FILE_PATH"
+    ftype "$FILE_PATH" -info
+    info - - " $FILE_PATH"
 
     if ! loc_delete "$FILE_PATH"; then
         _err -red - 'Removal error:'
-        err -red -- '> '; err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 201
     fi
 }
@@ -3193,26 +3149,15 @@ __loc_empty() {
         :
     elif exist "$FILE_PATH"; then
         EINVAL;
-        if [ -b "$FILE_PATH" ]; then
-            err -red -- 'B ' # block file
-        elif [ -c "$FILE_PATH" ]; then
-            err -red -- 'C ' # character file
-        elif [ -h "$FILE_PATH" ]; then
-            err -red -- 'L ' # symbolic link
-        elif [ -p "$FILE_PATH" ]; then
-            err -red -- 'P ' # named pipe
-        elif [ -S "$FILE_PATH" ]; then
-            err -red -- 'S ' # socket
-        elif [ -t "$FILE_PATH" 2> /dev/null ]; then
-            err -red -- 'FD ' # open file descriptor
-        fi
-        err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 222
     fi
 
     if dir "$FILE_PATH"; then
         _info -white - 'Will empty:'
-        info -white -- 'D '; info - - "$FILE_PATH"
+        ftype "$FILE_PATH" -info
+        info - - " $FILE_PATH"
 
         if [ "$silent_cmd" = 0 ]; then
             if ! rm -rf "$FILE_PATH"/*; then
@@ -3227,17 +3172,19 @@ __loc_empty() {
         if exist "$FILE_PATH"; then
             _info -white - 'Will truncate:'
         else
-            _info -white - 'Will create:'
+            _info -white - 'Will create a file:'
         fi
-        info -white -- 'F '; info - - "$FILE_PATH"
+        ftype "$FILE_PATH" -info
+        info - - " $FILE_PATH"
 
         if ! { : > "$FILE_PATH"; }; then
             if exist "$FILE_PATH"; then
                 _err -red - 'Truncation error:'
             else
-                _err -red - 'Creation error:'
+                _err -red - 'File creation error:'
             fi
-            err -red -- 'F '; err - - "$FILE_PATH"
+            ftype "$FILE_PATH" -err
+            err - - " $FILE_PATH"
             exit 201
         fi
     fi
@@ -3266,18 +3213,22 @@ __loc_target_link_overwrite() {
 
     if ! { exist "$FILE_PATH" || [ -h "$FILE_PATH" ]; }; then
         ENOENT;
-        err -red -- 'F '; err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 202
     fi
 
     while :; do
         _info -white - 'Will symbolic link source/target:'
-        info -white -- '? '; info - - "$FILE_PATH"
-        info -white -- 'L '; info - - "$FILE_PATH_TARGET"
+        ftype "$FILE_PATH" -info
+        info - - " $FILE_PATH"
+        ftype "$FILE_PATH_TARGET" -info
+        info - - " $FILE_PATH_TARGET"
 
         if ! loc_link "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            _err -red - 'Write error:'
-            err -red -- 'L '; err - - "$FILE_PATH_TARGET"
+            _err -red - 'Symbolic linking error:'
+            ftype "$FILE_PATH_TARGET" -err
+            err - - " $FILE_PATH_TARGET"
             exit 201
         fi
     break; done
@@ -3300,7 +3251,7 @@ __git_get() {
     assert -eq "$#" 1 || return 255
 
     _info -white - '__git_get():'
-    info -white -- 'U '; info - - "$1"
+    info - - "$1"
 
     set -- "$@" '--depth' '1'
 
@@ -3312,7 +3263,7 @@ __git_get() {
 
     if ! git clone "$@"; then
         _err -red - '__git_get(): Clone error:'
-        err -red -- 'U '; err - - "$1"
+        err - - "$1"
         exit 201
     fi
 }
@@ -6514,7 +6465,8 @@ PROFILES_INI
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        err -red -- 'F '; err - - "$FILE_PATH"
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
         exit 202
     fi
 
@@ -6797,7 +6749,8 @@ CPU
 
     if ! exist "$FILE_PATH"/cpu0/cpufreq/scaling_governor; then
         ENOENT;
-        err -red -- 'F '; err - - "$FILE_PATH"/cpu0/cpufreq/scaling_governor
+        ftype "$FILE_PATH"/cpu0/cpufreq/scaling_governor -err
+        err - - " $FILE_PATH"/cpu0/cpufreq/scaling_governor
         exit 202
     fi
 
@@ -6816,7 +6769,8 @@ SCALING_GOVERNOR
 
         if ! file_equiv "$FILE_PATH" "$FILE"; then
             EERROR 'Failed to set the governor:'
-            err -red -- 'F '; err - - "$FILE_PATH"
+            ftype "$FILE_PATH" -err
+            err - - " $FILE_PATH"
         fi
     done
 }
@@ -6829,7 +6783,8 @@ CPU
 
     if ! exist "$FILE_PATH"/cpu0/cpufreq/scaling_governor; then
         ENOENT;
-        err -red -- 'F '; err - - "$FILE_PATH"/cpu0/cpufreq/scaling_governor
+        ftype "$FILE_PATH"/cpu0/cpufreq/scaling_governor -err
+        err - - " $FILE_PATH"/cpu0/cpufreq/scaling_governor
         exit 202
     fi
 
@@ -6848,7 +6803,8 @@ SCALING_GOVERNOR
 
         if ! file_equiv "$FILE_PATH" "$FILE"; then
             EERROR 'Failed to set the governor:'
-            err -red -- 'F '; err - - "$FILE_PATH"
+            ftype "$FILE_PATH" -err
+            err - - " $FILE_PATH"
         fi
     done
 }
