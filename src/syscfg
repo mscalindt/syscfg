@@ -10039,7 +10039,7 @@ main() {
         trap - INT TERM EXIT
         set +e
 
-        info -green - 'Done! (｡◕‿◕｡)'
+        info -green - 'Done!'
 
         shift
     done; readonly RC
