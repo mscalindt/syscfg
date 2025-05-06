@@ -215,6 +215,40 @@ writable() {
 # START output_functions
 
 #! .desc:
+# Print formatted text to stderr (syscfg client string)
+#! .params:
+# <$1> - color(
+#     '-'  - none
+#     '-bk' - black
+#     '-r' - red
+#     '-g' - green
+#     '-y' - yellow
+#     '-be' - blue
+#     '-m' - magenta
+#     '-c' - cyan
+#     '-w' - white
+#     .
+# )
+# <$2> - type(
+#     '-' - raw
+#     '--' - raw, no newline
+#     .
+# )
+# <"$3"+> - text
+#! .rc:
+# (0) success
+# (255) bad input
+#.
+_err() {
+    _clr="$1"
+    _fmt="$2"
+
+    shift 2 && set -- "$_clr" "$_fmt" "[E $$ $opd]" "$@"
+
+    err "$@"
+}
+
+#! .desc:
 # Print formatted text to stderr
 #! .params:
 # <$1> - color(
@@ -306,6 +340,40 @@ err() {
             ;;
         esac
     fi
+}
+
+#! .desc:
+# Print formatted text to stdout (syscfg client string)
+#! .params:
+# <$1> - color(
+#     '-'  - none
+#     '-bk' - black
+#     '-r' - red
+#     '-g' - green
+#     '-y' - yellow
+#     '-be' - blue
+#     '-m' - magenta
+#     '-c' - cyan
+#     '-w' - white
+#     .
+# )
+# <$2> - type(
+#     '-' - raw
+#     '--' - raw, no newline
+#     .
+# )
+# <"$3"+> - text
+#! .rc:
+# (0) success
+# (255) bad input
+#.
+_info() {
+    _clr="$1"
+    _fmt="$2"
+
+    shift 2 && set -- "$_clr" "$_fmt" "[I $$ $opd]" "$@"
+
+    info "$@"
 }
 
 #! .desc:
@@ -1102,14 +1170,14 @@ unmount() {
 #! .rc:
 # 201
 #.
-EPERM() { err -r -2 'EPERM:'; }
+EPERM() { _err -r -- 'EPERM:'; }
 
 #! .desc:
 # ENOENT: "No such file or directory"
 #! .rc:
 # 202
 #.
-ENOENT() { err -r -1 'ENOENT:'; }
+ENOENT() { _err -r - 'ENOENT:'; }
 
 #! .desc:
 # EEXIST: "Already exists"
@@ -1122,7 +1190,7 @@ ENOENT() { err -r -1 'ENOENT:'; }
 EEXIST() {
     assert -min "$#" 1 || return 255
 
-    err -r -1 'EEXIST:'
+    _err -r - 'EEXIST:'
 
     while [ "$1" ]; do
         if [ -b "$1" ]; then
@@ -1163,7 +1231,7 @@ EEXIST() {
 ENOTDIR() {
     assert -min "$#" 1 || return 255
 
-    err -r -1 'ENOTDIR:'
+    _err -r - 'ENOTDIR:'
 
     while [ "$1" ]; do
         if [ -b "$1" ]; then
@@ -1202,7 +1270,7 @@ ENOTDIR() {
 EISDIR() {
     assert -min "$#" 1 || return 255
 
-    err -r -1 'EISDIR:'
+    _err -r - 'EISDIR:'
 
     while [ "$1" ]; do
         if dir "$1"; then
@@ -1223,7 +1291,7 @@ EISDIR() {
 #! .rc:
 # 222
 #.
-EINVAL() { err -r -1 'EINVAL:'; }
+EINVAL() { _err -r - 'EINVAL:'; }
 
 # END std_err_functions; 201-222
 # START custom_err_functions; 230-235
@@ -1239,7 +1307,7 @@ EINVAL() { err -r -1 'EINVAL:'; }
 ENOCMD() {
     assert -eq "$#" 1 || return 255
 
-    err -r -1 "ENOCMD: $1"
+    _err -r - "ENOCMD: $1"
 
     exit 230
 }
@@ -1255,7 +1323,7 @@ ENOCMD() {
 EREAD() {
     assert -min "$#" 1 || return 255
 
-    err -r -1 'EREAD:'
+    _err -r - 'EREAD:'
 
     while [ "$1" ]; do
         if [ -b "$1" ]; then
@@ -1296,7 +1364,7 @@ EREAD() {
 ENOTFILE() {
     assert -min "$#" 1 || return 255
 
-    err -r -1 'ENOTFILE:'
+    _err -r - 'ENOTFILE:'
 
     while [ "$1" ]; do
         if [ -b "$1" ]; then
@@ -1335,7 +1403,7 @@ ENOTFILE() {
 EFSFLAG() {
     assert -min "$#" 1 || return 255
 
-    err -r -1 'EFSFLAG:'
+    _err -r - 'EFSFLAG:'
 
     while [ "$1" ]; do
         if [ -b "$1" ]; then
@@ -1376,7 +1444,7 @@ EFSFLAG() {
 EPERMS() {
     assert -min "$#" 1 || return 255
 
-    err -r -1 'EPERMS:'
+    _err -r - 'EPERMS:'
 
     while [ "$1" ]; do
         if [ -b "$1" ]; then
@@ -1417,7 +1485,7 @@ EPERMS() {
 EERROR() {
     assert -eq "$#" 1 || return 255
 
-    err -r -1 "EERROR: $1"; exit 235
+    _err -r - "EERROR: $1"; exit 235
 }
 
 # END custom_err_functions; 230-235
@@ -2328,25 +2396,25 @@ loc_own_user() {
 #.
 __bin_write() {
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE" ]; then
-        info -w -1 'Empty FILE. Write cancelled:'
+        _info -w - 'Empty FILE. Write cancelled:'
         info -w -- 'F '; info - - "$FILE_PATH"
         return 0
     fi
 
     if ! is_octal "$FILE"; then
-        err -r -1 'Bad FILE; expected octal.'
+        _err -r - 'Bad FILE; expected octal.'
         return 255
     fi
 
     while :; do
         if [ "$always_write" = 0 ]; then
             if bin_equiv "$FILE_PATH" "$FILE"; then
-                info -w -1 'Write avoided:'
+                _info -w - 'Write avoided:'
                 info -g -- 'F '; info - - "$FILE_PATH"
                 break
             fi
@@ -2360,7 +2428,7 @@ __bin_write() {
             EEXIST "$FILE_PATH"
         fi
 
-        info -w -1 'Will write:'
+        _info -w - 'Will write:'
         info -w -- 'F '; info - - "$FILE_PATH"
 
         (
@@ -2371,7 +2439,7 @@ __bin_write() {
         )
 
         if ! file_write_octal "$FILE_PATH" "$FILE"; then
-            err -r -1 'Write error:'
+            _err -r - 'Write error:'
             err -r -- 'F '; err - - "$FILE_PATH"
             exit 201
         fi
@@ -2394,31 +2462,31 @@ __bin_write() {
 #.
 __bin_write_overwrite() {
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE" ]; then
-        info -w -1 'Empty FILE. Write cancelled:'
+        _info -w - 'Empty FILE. Write cancelled:'
         info -w -- 'F '; info - - "$FILE_PATH"
         return 0
     fi
 
     if ! is_octal "$FILE"; then
-        err -r -1 'Bad FILE; expected octal.'
+        _err -r - 'Bad FILE; expected octal.'
         return 255
     fi
 
     while :; do
         if [ "$always_write" = 0 ]; then
             if bin_equiv "$FILE_PATH" "$FILE"; then
-                info -w -1 'Write avoided:'
+                _info -w - 'Write avoided:'
                 info -g -- 'F '; info - - "$FILE_PATH"
                 break
             fi
         fi
 
-        info -w -1 'Will write:'
+        _info -w - 'Will write:'
         info -w -- 'F '; info - - "$FILE_PATH"
 
         (
@@ -2429,7 +2497,7 @@ __bin_write_overwrite() {
         )
 
         if ! file_write_octal "$FILE_PATH" "$FILE"; then
-            err -r -1 'Write error:'
+            _err -r - 'Write error:'
             err -r -- 'F '; err - - "$FILE_PATH"
             exit 201
         fi
@@ -2452,12 +2520,12 @@ __bin_write_overwrite() {
 #.
 __dir_target_write() {
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE_PATH_TARGET" ]; then
-        err -r -1 'Missing FILE_PATH_TARGET.'
+        _err -r - 'Missing FILE_PATH_TARGET.'
         return 255
     fi
 
@@ -2480,7 +2548,7 @@ __dir_target_write() {
             EEXIST "$FILE_PATH_TARGET"
         fi
 
-        info -w -1 'Will copy from/to:'
+        _info -w - 'Will copy from/to:'
         info -w -- 'D '; info - - "$FILE_PATH"
         info -w -- 'D '; info - - "$FILE_PATH_TARGET"
 
@@ -2501,7 +2569,7 @@ __dir_target_write() {
             done
 
         if ! dir_write "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            err -r -1 'Write error:'
+            _err -r - 'Write error:'
             err -r -- 'D '; err - - "$FILE_PATH_TARGET"
             exit 201
         fi
@@ -2524,12 +2592,12 @@ __dir_target_write() {
 #.
 __dir_target_write_overwrite() {
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE_PATH_TARGET" ]; then
-        err -r -1 'Missing FILE_PATH_TARGET.'
+        _err -r - 'Missing FILE_PATH_TARGET.'
         return 255
     fi
 
@@ -2544,7 +2612,7 @@ __dir_target_write_overwrite() {
     readable "$FILE_PATH" || EREAD "$FILE_PATH"
 
     while :; do
-        info -w -1 'Will copy from/to:'
+        _info -w - 'Will copy from/to:'
         info -w -- 'D '; info - - "$FILE_PATH"
         info -w -- 'D '; info - - "$FILE_PATH_TARGET"
 
@@ -2565,7 +2633,7 @@ __dir_target_write_overwrite() {
             done
 
         if ! dir_write "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            err -r -1 'Write error:'
+            _err -r - 'Write error:'
             err -r -- 'D '; err - - "$FILE_PATH_TARGET"
             exit 201
         fi
@@ -2588,7 +2656,7 @@ __dir_target_write_overwrite() {
 #.
 __FILE_PATH_preload() {
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
@@ -2612,7 +2680,7 @@ __FILE_PATH_preload() {
 #.
 __file_executable() {
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
@@ -2647,12 +2715,12 @@ __file_executable() {
 #.
 __file_write() {
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE" ]; then
-        info -w -1 'Empty FILE. Write cancelled:'
+        _info -w - 'Empty FILE. Write cancelled:'
         info -w -- 'F '; info - - "$FILE_PATH"
         return 0
     fi
@@ -2660,7 +2728,7 @@ __file_write() {
     while :; do
         if [ "$always_write" = 0 ]; then
             if file_equiv "$FILE_PATH" "$FILE"; then
-                info -w -1 'Write avoided:'
+                _info -w - 'Write avoided:'
                 info -g -- 'F '; info - - "$FILE_PATH"
                 break
             fi
@@ -2675,11 +2743,11 @@ __file_write() {
         fi
 
         if LOG_written; then
-            info -w -1 'Changes:'
+            _info -w - 'Changes:'
             info -w -- 'F '; info - - "$FILE_PATH"
             LOG_print;
         else
-            info -w -1 'Will write:'
+            _info -w - 'Will write:'
             info -w -- 'F '; info - - "$FILE_PATH"
             if [ "$silent_write" = 0 ]; then
                 info -w - '0:'; info - -- "$FILE"
@@ -2687,7 +2755,7 @@ __file_write() {
         fi
 
         if ! file_write "$FILE_PATH" "$FILE"; then
-            err -r -1 'Write error:'
+            _err -r - 'Write error:'
             err -r -- 'F '; err - - "$FILE_PATH"
             exit 201
         fi
@@ -2698,7 +2766,7 @@ __file_write() {
     fi
 
     if ! LOG_clear; then
-        err -r -1 'Log clear error.'
+        _err -r - 'Log clear error.'
         exit 201
     fi
 }
@@ -2715,12 +2783,12 @@ __file_write() {
 #.
 __file_write_overwrite() {
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE" ]; then
-        info -w -1 'Empty FILE. Write cancelled:'
+        _info -w - 'Empty FILE. Write cancelled:'
         info -w -- 'F '; info - - "$FILE_PATH"
         return 0
     fi
@@ -2728,18 +2796,18 @@ __file_write_overwrite() {
     while :; do
         if [ "$always_write" = 0 ]; then
             if file_equiv "$FILE_PATH" "$FILE"; then
-                info -w -1 'Write avoided:'
+                _info -w - 'Write avoided:'
                 info -g -- 'F '; info - - "$FILE_PATH"
                 break
             fi
         fi
 
         if LOG_written; then
-            info -w -1 'Changes:'
+            _info -w - 'Changes:'
             info -w -- 'F '; info - - "$FILE_PATH"
             LOG_print;
         else
-            info -w -1 'Will write:'
+            _info -w - 'Will write:'
             info -w -- 'F '; info - - "$FILE_PATH"
             if [ "$silent_write" = 0 ]; then
                 info -w - '0:'; info - -- "$FILE"
@@ -2747,7 +2815,7 @@ __file_write_overwrite() {
         fi
 
         if ! file_write "$FILE_PATH" "$FILE"; then
-            err -r -1 'Write error:'
+            _err -r - 'Write error:'
             err -r -- 'F '; err - - "$FILE_PATH"
             exit 201
         fi
@@ -2758,7 +2826,7 @@ __file_write_overwrite() {
     fi
 
     if ! LOG_clear; then
-        err -r -1 'Log clear error.'
+        _err -r - 'Log clear error.'
         exit 201
     fi
 }
@@ -2775,12 +2843,12 @@ __file_write_overwrite() {
 #.
 __file_target_write() {
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE_PATH_TARGET" ]; then
-        err -r -1 'Missing FILE_PATH_TARGET.'
+        _err -r - 'Missing FILE_PATH_TARGET.'
         return 255
     fi
 
@@ -2798,11 +2866,11 @@ __file_target_write() {
         if [ "$always_write" = 0 ]; then
             if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
                 if [ -h "$FILE_PATH_TARGET" ]; then
-                    info -w -1 'Write avoided:'
+                    _info -w - 'Write avoided:'
                     info -g -- 'L '; info - - "$FILE_PATH_TARGET"
                     break
                 else
-                    info -w -1 'Write avoided:'
+                    _info -w - 'Write avoided:'
                     info -g -- 'F '; info - - "$FILE_PATH_TARGET"
                     break
                 fi
@@ -2817,12 +2885,12 @@ __file_target_write() {
             EEXIST "$FILE_PATH_TARGET"
         fi
 
-        info -w -1 'Will copy from/to:'
+        _info -w - 'Will copy from/to:'
         info -w -- 'F '; info - - "$FILE_PATH"
         info -w -- 'F '; info - - "$FILE_PATH_TARGET"
 
         if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            err -r -1 'Write error:'
+            _err -r - 'Write error:'
             err -r -- 'F '; err - - "$FILE_PATH_TARGET"
             exit 201
         fi
@@ -2845,12 +2913,12 @@ __file_target_write() {
 #.
 __file_target_write_overwrite() {
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE_PATH_TARGET" ]; then
-        err -r -1 'Missing FILE_PATH_TARGET.'
+        _err -r - 'Missing FILE_PATH_TARGET.'
         return 255
     fi
 
@@ -2868,23 +2936,23 @@ __file_target_write_overwrite() {
         if [ "$always_write" = 0 ]; then
             if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
                 if [ -h "$FILE_PATH_TARGET" ]; then
-                    info -w -1 'Write avoided:'
+                    _info -w - 'Write avoided:'
                     info -g -- 'L '; info - - "$FILE_PATH_TARGET"
                     break
                 else
-                    info -w -1 'Write avoided:'
+                    _info -w - 'Write avoided:'
                     info -g -- 'F '; info - - "$FILE_PATH_TARGET"
                     break
                 fi
             fi
         fi
 
-        info -w -1 'Will copy from/to:'
+        _info -w - 'Will copy from/to:'
         info -w -- 'F '; info - - "$FILE_PATH"
         info -w -- 'F '; info - - "$FILE_PATH_TARGET"
 
         if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            err -r -1 'Write error:'
+            _err -r - 'Write error:'
             err -r -- 'F '; err - - "$FILE_PATH_TARGET"
             exit 201
         fi
@@ -2912,7 +2980,7 @@ __loc_chattr() {
     cmd 'chattr' || return 0
 
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
@@ -2973,7 +3041,7 @@ __loc_chmod() {
     assert -eq "$#" 1 || return 255
 
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
@@ -3036,7 +3104,7 @@ __loc_chown() {
     assert -eq "$#" 1 || return 255
 
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
@@ -3095,17 +3163,17 @@ __loc_chown() {
 #.
 __loc_delete() {
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
     if ! exist "$FILE_PATH"; then
-        info -w -1 'Already deleted:'
+        _info -w - 'Already deleted:'
         info -g -- '> '; info - - "$FILE_PATH"
         return 0
     fi
 
-    info -w -1 'Will delete:'
+    _info -w - 'Will delete:'
     if [ -b "$FILE_PATH" ]; then
         info -w -- 'B ' # block file
     elif [ -c "$FILE_PATH" ]; then
@@ -3128,7 +3196,7 @@ __loc_delete() {
     info - - "$FILE_PATH"
 
     if ! loc_delete "$FILE_PATH"; then
-        err -r -1 'Removal error:'
+        _err -r - 'Removal error:'
         err -r -- '> '; err - - "$FILE_PATH"
         exit 201
     fi
@@ -3145,7 +3213,7 @@ __loc_delete() {
 #.
 __loc_empty() {
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
@@ -3173,7 +3241,7 @@ __loc_empty() {
     fi
 
     if dir "$FILE_PATH"; then
-        info -w -1 'Will empty:'
+        _info -w - 'Will empty:'
         info -w -- 'D '; info - - "$FILE_PATH"
 
         if [ "$silent_cmd" = 0 ]; then
@@ -3187,17 +3255,17 @@ __loc_empty() {
         fi
     else
         if exist "$FILE_PATH"; then
-            info -w -1 'Will truncate:'
+            _info -w - 'Will truncate:'
         else
-            info -w -1 'Will create:'
+            _info -w - 'Will create:'
         fi
         info -w -- 'F '; info - - "$FILE_PATH"
 
         if ! { : > "$FILE_PATH"; }; then
             if exist "$FILE_PATH"; then
-                err -r -1 'Truncation error:'
+                _err -r - 'Truncation error:'
             else
-                err -r -1 'Creation error:'
+                _err -r - 'Creation error:'
             fi
             err -r -- 'F '; err - - "$FILE_PATH"
             exit 201
@@ -3217,12 +3285,12 @@ __loc_empty() {
 #.
 __loc_target_link_overwrite() {
     if [ ! "$FILE_PATH" ]; then
-        err -r -1 'Missing FILE_PATH.'
+        _err -r - 'Missing FILE_PATH.'
         return 255
     fi
 
     if [ ! "$FILE_PATH_TARGET" ]; then
-        err -r -1 'Missing FILE_PATH_TARGET.'
+        _err -r - 'Missing FILE_PATH_TARGET.'
         return 255
     fi
 
@@ -3233,12 +3301,12 @@ __loc_target_link_overwrite() {
     fi
 
     while :; do
-        info -w -1 'Will symbolic link source/target:'
+        _info -w - 'Will symbolic link source/target:'
         info -w -- '? '; info - - "$FILE_PATH"
         info -w -- 'L '; info - - "$FILE_PATH_TARGET"
 
         if ! loc_link "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            err -r -1 'Write error:'
+            _err -r - 'Write error:'
             err -r -- 'L '; err - - "$FILE_PATH_TARGET"
             exit 201
         fi
@@ -3261,7 +3329,7 @@ __loc_target_link_overwrite() {
 __git_get() {
     assert -eq "$#" 1 || return 255
 
-    info -w -1 '__git_get():'
+    _info -w - '__git_get():'
     info -w -- 'U '; info - - "$1"
 
     set -- "$@" '--depth' '1'
@@ -3273,7 +3341,7 @@ __git_get() {
     fi
 
     if ! git clone "$@"; then
-        err -r -1 '__git_get(): Clone error:'
+        _err -r - '__git_get(): Clone error:'
         err -r -- 'U '; err - - "$1"
         exit 201
     fi
@@ -5849,19 +5917,19 @@ _conf_2() {
     if file '/etc/dhcpcd.conf'; then
         _dhcpcd_conf;
     else
-        info -y -1 'Skipped _dhcpcd_conf()'
+        _info -y - 'Skipped _dhcpcd_conf()'
     fi
 
     if file '/etc/dnsmasq.conf'; then
         _dnsmasq_conf;
     else
-        info -y -1 'Skipped _dnsmasq_conf()'
+        _info -y - 'Skipped _dnsmasq_conf()'
     fi
 
     if file '/etc/gai.conf'; then
         _gai_conf;
     else
-        info -y -1 'Skipped _gai_conf()'
+        _info -y - 'Skipped _gai_conf()'
     fi
 
     if cmd 'grub-install' && cmd 'grub-mkconfig'; then
@@ -5870,29 +5938,29 @@ _conf_2() {
         if file '/etc/default/grub'; then
             _grub_conf;
         else
-            info -y -1 'Skipped _grub_conf()'
+            _info -y - 'Skipped _grub_conf()'
         fi
     else
-        info -y -1 'Skipped _grub()'
-        info -y -1 'Skipped _grub_conf()'
+        _info -y - 'Skipped _grub()'
+        _info -y - 'Skipped _grub_conf()'
     fi
 
     if file '/etc/mkinitcpio.conf'; then
         _initramfs_conf;
     else
-        info -y -1 'Skipped _initramfs_conf()'
+        _info -y - 'Skipped _initramfs_conf()'
     fi
 
     if file '/etc/makepkg.conf'; then
         _makepkg_conf;
     else
-        info -y -1 'Skipped _makepkg_conf()'
+        _info -y - 'Skipped _makepkg_conf()'
     fi
 
     if file '/etc/pacman.conf'; then
         _pacman_conf;
     else
-        info -y -1 'Skipped _pacman_conf()'
+        _info -y - 'Skipped _pacman_conf()'
     fi
 
     if file '/etc/security/faillock.conf' && \
@@ -5901,7 +5969,7 @@ _conf_2() {
        file '/etc/pam.d/system-auth'; then
         _pam_conf;
     else
-        info -y -1 'Skipped _pam_conf()'
+        _info -y - 'Skipped _pam_conf()'
     fi
 }
 
@@ -5926,19 +5994,19 @@ _conf_3() {
     if file '/etc/bluetooth/main.conf'; then
         _bluez_conf;
     else
-        info -y -1 'Skipped _bluez_conf()'
+        _info -y - 'Skipped _bluez_conf()'
     fi
 
     if file "$home"/'.mozilla/firefox/profiles.ini'; then
         _firefox_conf;
     else
-        info -y -1 'Skipped _firefox_conf()'
+        _info -y - 'Skipped _firefox_conf()'
     fi
 
     if file '/etc/fuse.conf'; then
         _fuse_conf;
     else
-        info -y -1 'Skipped _fuse_conf()'
+        _info -y - 'Skipped _fuse_conf()'
     fi
 }
 
@@ -7076,7 +7144,7 @@ CONFIG
 
 _initramfs_conf() {
     if [ "$arch_linux" != 1 ]; then
-        info -w -1 'Nothing to be done.'
+        _info -w - 'Nothing to be done.'
 
         return 0
     fi
@@ -7763,7 +7831,7 @@ LOCALE_GEN
 
 _makepkg_conf() {
     if [ "$arch_linux" != 1 ]; then
-        info -w -1 'Nothing to be done.'
+        _info -w - 'Nothing to be done.'
 
         return 0
     fi
@@ -7916,7 +7984,7 @@ _nvram_clr() {
     set -- '/sys/firmware/efi/efivars'/Boot0*
 
     if ! exist "$1"; then
-        info -w -1 'No valid entries have been found.'
+        _info -w - 'No valid entries have been found.'
         return 0
     fi
 
@@ -7934,7 +8002,7 @@ _nvram_clr() {
         fi
     fi
 
-    info -w -1 'Will delete:'
+    _info -w - 'Will delete:'
     printf "%s\n" '/sys/firmware/efi/efivars'/BootOrder*
     printf "%s\n" '/sys/firmware/efi/efivars'/Boot0*
 
@@ -7956,7 +8024,7 @@ _nvram_clr() {
         EERROR 'Entry removal failed.'
     fi
 
-    info -w -1 'The entries were removed; firmware will attempt recovery.'
+    _info -w - 'The entries were removed; firmware will attempt recovery.'
 }
 
 _openal_conf() {
@@ -7975,7 +8043,7 @@ ALSOFT_CONF
 
 _pacman_conf() {
     if [ "$arch_linux" != 1 ]; then
-        info -w -1 'Nothing to be done.'
+        _info -w - 'Nothing to be done.'
 
         return 0
     fi
@@ -8635,7 +8703,7 @@ RIFLE_CONF
 
 _reflector() {
     if [ "$arch_linux" != 1 ]; then
-        info -w -1 'Nothing to be done.'
+        _info -w - 'Nothing to be done.'
 
         return 0
     fi
@@ -8649,7 +8717,7 @@ _reflector() {
 
 _reflector_bg() {
     if [ "$arch_linux" != 1 ]; then
-        info -w -1 'Nothing to be done.'
+        _info -w - 'Nothing to be done.'
 
         return 0
     fi
@@ -8661,7 +8729,7 @@ _reflector_bg() {
 $arch_mirlist
 MIRRORLIST
 
-    info -w -1 'Executing reflector. This may take some time.'
+    _info -w - 'Executing reflector. This may take some time.'
 
     { FILE=$(
         reflector --country Bulgaria \
@@ -8695,7 +8763,7 @@ MIRRORLIST
 
 _reflector_de() {
     if [ "$arch_linux" != 1 ]; then
-        info -w -1 'Nothing to be done.'
+        _info -w - 'Nothing to be done.'
 
         return 0
     fi
@@ -8707,7 +8775,7 @@ _reflector_de() {
 $arch_mirlist
 MIRRORLIST
 
-    info -w -1 'Executing reflector. This may take some time.'
+    _info -w - 'Executing reflector. This may take some time.'
 
     { FILE=$(
         reflector --country Germany \
@@ -9600,7 +9668,7 @@ _tz() {
     elif [ "$de" = 1 ]; then
         _tz_de;
     else
-        info -w -1 'Nothing to be done.'
+        _info -w - 'Nothing to be done.'
 
         return 0
     fi
@@ -9778,9 +9846,9 @@ err_handler() {
     fi
 
     if [ "$2" = INT ]; then
-        err -r -1 "${0##*/}: Received INT signal. ($1)"; kill -2 "$$"
+        err -r - "${0##*/}: Received INT signal. ($1)"; kill -2 "$$"
     else
-        err -r -1 "${0##*/}: Received $2 signal. ($1)"; exit "$1"
+        err -r - "${0##*/}: Received $2 signal. ($1)"; exit "$1"
     fi
 }
 
@@ -9950,19 +10018,19 @@ main() {
 
     { assert -min "$#" 1 && main_assert_ops "$@"; } || {
         if [ "$#" -eq 0 ]; then
-            err -r -1 'No operation has been specified.'
+            err -r - 'No operation has been specified.'
         else
-            err -r -1 "Unrecognized operation: '$_opd'"
+            err -r - "Unrecognized operation: '$_opd'"
         fi
 
-        ifs_map "$ops" info -w -1
-        info -w -1 'SWITCH: always_write ^AW'
-        info -w -1 'SWITCH: audio_hq_resamp ^AQ'
-        info -w -1 'SWITCH: force_write ^FW'
-        info -w -1 'SWITCH: gaming ^GG'
-        info -w -1 'SWITCH: ipv6 ^I6'
-        info -w -1 'SWITCH: silent_cmd ^SC'
-        info -w -1 'SWITCH: silent_write ^SW'
+        ifs_map "$ops" info -w -
+        info -w - 'SWITCH: always_write ^AW'
+        info -w - 'SWITCH: audio_hq_resamp ^AQ'
+        info -w - 'SWITCH: force_write ^FW'
+        info -w - 'SWITCH: gaming ^GG'
+        info -w - 'SWITCH: ipv6 ^I6'
+        info -w - 'SWITCH: silent_cmd ^SC'
+        info -w - 'SWITCH: silent_write ^SW'
 
         exit 2
     }
@@ -10020,7 +10088,7 @@ main() {
             exit "$1"
         }
 
-        eval "info -be -1 \"$1 -> ${opd}()\"; $opd"
+        eval "info -be - \"$1 -> ${opd}()\"; $opd"
         RC=$?
 
         # env reset
@@ -10034,7 +10102,7 @@ main() {
         trap - INT TERM EXIT
         set +e
 
-        info -g -1 'Done! (｡◕‿◕｡)'
+        info -g - 'Done! (｡◕‿◕｡)'
 
         shift
     done; readonly RC
