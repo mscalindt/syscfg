@@ -3183,11 +3183,11 @@ __loc_empty() {
 
         if [ "$silent_cmd" = 0 ]; then
             if ! rm -rf "$FILE_PATH"/*; then
-                err -red - 'rm: Failed.'; exit 235
+                _err -red - 'rm: Failed.'; exit 235
             fi
         else
             if ! rm -rf "$FILE_PATH"/* > /dev/null 2>&1; then
-                err -red - 'rm: Failed.'; exit 235
+                _err -red - 'rm: Failed.'; exit 235
             fi
         fi
     else
@@ -5764,22 +5764,22 @@ _clk_sync() {
     cmd 'ntpd' || ENOCMD 'ntpd'
 
     if [ "$silent_cmd" = 0 ]; then
-        info -white - 'ntpd:'
+        _info -white - 'ntpd:'
 
         if ! ntpd -gGLnq pool.ntp.org; then
-            err -red - 'ntpd: Failed.'; exit 235
+            _err -red - 'ntpd: Failed.'; exit 235
         fi
 
         if ! hwclock -w; then
-            err -red - 'hwclock: Failed to set the system clock.'; exit 235
+            _err -red - 'hwclock: Failed to set the system clock.'; exit 235
         fi
     else
         if ! ntpd -gGLnq pool.ntp.org > /dev/null 2>&1; then
-            err -red - 'ntpd: Failed.'; exit 235
+            _err -red - 'ntpd: Failed.'; exit 235
         fi
 
         if ! hwclock -w > /dev/null 2>&1; then
-            err -red - 'hwclock: Failed to set the system clock.'; exit 235
+            _err -red - 'hwclock: Failed to set the system clock.'; exit 235
         fi
     fi
 }
@@ -6827,20 +6827,20 @@ _grub() {
     cmd 'grub-mkconfig' || ENOCMD 'grub-mkconfig'
 
     if [ "$silent_cmd" = 0 ]; then
-        info -white - 'grub-install:'
+        _info -white - 'grub-install:'
 
         if ! grub-install --target=x86_64-efi \
                           --efi-directory="$efi_mnt" \
                           --boot-directory="$efi_mnt"/EFI/BOOT \
                           --removable \
                           --no-nvram; then
-            err -red - 'grub-install: Failed.'; exit 235
+            _err -red - 'grub-install: Failed.'; exit 235
         fi
 
-        info -white - 'grub-mkconfig:'
+        _info -white - 'grub-mkconfig:'
 
         if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg; then
-            err -red - 'grub-mkconfig: Failed.'; exit 235
+            _err -red - 'grub-mkconfig: Failed.'; exit 235
         fi
     else
         if ! grub-install --target=x86_64-efi \
@@ -6848,12 +6848,12 @@ _grub() {
                           --boot-directory="$efi_mnt"/EFI/BOOT \
                           --removable \
                           --no-nvram > /dev/null 2>&1; then
-            err -red - 'grub-install: Failed.'; exit 235
+            _err -red - 'grub-install: Failed.'; exit 235
         fi
 
         if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg \
              > /dev/null 2>&1; then
-            err -red - 'grub-mkconfig: Failed.'; exit 235
+            _err -red - 'grub-mkconfig: Failed.'; exit 235
         fi
     fi
 }
@@ -6914,15 +6914,15 @@ GRUB
     __file_write_overwrite;
 
     if [ "$silent_cmd" = 0 ]; then
-        info -white - 'grub-mkconfig:'
+        _info -white - 'grub-mkconfig:'
 
         if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg; then
-            err -red - 'grub-mkconfig: Failed.'; exit 235
+            _err -red - 'grub-mkconfig: Failed.'; exit 235
         fi
     else
         if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg \
              > /dev/null 2>&1; then
-            err -red - 'grub-mkconfig: Failed.'; exit 235
+            _err -red - 'grub-mkconfig: Failed.'; exit 235
         fi
     fi
 }
@@ -7116,14 +7116,14 @@ MKINITCPIO_CONF
     __file_write_overwrite;
 
     if [ "$silent_cmd" = 0 ]; then
-        info -white - 'mkinitcpio:'
+        _info -white - 'mkinitcpio:'
 
         if ! mkinitcpio -P; then
-            err -red - 'mkinitcpio: Failed to regenerate initramfs.'; exit 235
+            _err -red - 'mkinitcpio: Failed to regenerate initramfs.'; exit 235
         fi
     else
         if ! mkinitcpio -P > /dev/null 2>&1; then
-            err -red - 'mkinitcpio: Failed to regenerate initramfs.'; exit 235
+            _err -red - 'mkinitcpio: Failed to regenerate initramfs.'; exit 235
         fi
     fi
 }
@@ -7754,14 +7754,14 @@ LOCALE_GEN
     __file_write;
 
     if [ "$silent_cmd" = 0 ]; then
-        info -white - 'locale-gen:'
+        _info -white - 'locale-gen:'
 
         if ! locale-gen; then
-            err -red - 'locale-gen: Failed to generate locales.'; exit 235
+            _err -red - 'locale-gen: Failed to generate locales.'; exit 235
         fi
     else
         if ! locale-gen > /dev/null 2>&1; then
-            err -red - 'locale-gen: Failed to generate locales.'; exit 235
+            _err -red - 'locale-gen: Failed to generate locales.'; exit 235
         fi
     fi
 }
@@ -7946,12 +7946,12 @@ _nvram_clr() {
     if [ "$silent_cmd" = 0 ]; then
         if ! rm -f '/sys/firmware/efi/efivars'/BootOrder* \
                    '/sys/firmware/efi/efivars'/Boot0*; then
-            err -red - 'rm: Failed.'; exit 235
+            _err -red - 'rm: Failed.'; exit 235
         fi
     else
         if ! rm -f '/sys/firmware/efi/efivars'/BootOrder* \
                    '/sys/firmware/efi/efivars'/Boot0* > /dev/null 2>&1; then
-            err -red - 'rm: Failed.'; exit 235
+            _err -red - 'rm: Failed.'; exit 235
         fi
     fi
 
@@ -8691,8 +8691,8 @@ MIRRORLIST
     if [ "$FILE" ]; then
         FILE="$FILE$LF"
     else
-        err -red - 'reflector: Failed.'
-        err -red - 'Try again on a static network condition.'; exit 235
+        _err -red - 'reflector: Failed.'
+        _err -red - 'Try again on a static network condition.'; exit 235
     fi
 
     __file_write_overwrite;
@@ -8737,8 +8737,8 @@ MIRRORLIST
     if [ "$FILE" ]; then
         FILE="$FILE$LF"
     else
-        err -red - 'reflector: Failed.'
-        err -red - 'Try again on a static network condition.'; exit 235
+        _err -red - 'reflector: Failed.'
+        _err -red - 'Try again on a static network condition.'; exit 235
     fi
 
     __file_write_overwrite;
@@ -9629,11 +9629,11 @@ LOCALTIME
 
     if [ "$silent_cmd" = 0 ]; then
         if ! hwclock -w; then
-            err -red - 'hwclock: Failed to set the system clock.'; exit 235
+            _err -red - 'hwclock: Failed to set the system clock.'; exit 235
         fi
     else
         if ! hwclock -w > /dev/null 2>&1; then
-            err -red - 'hwclock: Failed to set the system clock.'; exit 235
+            _err -red - 'hwclock: Failed to set the system clock.'; exit 235
         fi
     fi
 }
@@ -9656,11 +9656,11 @@ LOCALTIME
 
     if [ "$silent_cmd" = 0 ]; then
         if ! hwclock -w; then
-            err -red - 'hwclock: Failed to set the system clock.'; exit 235
+            _err -red - 'hwclock: Failed to set the system clock.'; exit 235
         fi
     else
         if ! hwclock -w > /dev/null 2>&1; then
-            err -red - 'hwclock: Failed to set the system clock.'; exit 235
+            _err -red - 'hwclock: Failed to set the system clock.'; exit 235
         fi
     fi
 }
