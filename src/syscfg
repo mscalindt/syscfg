@@ -1,7 +1,23 @@
 #!/bin/sh
 # SPDX-License-Identifier: BSD-2-Clause
 # Copyright (C) 2021-2025 Dimitar Yurukov <mscalindt@protonmail.com>
+#
 # syscfg - declarative OS configuration
+#
+# Table of syscfg-defined error codes:
+# ---
+# (1): EERROR: "General operation error".
+# ---
+# STANDARD:
+# (1): EPERM: "Operation not permitted".
+# (2): ENOENT: "No such file or directory".
+# (17): EEXIST: "Already exists".
+# (20): ENOTDIR: "Not a directory".
+# (21): EISDIR: "Is a directory".
+# (22): EINVAL: "Invalid argument".
+# ---
+# SPECIAL CUSTOM:
+# (255): Bad function input/usage error.
 
 # Maintainer note for any functions in assertive_functions():
 #
@@ -1226,28 +1242,42 @@ unmount() {
 }
 
 # END utility_functions
-# START std_err_functions; 201-222
+# START std_err_functions
 
 #! .desc:
 # EPERM: "Operation not permitted"
 #! .rc:
-# 201
+# 1
 #.
 EPERM() { _err -red -- 'EPERM:'; }
 
 #! .desc:
 # ENOENT: "No such file or directory"
 #! .rc:
-# 202
+# 2
 #.
 ENOENT() { _err -red - 'ENOENT:'; }
+
+#! .desc:
+# EERROR: "General operation error"
+#! .params:
+# <"$1"+> - error
+#! .rc:
+# (1)
+# (255) bad input
+#.
+EERROR() {
+    assert -eq "$#" 1 || return 255
+
+    _err -red - "EERROR: $1"; exit 1
+}
 
 #! .desc:
 # EEXIST: "Already exists"
 #! .params:
 # <"$1"+> - absolute path
 #! .rc:
-# (217)
+# (17)
 # (255) bad input
 #.
 EEXIST() {
@@ -1262,7 +1292,7 @@ EEXIST() {
         shift
     done
 
-    exit 217
+    exit 17
 }
 
 #! .desc:
@@ -1270,7 +1300,7 @@ EEXIST() {
 #! .params:
 # <"$1"+> - absolute path
 #! .rc:
-# (220)
+# (20)
 # (255) bad input
 #.
 ENOTDIR() {
@@ -1285,7 +1315,7 @@ ENOTDIR() {
         shift
     done
 
-    exit 220
+    exit 20
 }
 
 #! .desc:
@@ -1293,7 +1323,7 @@ ENOTDIR() {
 #! .params:
 # <"$1"+> - absolute path
 #! .rc:
-# (221)
+# (21)
 # (255) bad input
 #.
 EISDIR() {
@@ -1308,18 +1338,18 @@ EISDIR() {
         shift
     done
 
-    exit 221
+    exit 21
 }
 
 #! .desc:
 # EINVAL: "Invalid argument"
 #! .rc:
-# 222
+# 22
 #.
 EINVAL() { _err -red - 'EINVAL:'; }
 
-# END std_err_functions; 201-222
-# START custom_err_functions; 230-235
+# END std_err_functions
+# START custom_err_functions; 230-234
 
 #! .desc:
 # ENOCMD: "No such command"
@@ -1429,21 +1459,7 @@ EPERMS() {
     exit 234
 }
 
-#! .desc:
-# EERROR: "General operation error"
-#! .params:
-# <"$1"+> - error
-#! .rc:
-# (235)
-# (255) bad input
-#.
-EERROR() {
-    assert -eq "$#" 1 || return 255
-
-    _err -red - "EERROR: $1"; exit 235
-}
-
-# END custom_err_functions; 230-235
+# END custom_err_functions; 230-234
 
 #! .desc:
 # Modify a file in-place according to format
@@ -2400,7 +2416,7 @@ __bin_write() {
             _err -red - 'File write error:'
             ftype "$FILE_PATH" -err
             err - - " $FILE_PATH"
-            exit 201
+            exit 1
         fi
     break; done
 
@@ -2462,7 +2478,7 @@ __bin_write_overwrite() {
             _err -red - 'File write error:'
             ftype "$FILE_PATH" -err
             err - - " $FILE_PATH"
-            exit 201
+            exit 1
         fi
     break; done
 
@@ -2496,7 +2512,7 @@ __dir_target_write() {
         ENOENT;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 202
+        exit 2
     fi
 
     dir "$FILE_PATH" || ENOTDIR "$FILE_PATH"
@@ -2538,7 +2554,7 @@ __dir_target_write() {
             _err -red - 'Directory write error:'
             ftype "$FILE_PATH_TARGET" -err
             err - - " $FILE_PATH_TARGET"
-            exit 201
+            exit 1
         fi
     break; done
 
@@ -2572,7 +2588,7 @@ __dir_target_write_overwrite() {
         ENOENT;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 202
+        exit 2
     fi
 
     dir "$FILE_PATH" || ENOTDIR "$FILE_PATH"
@@ -2606,7 +2622,7 @@ __dir_target_write_overwrite() {
             _err -red - 'Directory write error:'
             ftype "$FILE_PATH_TARGET" -err
             err - - " $FILE_PATH_TARGET"
-            exit 201
+            exit 1
         fi
     break; done
 
@@ -2635,7 +2651,7 @@ __FILE_PATH_preload() {
         ENOENT;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 202
+        exit 2
     fi
 
     FILE_preload "$FILE_PATH" || EREAD "$FILE_PATH"
@@ -2660,7 +2676,7 @@ __file_executable() {
         ENOENT;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 202
+        exit 2
     fi
 
     file "$FILE_PATH" || ENOTFILE "$FILE_PATH"
@@ -2735,7 +2751,7 @@ __file_write() {
             _err -red - 'File write error:'
             ftype "$FILE_PATH" -err
             err - - " $FILE_PATH"
-            exit 201
+            exit 1
         fi
     break; done
 
@@ -2745,7 +2761,7 @@ __file_write() {
 
     if ! LOG_clear; then
         _err -r - 'Log clear error.'
-        exit 201
+        exit 1
     fi
 }
 
@@ -2800,7 +2816,7 @@ __file_write_overwrite() {
             _err -red - 'File write error:'
             ftype "$FILE_PATH" -err
             err - - " $FILE_PATH"
-            exit 201
+            exit 1
         fi
     break; done
 
@@ -2810,7 +2826,7 @@ __file_write_overwrite() {
 
     if ! LOG_clear; then
         _err -red - 'Log clear error.'
-        exit 201
+        exit 1
     fi
 }
 
@@ -2839,7 +2855,7 @@ __file_target_write() {
         ENOENT;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 202
+        exit 2
     fi
 
     file "$FILE_PATH" || ENOTFILE "$FILE_PATH"
@@ -2874,7 +2890,7 @@ __file_target_write() {
             _err -red - 'File write error:'
             ftype "$FILE_PATH_TARGET" -err
             err - - " $FILE_PATH_TARGET"
-            exit 201
+            exit 1
         fi
     break; done
 
@@ -2908,7 +2924,7 @@ __file_target_write_overwrite() {
         ENOENT;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 202
+        exit 2
     fi
 
     file "$FILE_PATH" || ENOTFILE "$FILE_PATH"
@@ -2935,7 +2951,7 @@ __file_target_write_overwrite() {
             _err -red - 'File write error:'
             ftype "$FILE_PATH_TARGET" -info
             err - - " $FILE_PATH_TARGET"
-            exit 201
+            exit 1
         fi
     break; done
 
@@ -2969,7 +2985,7 @@ __loc_chattr() {
         ENOENT;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 202
+        exit 2
     fi
 
     if dir "$FILE_PATH"; then
@@ -2980,7 +2996,7 @@ __loc_chattr() {
         EINVAL;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 222
+        exit 22
     fi
 
     if [ "$silent_cmd" = 0 ]; then
@@ -3017,7 +3033,7 @@ __loc_chmod() {
         ENOENT;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 202
+        exit 2
     fi
 
     if dir "$FILE_PATH"; then
@@ -3028,7 +3044,7 @@ __loc_chmod() {
         EINVAL;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 222
+        exit 22
     fi
 
     chattr_remove "$FILE_PATH"
@@ -3067,7 +3083,7 @@ __loc_chown() {
         ENOENT;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 202
+        exit 2
     fi
 
     if dir "$FILE_PATH"; then
@@ -3078,7 +3094,7 @@ __loc_chown() {
         EINVAL;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 222
+        exit 22
     fi
 
     chattr_remove "$FILE_PATH"
@@ -3124,7 +3140,7 @@ __loc_delete() {
         _err -red - 'Removal error:'
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 201
+        exit 1
     fi
 }
 
@@ -3151,7 +3167,7 @@ __loc_empty() {
         EINVAL;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 222
+        exit 22
     fi
 
     if dir "$FILE_PATH"; then
@@ -3161,11 +3177,11 @@ __loc_empty() {
 
         if [ "$silent_cmd" = 0 ]; then
             if ! rm -rf "$FILE_PATH"/*; then
-                _err -red - 'rm: Failed.'; exit 235
+                _err -red - 'rm: Failed.'; exit 1
             fi
         else
             if ! rm -rf "$FILE_PATH"/* > /dev/null 2>&1; then
-                _err -red - 'rm: Failed.'; exit 235
+                _err -red - 'rm: Failed.'; exit 1
             fi
         fi
     else
@@ -3185,7 +3201,7 @@ __loc_empty() {
             fi
             ftype "$FILE_PATH" -err
             err - - " $FILE_PATH"
-            exit 201
+            exit 1
         fi
     fi
 }
@@ -3215,7 +3231,7 @@ __loc_target_link_overwrite() {
         ENOENT;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 202
+        exit 2
     fi
 
     while :; do
@@ -3229,7 +3245,7 @@ __loc_target_link_overwrite() {
             _err -red - 'Symbolic linking error:'
             ftype "$FILE_PATH_TARGET" -err
             err - - " $FILE_PATH_TARGET"
-            exit 201
+            exit 1
         fi
     break; done
 
@@ -3264,7 +3280,7 @@ __git_get() {
     if ! git clone "$@"; then
         _err -red - '__git_get(): Clone error:'
         err - - "$1"
-        exit 201
+        exit 1
     fi
 }
 
@@ -5751,19 +5767,19 @@ _clk_sync() {
         _info -white - 'ntpd:'
 
         if ! ntpd -gGLnq pool.ntp.org; then
-            _err -red - 'ntpd: Failed.'; exit 235
+            _err -red - 'ntpd: Failed.'; exit 1
         fi
 
         if ! hwclock -w; then
-            _err -red - 'hwclock: Failed to set the system clock.'; exit 235
+            _err -red - 'hwclock: Failed to set the system clock.'; exit 1
         fi
     else
         if ! ntpd -gGLnq pool.ntp.org > /dev/null 2>&1; then
-            _err -red - 'ntpd: Failed.'; exit 235
+            _err -red - 'ntpd: Failed.'; exit 1
         fi
 
         if ! hwclock -w > /dev/null 2>&1; then
-            _err -red - 'hwclock: Failed to set the system clock.'; exit 235
+            _err -red - 'hwclock: Failed to set the system clock.'; exit 1
         fi
     fi
 }
@@ -6467,7 +6483,7 @@ PROFILES_INI
         ENOENT;
         ftype "$FILE_PATH" -err
         err - - " $FILE_PATH"
-        exit 202
+        exit 2
     fi
 
     __git_get 'https://github.com/mscalindt/firefox-profile-private'
@@ -6751,7 +6767,7 @@ CPU
         ENOENT;
         ftype "$FILE_PATH"/cpu0/cpufreq/scaling_governor -err
         err - - " $FILE_PATH"/cpu0/cpufreq/scaling_governor
-        exit 202
+        exit 2
     fi
 
     for core in "$FILE_PATH"/cpu*/cpufreq/scaling_governor; do
@@ -6771,7 +6787,7 @@ SCALING_GOVERNOR
             _err -red - 'EERROR: Failed to set the governor:'
             ftype "$FILE_PATH" -err
             err - - " $FILE_PATH"
-            exit 235
+            exit 1
         fi
     done
 }
@@ -6786,7 +6802,7 @@ CPU
         ENOENT;
         ftype "$FILE_PATH"/cpu0/cpufreq/scaling_governor -err
         err - - " $FILE_PATH"/cpu0/cpufreq/scaling_governor
-        exit 202
+        exit 2
     fi
 
     for core in "$FILE_PATH"/cpu*/cpufreq/scaling_governor; do
@@ -6806,7 +6822,7 @@ SCALING_GOVERNOR
             _err -red - 'EERROR: Failed to set the governor:'
             ftype "$FILE_PATH" -err
             err - - " $FILE_PATH"
-            exit 235
+            exit 1
         fi
     done
 }
@@ -6825,13 +6841,13 @@ _grub() {
                           --boot-directory="$efi_mnt"/EFI/BOOT \
                           --removable \
                           --no-nvram; then
-            _err -red - 'grub-install: Failed.'; exit 235
+            _err -red - 'grub-install: Failed.'; exit 1
         fi
 
         _info -white - 'grub-mkconfig:'
 
         if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg; then
-            _err -red - 'grub-mkconfig: Failed.'; exit 235
+            _err -red - 'grub-mkconfig: Failed.'; exit 1
         fi
     else
         if ! grub-install --target=x86_64-efi \
@@ -6839,12 +6855,12 @@ _grub() {
                           --boot-directory="$efi_mnt"/EFI/BOOT \
                           --removable \
                           --no-nvram > /dev/null 2>&1; then
-            _err -red - 'grub-install: Failed.'; exit 235
+            _err -red - 'grub-install: Failed.'; exit 1
         fi
 
         if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg \
              > /dev/null 2>&1; then
-            _err -red - 'grub-mkconfig: Failed.'; exit 235
+            _err -red - 'grub-mkconfig: Failed.'; exit 1
         fi
     fi
 }
@@ -6908,12 +6924,12 @@ GRUB
         _info -white - 'grub-mkconfig:'
 
         if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg; then
-            _err -red - 'grub-mkconfig: Failed.'; exit 235
+            _err -red - 'grub-mkconfig: Failed.'; exit 1
         fi
     else
         if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg \
              > /dev/null 2>&1; then
-            _err -red - 'grub-mkconfig: Failed.'; exit 235
+            _err -red - 'grub-mkconfig: Failed.'; exit 1
         fi
     fi
 }
@@ -7110,11 +7126,11 @@ MKINITCPIO_CONF
         _info -white - 'mkinitcpio:'
 
         if ! mkinitcpio -P; then
-            _err -red - 'mkinitcpio: Failed to regenerate initramfs.'; exit 235
+            _err -red - 'mkinitcpio: Failed to regenerate initramfs.'; exit 1
         fi
     else
         if ! mkinitcpio -P > /dev/null 2>&1; then
-            _err -red - 'mkinitcpio: Failed to regenerate initramfs.'; exit 235
+            _err -red - 'mkinitcpio: Failed to regenerate initramfs.'; exit 1
         fi
     fi
 }
@@ -7748,11 +7764,11 @@ LOCALE_GEN
         _info -white - 'locale-gen:'
 
         if ! locale-gen; then
-            _err -red - 'locale-gen: Failed to generate locales.'; exit 235
+            _err -red - 'locale-gen: Failed to generate locales.'; exit 1
         fi
     else
         if ! locale-gen > /dev/null 2>&1; then
-            _err -red - 'locale-gen: Failed to generate locales.'; exit 235
+            _err -red - 'locale-gen: Failed to generate locales.'; exit 1
         fi
     fi
 }
@@ -7937,12 +7953,12 @@ _nvram_clr() {
     if [ "$silent_cmd" = 0 ]; then
         if ! rm -f '/sys/firmware/efi/efivars'/BootOrder* \
                    '/sys/firmware/efi/efivars'/Boot0*; then
-            _err -red - 'rm: Failed.'; exit 235
+            _err -red - 'rm: Failed.'; exit 1
         fi
     else
         if ! rm -f '/sys/firmware/efi/efivars'/BootOrder* \
                    '/sys/firmware/efi/efivars'/Boot0* > /dev/null 2>&1; then
-            _err -red - 'rm: Failed.'; exit 235
+            _err -red - 'rm: Failed.'; exit 1
         fi
     fi
 
@@ -8683,7 +8699,7 @@ MIRRORLIST
         FILE="$FILE$LF"
     else
         _err -red - 'reflector: Failed.'
-        _err -red - 'Try again on a static network condition.'; exit 235
+        _err -red - 'Try again on a static network condition.'; exit 1
     fi
 
     __file_write_overwrite;
@@ -8729,7 +8745,7 @@ MIRRORLIST
         FILE="$FILE$LF"
     else
         _err -red - 'reflector: Failed.'
-        _err -red - 'Try again on a static network condition.'; exit 235
+        _err -red - 'Try again on a static network condition.'; exit 1
     fi
 
     __file_write_overwrite;
@@ -9620,11 +9636,11 @@ LOCALTIME
 
     if [ "$silent_cmd" = 0 ]; then
         if ! hwclock -w; then
-            _err -red - 'hwclock: Failed to set the system clock.'; exit 235
+            _err -red - 'hwclock: Failed to set the system clock.'; exit 1
         fi
     else
         if ! hwclock -w > /dev/null 2>&1; then
-            _err -red - 'hwclock: Failed to set the system clock.'; exit 235
+            _err -red - 'hwclock: Failed to set the system clock.'; exit 1
         fi
     fi
 }
@@ -9647,11 +9663,11 @@ LOCALTIME
 
     if [ "$silent_cmd" = 0 ]; then
         if ! hwclock -w; then
-            _err -red - 'hwclock: Failed to set the system clock.'; exit 235
+            _err -red - 'hwclock: Failed to set the system clock.'; exit 1
         fi
     else
         if ! hwclock -w > /dev/null 2>&1; then
-            _err -red - 'hwclock: Failed to set the system clock.'; exit 235
+            _err -red - 'hwclock: Failed to set the system clock.'; exit 1
         fi
     fi
 }
