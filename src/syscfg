@@ -7778,7 +7778,8 @@ _nvram_clr() {
         return 0
     fi
 
-    set -- '/sys/firmware/efi/efivars'/BootOrder* \
+    set -- \
+        '/sys/firmware/efi/efivars'/BootOrder* \
         '/sys/firmware/efi/efivars'/Boot0*
 
     if cmd 'chattr'; then
