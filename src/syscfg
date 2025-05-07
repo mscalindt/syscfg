@@ -6737,7 +6737,8 @@ SCALING_GOVERNOR
 _grub() {
     is_uefi || EERROR 'Not in UEFI mode.'
 
-    __cmd grub-install --target=x86_64-efi \
+    __cmd grub-install \
+        --target=x86_64-efi \
         --efi-directory="$efi_mnt" \
         --boot-directory="$efi_mnt"/EFI/BOOT \
         --removable \
