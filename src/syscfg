@@ -1398,29 +1398,6 @@ ENOTFILE() {
 }
 
 #! .desc:
-# EFSFLAG: "Error setting filesystem flag(s)"
-#! .params:
-# <"$1"+> - absolute path
-#! .rc:
-# (233)
-# (255) bad input
-#.
-EFSFLAG() {
-    assert -min "$#" 1 || return 255
-
-    _err -red - 'EFSFLAG:'
-
-    while [ "$1" ]; do
-        ftype "$1" -err
-        err - - " $1"
-
-        shift
-    done
-
-    exit 233
-}
-
-#! .desc:
 # EPERMS: "Error setting permissions"
 #! .params:
 # <"$1"+> - absolute path
