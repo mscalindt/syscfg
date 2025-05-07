@@ -1349,23 +1349,7 @@ EISDIR() {
 EINVAL() { _err -red - 'EINVAL:'; }
 
 # END std_err_functions
-# START custom_err_functions; 230-234
-
-#! .desc:
-# ENOCMD: "No such command"
-#! .params:
-# <"$1"> - command
-#! .rc:
-# (230)
-# (255) bad input
-#.
-ENOCMD() {
-    assert -eq "$#" 1 || return 255
-
-    _err -red - "ENOCMD: $1"
-
-    exit 230
-}
+# START custom_err_functions; 231-234
 
 #! .desc:
 # EREAD: "Error reading file or directory"
@@ -1459,7 +1443,7 @@ EPERMS() {
     exit 234
 }
 
-# END custom_err_functions; 230-234
+# END custom_err_functions; 231-234
 
 #! .desc:
 # Modify a file in-place according to format
