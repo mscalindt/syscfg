@@ -8538,7 +8538,8 @@ _reflector_de() {
 $arch_mirlist
 MIRRORLIST
 
-    __FILE_cmd reflector --country Germany \
+    __FILE_cmd reflector \
+        --country Germany \
         --connection-timeout 1 \
         --download-timeout 60 \
         --protocol https \
