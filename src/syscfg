@@ -2488,6 +2488,70 @@ __bin_write_overwrite() {
 }
 
 #! .desc:
+# Run a command
+#! .params:
+# <"$1"> - command
+# <"$2">+ -  arguments
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__cmd() {
+    cmd "$1" || {
+        _err -red - 'Missing command:'
+
+        err -white -- '`'
+        err - -- "$1"
+        err -white - '`'
+
+        exit 127
+    }
+
+    _info -white - 'Running command:'
+
+    info -white -- '`'
+    info - -- "$@"
+    info -white - '`'
+
+    if [ "$silent_cmd" = 1 ]; then
+        command "$@" > /dev/null || return "$?"
+    else
+        command "$@" || return "$?"
+    fi
+}
+
+#! .desc:
+# Run a command and store output in $FILE
+#! .params:
+# <"$1"> - command
+# <"$2">+ -  arguments
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__FILE_cmd() {
+    cmd "$1" || {
+        _err -red - 'Missing command:'
+
+        err -white -- '`'
+        err - -- "$1"
+        err -white - '`'
+
+        exit 127
+    }
+
+    _info -white - 'Running command:'
+
+    info -white -- '`'
+    info - -- "$@"
+    info -white - '`'
+
+    FILE=$(command "$@")
+}
+
+#! .desc:
 # Copy a directory at the specified path
 #! .uses:
 # <FILE_PATH> $ - the directory
@@ -2681,15 +2745,7 @@ __file_executable() {
 
     file "$FILE_PATH" || ENOTFILE "$FILE_PATH"
 
-    if [ "$silent_cmd" = 0 ]; then
-        if ! chmod +x "$FILE_PATH"; then
-            EPERMS "$FILE_PATH"
-        fi
-    else
-        if ! chmod +x "$FILE_PATH" > /dev/null 2>&1; then
-            EPERMS "$FILE_PATH"
-        fi
-    fi
+    __cmd chmod +x "$FILE_PATH"
 }
 
 #! .desc:
@@ -2999,15 +3055,7 @@ __loc_chattr() {
         exit 22
     fi
 
-    if [ "$silent_cmd" = 0 ]; then
-        if ! chattr +"$1" "$FILE_PATH"; then
-            EFSFLAG "$FILE_PATH"
-        fi
-    else
-        if ! chattr +"$1" "$FILE_PATH" > /dev/null 2>&1; then
-            EFSFLAG "$FILE_PATH"
-        fi
-    fi
+    __cmd chattr +"$1" "$FILE_PATH"
 }
 
 #! .desc:
@@ -3049,15 +3097,7 @@ __loc_chmod() {
 
     chattr_remove "$FILE_PATH"
 
-    if [ "$silent_cmd" = 0 ]; then
-        if ! chmod "$1" "$FILE_PATH"; then
-            EPERMS "$FILE_PATH"
-        fi
-    else
-        if ! chmod "$1" "$FILE_PATH" > /dev/null 2>&1; then
-            EPERMS "$FILE_PATH"
-        fi
-    fi
+    __cmd chmod "$1" "$FILE_PATH"
 }
 
 #! .desc:
@@ -3099,15 +3139,7 @@ __loc_chown() {
 
     chattr_remove "$FILE_PATH"
 
-    if [ "$silent_cmd" = 0 ]; then
-        if ! chown -R "$uid":"$gid" "$FILE_PATH"; then
-            EPERMS "$FILE_PATH"
-        fi
-    else
-        if ! chown -R "$uid":"$gid" "$FILE_PATH" > /dev/null 2>&1; then
-            EPERMS "$FILE_PATH"
-        fi
-    fi
+    __cmd chown -R "$uid":"$gid" "$FILE_PATH"
 }
 
 #! .desc:
@@ -3175,15 +3207,7 @@ __loc_empty() {
         ftype "$FILE_PATH" -info
         info - - " $FILE_PATH"
 
-        if [ "$silent_cmd" = 0 ]; then
-            if ! rm -rf "$FILE_PATH"/*; then
-                _err -red - 'rm: Failed.'; exit 1
-            fi
-        else
-            if ! rm -rf "$FILE_PATH"/* > /dev/null 2>&1; then
-                _err -red - 'rm: Failed.'; exit 1
-            fi
-        fi
+        __cmd rm -rf "$FILE_PATH"/*
     else
         if exist "$FILE_PATH"; then
             _info -white - 'Will truncate:'
@@ -3266,9 +3290,6 @@ __loc_target_link_overwrite() {
 __git_get() {
     assert -eq "$#" 1 || return 255
 
-    _info -white - '__git_get():'
-    info - - "$1"
-
     set -- "$@" '--depth' '1'
 
     if str '/' "$1"; then
@@ -3277,11 +3298,7 @@ __git_get() {
         set -- "$@" "$tmpd/$1"
     fi
 
-    if ! git clone "$@"; then
-        _err -red - '__git_get(): Clone error:'
-        err - - "$1"
-        exit 1
-    fi
+    __cmd git clone "$@"
 }
 
 # $m533ia assertion:
@@ -5760,28 +5777,8 @@ MAIN_CONF
 
 # RTC clock sync using the closest NTP server (pool.ntp.org)
 _clk_sync() {
-    cmd 'hwclock' || ENOCMD 'hwclock'
-    cmd 'ntpd' || ENOCMD 'ntpd'
-
-    if [ "$silent_cmd" = 0 ]; then
-        _info -white - 'ntpd:'
-
-        if ! ntpd -gGLnq pool.ntp.org; then
-            _err -red - 'ntpd: Failed.'; exit 1
-        fi
-
-        if ! hwclock -w; then
-            _err -red - 'hwclock: Failed to set the system clock.'; exit 1
-        fi
-    else
-        if ! ntpd -gGLnq pool.ntp.org > /dev/null 2>&1; then
-            _err -red - 'ntpd: Failed.'; exit 1
-        fi
-
-        if ! hwclock -w > /dev/null 2>&1; then
-            _err -red - 'hwclock: Failed to set the system clock.'; exit 1
-        fi
-    fi
+    __cmd ntpd -gGLnq pool.ntp.org
+    __cmd hwclock -w
 }
 
 # Software configuration - stage 1
@@ -6472,8 +6469,6 @@ FP_CONF
 }
 
 _firefox_conf() {
-    cmd 'git' || ENOCMD 'git'
-
     FILE_PATH \
 <<PROFILES_INI
 $home/.mozilla/firefox/profiles.ini
@@ -6830,39 +6825,14 @@ SCALING_GOVERNOR
 # "Removable" GRUB UEFI installation (NVRAM-less... when no NVRAM entries)
 _grub() {
     is_uefi || EERROR 'Not in UEFI mode.'
-    cmd 'grub-install' || ENOCMD 'grub-install'
-    cmd 'grub-mkconfig' || ENOCMD 'grub-mkconfig'
 
-    if [ "$silent_cmd" = 0 ]; then
-        _info -white - 'grub-install:'
+    __cmd grub-install --target=x86_64-efi \
+        --efi-directory="$efi_mnt" \
+        --boot-directory="$efi_mnt"/EFI/BOOT \
+        --removable \
+        --no-nvram
 
-        if ! grub-install --target=x86_64-efi \
-                          --efi-directory="$efi_mnt" \
-                          --boot-directory="$efi_mnt"/EFI/BOOT \
-                          --removable \
-                          --no-nvram; then
-            _err -red - 'grub-install: Failed.'; exit 1
-        fi
-
-        _info -white - 'grub-mkconfig:'
-
-        if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg; then
-            _err -red - 'grub-mkconfig: Failed.'; exit 1
-        fi
-    else
-        if ! grub-install --target=x86_64-efi \
-                          --efi-directory="$efi_mnt" \
-                          --boot-directory="$efi_mnt"/EFI/BOOT \
-                          --removable \
-                          --no-nvram > /dev/null 2>&1; then
-            _err -red - 'grub-install: Failed.'; exit 1
-        fi
-
-        if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg \
-             > /dev/null 2>&1; then
-            _err -red - 'grub-mkconfig: Failed.'; exit 1
-        fi
-    fi
+    __cmd grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg
 }
 
 # To simulate a config file, we drop-in our replacement of /etc/default/grub,
@@ -6875,7 +6845,6 @@ _grub() {
 # replacement.
 _grub_conf() {
     is_uefi || EERROR 'Not in UEFI mode.'
-    cmd 'grub-mkconfig' || ENOCMD 'grub-mkconfig'
 
     FILE_PATH \
 <<'GRUB'
@@ -6920,18 +6889,7 @@ GRUB
 
     __file_write_overwrite;
 
-    if [ "$silent_cmd" = 0 ]; then
-        _info -white - 'grub-mkconfig:'
-
-        if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg; then
-            _err -red - 'grub-mkconfig: Failed.'; exit 1
-        fi
-    else
-        if ! grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg \
-             > /dev/null 2>&1; then
-            _err -red - 'grub-mkconfig: Failed.'; exit 1
-        fi
-    fi
+    __cmd grub-mkconfig -o "$efi_mnt"/EFI/BOOT/grub/grub.cfg
 }
 
 _gtk_conf() {
@@ -7093,8 +7051,6 @@ _initramfs_conf() {
         return 0
     fi
 
-    cmd 'mkinitcpio' || ENOCMD 'mkinitcpio'
-
     FILE_PATH \
 <<'MKINITCPIO_CONF'
 /etc/mkinitcpio.conf
@@ -7122,17 +7078,7 @@ MKINITCPIO_CONF
 
     __file_write_overwrite;
 
-    if [ "$silent_cmd" = 0 ]; then
-        _info -white - 'mkinitcpio:'
-
-        if ! mkinitcpio -P; then
-            _err -red - 'mkinitcpio: Failed to regenerate initramfs.'; exit 1
-        fi
-    else
-        if ! mkinitcpio -P > /dev/null 2>&1; then
-            _err -red - 'mkinitcpio: Failed to regenerate initramfs.'; exit 1
-        fi
-    fi
+    __cmd mkinitcpio -P
 }
 
 _iwd_conf() {
@@ -7733,8 +7679,6 @@ KVARCDARK__KVCONFIG
 
 # English locale config
 _locale() {
-    cmd 'locale-gen' || ENOCMD 'locale-gen'
-
     FILE_PATH \
 <<'LOCALE_CONF'
 /etc/locale.conf
@@ -7760,17 +7704,7 @@ LOCALE_GEN
 
     __file_write;
 
-    if [ "$silent_cmd" = 0 ]; then
-        _info -white - 'locale-gen:'
-
-        if ! locale-gen; then
-            _err -red - 'locale-gen: Failed to generate locales.'; exit 1
-        fi
-    else
-        if ! locale-gen > /dev/null 2>&1; then
-            _err -red - 'locale-gen: Failed to generate locales.'; exit 1
-        fi
-    fi
+    __cmd locale-gen
 }
 
 _makepkg_conf() {
@@ -7935,32 +7869,11 @@ _nvram_clr() {
     set -- '/sys/firmware/efi/efivars'/Boot*
 
     if cmd 'chattr'; then
-        if [ "$silent_cmd" = 0 ]; then
-            if ! chattr -ia "$@"; then
-                EFSFLAG "$@"
-            fi
-        else
-            if ! chattr -ia "$@" > /dev/null 2>&1; then
-                EFSFLAG "$@"
-            fi
-        fi
+        __cmd chattr -ia "$@"
     fi
 
-    _info -white - 'Will delete:'
-    printf "%s\n" '/sys/firmware/efi/efivars'/BootOrder*
-    printf "%s\n" '/sys/firmware/efi/efivars'/Boot0*
-
-    if [ "$silent_cmd" = 0 ]; then
-        if ! rm -f '/sys/firmware/efi/efivars'/BootOrder* \
-                   '/sys/firmware/efi/efivars'/Boot0*; then
-            _err -red - 'rm: Failed.'; exit 1
-        fi
-    else
-        if ! rm -f '/sys/firmware/efi/efivars'/BootOrder* \
-                   '/sys/firmware/efi/efivars'/Boot0* > /dev/null 2>&1; then
-            _err -red - 'rm: Failed.'; exit 1
-        fi
-    fi
+    __cmd rm -f '/sys/firmware/efi/efivars'/BootOrder* \
+        '/sys/firmware/efi/efivars'/Boot0*
 
     set -- '/sys/firmware/efi/efivars'/Boot0*
 
@@ -8666,26 +8579,20 @@ _reflector_bg() {
         return 0
     fi
 
-    cmd 'reflector' || ENOCMD 'reflector'
-
     FILE_PATH \
 <<MIRRORLIST
 $arch_mirlist
 MIRRORLIST
 
-    _info -white - 'Executing reflector. This may take some time.'
-
-    { FILE=$(
-        reflector --country Bulgaria \
-                  --connection-timeout 1 \
-                  --download-timeout 20 \
-                  --protocol https \
-                  --completion-percent 100 \
-                  --sort rate \
-                  --threads 8 \
-                  --latest 10 \
-                  --number 3 2> /dev/null
-    ); } 2> /dev/null || :
+    __FILE_cmd reflector --country Bulgaria \
+        --connection-timeout 1 \
+        --download-timeout 20 \
+        --protocol https \
+        --completion-percent 100 \
+        --sort rate \
+        --threads 8 \
+        --latest 10 \
+        --number 3
 
     FILE=$(
         printf "%s\n" "$FILE" | while IFS= read -r LINE; do
@@ -8712,26 +8619,20 @@ _reflector_de() {
         return 0
     fi
 
-    cmd 'reflector' || ENOCMD 'reflector'
-
     FILE_PATH \
 <<MIRRORLIST
 $arch_mirlist
 MIRRORLIST
 
-    _info -white - 'Executing reflector. This may take some time.'
-
-    { FILE=$(
-        reflector --country Germany \
-                  --connection-timeout 1 \
-                  --download-timeout 60 \
-                  --protocol https \
-                  --completion-percent 100 \
-                  --sort rate \
-                  --threads 8 \
-                  --latest 15 \
-                  --number 3 2> /dev/null
-    ); } 2> /dev/null || :
+    __FILE_cmd reflector --country Germany \
+        --connection-timeout 1 \
+        --download-timeout 60 \
+        --protocol https \
+        --completion-percent 100 \
+        --sort rate \
+        --threads 8 \
+        --latest 15 \
+        --number 3
 
     FILE=$(
         printf "%s\n" "$FILE" | while IFS= read -r LINE; do
@@ -9620,8 +9521,6 @@ _tz() {
 
 # Bulgarian timezone (Europe/Sofia)
 _tz_bg() {
-    cmd 'hwclock' || ENOCMD 'hwclock'
-
     FILE_PATH \
 <<'SOFIA'
 /usr/share/zoneinfo/Europe/Sofia
@@ -9634,21 +9533,11 @@ LOCALTIME
 
     __loc_target_link_overwrite;
 
-    if [ "$silent_cmd" = 0 ]; then
-        if ! hwclock -w; then
-            _err -red - 'hwclock: Failed to set the system clock.'; exit 1
-        fi
-    else
-        if ! hwclock -w > /dev/null 2>&1; then
-            _err -red - 'hwclock: Failed to set the system clock.'; exit 1
-        fi
-    fi
+    __cmd hwclock -w
 }
 
 # German timezone (Europe/Berlin)
 _tz_de() {
-    cmd 'hwclock' || ENOCMD 'hwclock'
-
     FILE_PATH \
 <<'BERLIN'
 /usr/share/zoneinfo/Europe/Berlin
@@ -9661,15 +9550,7 @@ LOCALTIME
 
     __loc_target_link_overwrite;
 
-    if [ "$silent_cmd" = 0 ]; then
-        if ! hwclock -w; then
-            _err -red - 'hwclock: Failed to set the system clock.'; exit 1
-        fi
-    else
-        if ! hwclock -w > /dev/null 2>&1; then
-            _err -red - 'hwclock: Failed to set the system clock.'; exit 1
-        fi
-    fi
+    __cmd hwclock -w
 }
 
 _xdg_conf() {
