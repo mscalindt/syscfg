@@ -6803,9 +6803,10 @@ SCALING_GOVERNOR
         __file_write_overwrite;
 
         if ! file_equiv "$FILE_PATH" "$FILE"; then
-            EERROR 'Failed to set the governor:'
+            _err -red - 'EERROR: Failed to set the governor:'
             ftype "$FILE_PATH" -err
             err - - " $FILE_PATH"
+            exit 235
         fi
     done
 }
