@@ -1349,7 +1349,7 @@ EISDIR() {
 EINVAL() { _err -red - 'EINVAL:'; }
 
 # END std_err_functions
-# START custom_err_functions; 231-232
+# START custom_err_functions; 231
 
 #! .desc:
 # EREAD: "Error reading file or directory"
@@ -1374,30 +1374,7 @@ EREAD() {
     exit 231
 }
 
-#! .desc:
-# ENOTFILE: "Not a file"
-#! .params:
-# <"$1"+> - absolute path
-#! .rc:
-# (232)
-# (255) bad input
-#.
-ENOTFILE() {
-    assert -min "$#" 1 || return 255
-
-    _err -red - 'ENOTFILE:'
-
-    while [ "$1" ]; do
-        ftype "$1" -err
-        err - - " $1"
-
-        shift
-    done
-
-    exit 232
-}
-
-# END custom_err_functions; 231-232
+# END custom_err_functions; 231
 
 #! .desc:
 # Modify a file in-place according to format
@@ -2681,7 +2658,12 @@ __file_executable() {
         exit 2
     fi
 
-    file "$FILE_PATH" || ENOTFILE "$FILE_PATH"
+    file "$FILE_PATH" || {
+        EINVAL;
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
+        exit 22
+    }
 
     __cmd chmod +x "$FILE_PATH"
 }
@@ -2852,7 +2834,12 @@ __file_target_write() {
         exit 2
     fi
 
-    file "$FILE_PATH" || ENOTFILE "$FILE_PATH"
+    file "$FILE_PATH" || {
+        EINVAL;
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
+        exit 22
+    }
 
     readable "$FILE_PATH" || EREAD "$FILE_PATH"
 
@@ -2921,7 +2908,12 @@ __file_target_write_overwrite() {
         exit 2
     fi
 
-    file "$FILE_PATH" || ENOTFILE "$FILE_PATH"
+    file "$FILE_PATH" || {
+        EINVAL;
+        ftype "$FILE_PATH" -err
+        err - - " $FILE_PATH"
+        exit 22
+    }
 
     readable "$FILE_PATH" || EREAD "$FILE_PATH"
 
