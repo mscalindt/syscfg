@@ -1349,7 +1349,7 @@ EISDIR() {
 EINVAL() { _err -red - 'EINVAL:'; }
 
 # END std_err_functions
-# START custom_err_functions; 231-234
+# START custom_err_functions; 231-232
 
 #! .desc:
 # EREAD: "Error reading file or directory"
@@ -1397,30 +1397,7 @@ ENOTFILE() {
     exit 232
 }
 
-#! .desc:
-# EPERMS: "Error setting permissions"
-#! .params:
-# <"$1"+> - absolute path
-#! .rc:
-# (234)
-# (255) bad input
-#.
-EPERMS() {
-    assert -min "$#" 1 || return 255
-
-    _err -red - 'EPERMS:'
-
-    while [ "$1" ]; do
-        ftype "$1" -err
-        err - - " $1"
-
-        shift
-    done
-
-    exit 234
-}
-
-# END custom_err_functions; 231-234
+# END custom_err_functions; 231-232
 
 #! .desc:
 # Modify a file in-place according to format
@@ -2382,7 +2359,7 @@ __bin_write() {
     break; done
 
     if ! loc_own_user "$FILE_PATH"; then
-        EPERMS "$FILE_PATH"
+        EERROR 'Failed to set user permissions.'
     fi
 }
 
@@ -2444,7 +2421,7 @@ __bin_write_overwrite() {
     break; done
 
     if ! loc_own_user "$FILE_PATH"; then
-        EPERMS "$FILE_PATH"
+        EERROR 'Failed to set user permissions.'
     fi
 }
 
@@ -2584,7 +2561,7 @@ __dir_target_write() {
     break; done
 
     if ! loc_own_user "$FILE_PATH_TARGET"; then
-        EPERMS "$FILE_PATH_TARGET"
+        EERROR 'Failed to set user permissions.'
     fi
 }
 
@@ -2652,7 +2629,7 @@ __dir_target_write_overwrite() {
     break; done
 
     if ! loc_own_user "$FILE_PATH_TARGET"; then
-        EPERMS "$FILE_PATH_TARGET"
+        EERROR 'Failed to set user permissions.'
     fi
 }
 
@@ -2773,7 +2750,7 @@ __file_write() {
     break; done
 
     if ! loc_own_user "$FILE_PATH"; then
-        EPERMS "$FILE_PATH"
+        EERROR 'Failed to set user permissions.'
     fi
 
     if ! LOG_clear; then
@@ -2838,7 +2815,7 @@ __file_write_overwrite() {
     break; done
 
     if ! loc_own_user "$FILE_PATH"; then
-        EPERMS "$FILE_PATH"
+        EERROR 'Failed to set user permissions.'
     fi
 
     if ! LOG_clear; then
@@ -2912,7 +2889,7 @@ __file_target_write() {
     break; done
 
     if ! loc_own_user "$FILE_PATH_TARGET"; then
-        EPERMS "$FILE_PATH_TARGET"
+        EERROR 'Failed to set user permissions.'
     fi
 }
 
@@ -2973,7 +2950,7 @@ __file_target_write_overwrite() {
     break; done
 
     if ! loc_own_user "$FILE_PATH_TARGET"; then
-        EPERMS "$FILE_PATH_TARGET"
+        EERROR 'Failed to set user permissions.'
     fi
 }
 
@@ -3235,7 +3212,7 @@ __loc_target_link_overwrite() {
     break; done
 
     if ! loc_own_user "$FILE_PATH_TARGET"; then
-        EPERMS "$FILE_PATH_TARGET"
+        EERROR 'Failed to set user permissions.'
     fi
 }
 
