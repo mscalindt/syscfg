@@ -9828,7 +9828,7 @@ main() {
             exit "$1"
         }
 
-        eval "info -blue - \"$1 -> ${opd}()\"; $opd"
+        eval "info -blue - \"$1 -> ${opd}()\"; ( $opd; )"
         RC=$?
 
         # env reset
