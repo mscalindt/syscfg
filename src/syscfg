@@ -6385,13 +6385,6 @@ _firefox_conf() {
 $home/.mozilla/firefox/profiles.ini
 PROFILES_INI
 
-    if ! exist "$FILE_PATH"; then
-        ENOENT;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
-        exit 2
-    fi
-
     __git_get 'https://github.com/mscalindt/firefox-profile-private'
 
     FILE_PATH \
