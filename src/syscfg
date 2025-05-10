@@ -10332,7 +10332,7 @@ main() {
     # Data
     gid='1000'
     group='mscalindt'
-    hostname='generic'
+    hostname='syscfg'
     uid='1000'
     user='mscalindt'
 
