@@ -8706,22 +8706,7 @@ input type:touchpad {
 input type:keyboard {
     xkb_layout us,bg(phonetic)
     xkb_model pc86
-CONFIG
-
-    if [ "$gaming" = 1 ]; then
-        FILE \
-<<'CONFIG'
-    xkb_options grp:alt_shift_toggle
-CONFIG
-    else
-        FILE \
-<<'CONFIG'
     xkb_options grp:alt_shift_toggle,caps:super
-CONFIG
-    fi
-
-    FILE \
-<<'CONFIG'
     repeat_delay 222
     repeat_rate 50
 }
@@ -8809,17 +8794,7 @@ mode "nointercept" {
 bindsym $mod+Shift+Escape mode "nointercept"
 
 bar {
-CONFIG
-
-    if [ "$gaming" != 1 ]; then
-        FILE \
-<<'CONFIG'
     status_command while /home/$USER/.config/sway/status; do sleep 0.1; done
-CONFIG
-    fi
-
-    FILE \
-<<'CONFIG'
     position top
     font pango:Source Code Pro 10
 
@@ -9616,8 +9591,6 @@ main() {
     audio_hq_resamp=0
     # Bluetooth support (D-Bus dependent)
     bluetooth=1
-    # Configure specific applications to be suited for gaming
-    gaming=0
     # Configure and prefer IPv6 over IPv4:
     ipv6=0
     # XDG portals support (D-Bus dependent protocols)
@@ -9735,7 +9708,6 @@ main() {
     # Enable always_write from cmdline:    ^AW as $1
     # Enable audio_hq_resamp from cmdline: ^AQ as $1
     # Enable force_write from cmdline:     ^FW as $1
-    # Enable gaming from cmdline:          ^GG as $1
     # Enable ipv6 from cmdline:            ^I6 as $1
     # Enable silent_cmd from cmdline:      ^SC as $1
     # Enable silent_write from cmdline:    ^SW as $1
@@ -9743,7 +9715,6 @@ main() {
         '^AW') always_write=1; shift && continue ;;
         '^AQ') audio_hq_resamp=1; shift && continue ;;
         '^FW') force_write=1; shift && continue ;;
-        '^GG') gaming=1; shift && continue ;;
         '^I6') ipv6=1; shift && continue ;;
         '^SC') silent_cmd=1; shift && continue ;;
         '^SW') silent_write=1; shift && continue ;;
@@ -9751,7 +9722,7 @@ main() {
     esac done
 
     readonly tmpd tmpf logf always_write force_write m533ia \
-             arch_linux audio_hq_resamp bluetooth browser dns dns0 gaming init \
+             arch_linux audio_hq_resamp bluetooth browser dns dns0 init \
              ipv6 qt_theme display_server wm bg de user home efi_mnt \
              arch_mirlist ops audio_server hostname wland audio_playerd portal \
              silent_cmd silent_write gid group uid pipewire_manager
@@ -9767,7 +9738,6 @@ main() {
         info -white - 'SWITCH: always_write ^AW'
         info -white - 'SWITCH: audio_hq_resamp ^AQ'
         info -white - 'SWITCH: force_write ^FW'
-        info -white - 'SWITCH: gaming ^GG'
         info -white - 'SWITCH: ipv6 ^I6'
         info -white - 'SWITCH: silent_cmd ^SC'
         info -white - 'SWITCH: silent_write ^SW'
