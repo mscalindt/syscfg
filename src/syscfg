@@ -6709,13 +6709,6 @@ schedutil
 SCALING_GOVERNOR
 
         __file_write_overwrite;
-
-        if ! file_equiv "$FILE_PATH" "$FILE"; then
-            _err -red - 'EERROR: Failed to set the governor:'
-            ftype "$FILE_PATH" -err || :
-            err - - " $FILE_PATH"
-            exit 1
-        fi
     done
 }
 
