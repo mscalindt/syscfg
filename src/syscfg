@@ -1286,7 +1286,7 @@ EEXIST() {
     _err -red - 'EEXIST:'
 
     while [ "$1" ]; do
-        ftype "$1" -err
+        ftype "$1" -err || :
         err - - " $1"
 
         shift
@@ -1309,7 +1309,7 @@ ENOTDIR() {
     _err -red - 'ENOTDIR:'
 
     while [ "$1" ]; do
-        ftype "$1" -err
+        ftype "$1" -err || :
         err - - " $1"
 
         shift
@@ -1332,7 +1332,7 @@ EISDIR() {
     _err -red - 'EISDIR:'
 
     while [ "$1" ]; do
-        ftype "$1" -err
+        ftype "$1" -err || :
         err - - " $1"
 
         shift
@@ -2262,7 +2262,7 @@ __bin_write() {
 
     if [ ! "$FILE" ]; then
         _info -white - 'Empty FILE. File write cancelled:'
-        ftype "$FILE_PATH" -info
+        ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
         return 0
     fi
@@ -2276,7 +2276,7 @@ __bin_write() {
         if [ "$always_write" = 0 ]; then
             if bin_equiv "$FILE_PATH" "$FILE"; then
                 _info -white - 'File write avoided:'
-                ftype "$FILE_PATH" -info
+                ftype "$FILE_PATH" -info || :
                 info - - " $FILE_PATH"
                 break
             fi
@@ -2291,7 +2291,7 @@ __bin_write() {
         fi
 
         _info -white - 'Will write a file:'
-        ftype "$FILE_PATH" -info
+        ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
 
         (
@@ -2303,7 +2303,7 @@ __bin_write() {
 
         if ! file_write_octal "$FILE_PATH" "$FILE"; then
             _err -red - 'File write error:'
-            ftype "$FILE_PATH" -err
+            ftype "$FILE_PATH" -err || :
             err - - " $FILE_PATH"
             exit 1
         fi
@@ -2332,7 +2332,7 @@ __bin_write_overwrite() {
 
     if [ ! "$FILE" ]; then
         _info -white - 'Empty FILE. File write cancelled:'
-        ftype "$FILE_PATH" -info
+        ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
         return 0
     fi
@@ -2346,14 +2346,14 @@ __bin_write_overwrite() {
         if [ "$always_write" = 0 ]; then
             if bin_equiv "$FILE_PATH" "$FILE"; then
                 _info -white - 'File write avoided:'
-                ftype "$FILE_PATH" -info
+                ftype "$FILE_PATH" -info || :
                 info - - " $FILE_PATH"
                 break
             fi
         fi
 
         _info -white - 'Will write a file:'
-        ftype "$FILE_PATH" -info
+        ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
 
         (
@@ -2365,7 +2365,7 @@ __bin_write_overwrite() {
 
         if ! file_write_octal "$FILE_PATH" "$FILE"; then
             _err -red - 'File write error:'
-            ftype "$FILE_PATH" -err
+            ftype "$FILE_PATH" -err || :
             err - - " $FILE_PATH"
             exit 1
         fi
@@ -2463,14 +2463,14 @@ __dir_target_write() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 2
     fi
 
     dir "$FILE_PATH" && readable "$FILE_PATH" || {
         EINVAL;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 22
     }
@@ -2485,9 +2485,9 @@ __dir_target_write() {
         fi
 
         _info -white - 'Will copy from/to:'
-        ftype "$FILE_PATH" -info
+        ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
-        ftype "$FILE_PATH_TARGET" -info
+        ftype "$FILE_PATH_TARGET" -info || :
         info - - " $FILE_PATH_TARGET"
 
         info -white -- '> '
@@ -2508,7 +2508,7 @@ __dir_target_write() {
 
         if ! dir_write "$FILE_PATH" "$FILE_PATH_TARGET"; then
             _err -red - 'Directory write error:'
-            ftype "$FILE_PATH_TARGET" -err
+            ftype "$FILE_PATH_TARGET" -err || :
             err - - " $FILE_PATH_TARGET"
             exit 1
         fi
@@ -2542,23 +2542,23 @@ __dir_target_write_overwrite() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 2
     fi
 
     dir "$FILE_PATH" && readable "$FILE_PATH" || {
         EINVAL;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 22
     }
 
     while :; do
         _info -white - 'Will copy from/to:'
-        ftype "$FILE_PATH" -info
+        ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
-        ftype "$FILE_PATH_TARGET" -info
+        ftype "$FILE_PATH_TARGET" -info || :
         info - - " $FILE_PATH_TARGET"
 
         info -white -- '> '
@@ -2579,7 +2579,7 @@ __dir_target_write_overwrite() {
 
         if ! dir_write "$FILE_PATH" "$FILE_PATH_TARGET"; then
             _err -red - 'Directory write error:'
-            ftype "$FILE_PATH_TARGET" -err
+            ftype "$FILE_PATH_TARGET" -err || :
             err - - " $FILE_PATH_TARGET"
             exit 1
         fi
@@ -2608,14 +2608,14 @@ __FILE_PATH_preload() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 2
     fi
 
     FILE_preload "$FILE_PATH" || {
         _err -red - 'Error reading file:'
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 1
     }
@@ -2638,14 +2638,14 @@ __file_executable() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 2
     fi
 
     file "$FILE_PATH" || {
         EINVAL;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 22
     }
@@ -2671,7 +2671,7 @@ __file_write() {
 
     if [ ! "$FILE" ]; then
         _info -white - 'Empty FILE. File write cancelled:'
-        ftype "$FILE_PATH" -info
+        ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
         return 0
     fi
@@ -2680,7 +2680,7 @@ __file_write() {
         if [ "$always_write" = 0 ]; then
             if file_equiv "$FILE_PATH" "$FILE"; then
                 _info -white - 'File write avoided:'
-                ftype "$FILE_PATH" -info
+                ftype "$FILE_PATH" -info || :
                 info - - " $FILE_PATH"
                 break
             fi
@@ -2696,12 +2696,12 @@ __file_write() {
 
         if LOG_written; then
             _info -white - 'File changes:'
-            ftype "$FILE_PATH" -info
+            ftype "$FILE_PATH" -info || :
             info - - " $FILE_PATH"
             LOG_print;
         else
             _info -white - 'Will write a file:'
-            ftype "$FILE_PATH" -info
+            ftype "$FILE_PATH" -info || :
             info - - " $FILE_PATH"
             if [ "$silent_write" = 0 ]; then
                 info -white - '0:'; info - -- "$FILE"
@@ -2710,7 +2710,7 @@ __file_write() {
 
         if ! file_write "$FILE_PATH" "$FILE"; then
             _err -red - 'File write error:'
-            ftype "$FILE_PATH" -err
+            ftype "$FILE_PATH" -err || :
             err - - " $FILE_PATH"
             exit 1
         fi
@@ -2744,7 +2744,7 @@ __file_write_overwrite() {
 
     if [ ! "$FILE" ]; then
         _info -white - 'Empty FILE. File write cancelled:'
-        ftype "$FILE_PATH" -info
+        ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
         return 0
     fi
@@ -2753,7 +2753,7 @@ __file_write_overwrite() {
         if [ "$always_write" = 0 ]; then
             if file_equiv "$FILE_PATH" "$FILE"; then
                 _info -white - 'File write avoided:'
-                ftype "$FILE_PATH" -info
+                ftype "$FILE_PATH" -info || :
                 info - - " $FILE_PATH"
                 break
             fi
@@ -2761,12 +2761,12 @@ __file_write_overwrite() {
 
         if LOG_written; then
             _info -white - 'File changes:'
-            ftype "$FILE_PATH" -info
+            ftype "$FILE_PATH" -info || :
             info - - " $FILE_PATH"
             LOG_print;
         else
             _info -white - 'Will write a file:'
-            ftype "$FILE_PATH" -info
+            ftype "$FILE_PATH" -info || :
             info - - " $FILE_PATH"
             if [ "$silent_write" = 0 ]; then
                 info -white - '0:'; info - -- "$FILE"
@@ -2775,7 +2775,7 @@ __file_write_overwrite() {
 
         if ! file_write "$FILE_PATH" "$FILE"; then
             _err -red - 'File write error:'
-            ftype "$FILE_PATH" -err
+            ftype "$FILE_PATH" -err || :
             err - - " $FILE_PATH"
             exit 1
         fi
@@ -2814,14 +2814,14 @@ __file_target_write() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 2
     fi
 
     file "$FILE_PATH" && readable "$FILE_PATH" || {
         EINVAL;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 22
     }
@@ -2830,7 +2830,7 @@ __file_target_write() {
         if [ "$always_write" = 0 ]; then
             if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
                 _info -white - 'File write avoided:'
-                ftype "$FILE_PATH_TARGET" -info
+                ftype "$FILE_PATH_TARGET" -info || :
                 info - - " $FILE_PATH_TARGET"
                 break
             fi
@@ -2845,14 +2845,14 @@ __file_target_write() {
         fi
 
         _info -white - 'Will copy from/to:'
-        ftype "$FILE_PATH" -info
+        ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
-        ftype "$FILE_PATH_TARGET" -info
+        ftype "$FILE_PATH_TARGET" -info || :
         info - - " $FILE_PATH_TARGET"
 
         if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
             _err -red - 'File write error:'
-            ftype "$FILE_PATH_TARGET" -err
+            ftype "$FILE_PATH_TARGET" -err || :
             err - - " $FILE_PATH_TARGET"
             exit 1
         fi
@@ -2886,14 +2886,14 @@ __file_target_write_overwrite() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 2
     fi
 
     file "$FILE_PATH" && readable "$FILE_PATH" || {
         EINVAL;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 22
     }
@@ -2902,21 +2902,21 @@ __file_target_write_overwrite() {
         if [ "$always_write" = 0 ]; then
             if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
                 _info -white - 'File write avoided:'
-                ftype "$FILE_PATH_TARGET" -info
+                ftype "$FILE_PATH_TARGET" -info || :
                 info - - " $FILE_PATH_TARGET"
                 break
             fi
         fi
 
         _info -white - 'Will copy from/to:'
-        ftype "$FILE_PATH" -info
+        ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
-        ftype "$FILE_PATH_TARGET" -info
+        ftype "$FILE_PATH_TARGET" -info || :
         info - - " $FILE_PATH_TARGET"
 
         if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
             _err -red - 'File write error:'
-            ftype "$FILE_PATH_TARGET" -info
+            ftype "$FILE_PATH_TARGET" -info || :
             err - - " $FILE_PATH_TARGET"
             exit 1
         fi
@@ -2950,7 +2950,7 @@ __loc_chattr() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 2
     fi
@@ -2961,7 +2961,7 @@ __loc_chattr() {
         :
     else
         EINVAL;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 22
     fi
@@ -2990,7 +2990,7 @@ __loc_chmod() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 2
     fi
@@ -3001,7 +3001,7 @@ __loc_chmod() {
         :
     else
         EINVAL;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 22
     fi
@@ -3032,7 +3032,7 @@ __loc_chown() {
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 2
     fi
@@ -3043,7 +3043,7 @@ __loc_chown() {
         :
     else
         EINVAL;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 22
     fi
@@ -3070,18 +3070,18 @@ __loc_delete() {
 
     if ! exist "$FILE_PATH"; then
         _info -white - 'Already deleted:'
-        ftype "$FILE_PATH" -info
+        ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
         return 0
     fi
 
     _info -white - 'Will delete:'
-    ftype "$FILE_PATH" -info
+    ftype "$FILE_PATH" -info || :
     info - - " $FILE_PATH"
 
     if ! loc_delete "$FILE_PATH"; then
         _err -red - 'Removal error:'
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 1
     fi
@@ -3108,14 +3108,14 @@ __loc_empty() {
         :
     elif exist "$FILE_PATH"; then
         EINVAL;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 22
     fi
 
     if dir "$FILE_PATH"; then
         _info -white - 'Will empty:'
-        ftype "$FILE_PATH" -info
+        ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
 
         __cmd rm -rf "$FILE_PATH"/*
@@ -3125,7 +3125,7 @@ __loc_empty() {
         else
             _info -white - 'Will create a file:'
         fi
-        ftype "$FILE_PATH" -info
+        ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
 
         if ! { : > "$FILE_PATH"; }; then
@@ -3134,7 +3134,7 @@ __loc_empty() {
             else
                 _err -red - 'File creation error:'
             fi
-            ftype "$FILE_PATH" -err
+            ftype "$FILE_PATH" -err || :
             err - - " $FILE_PATH"
             exit 1
         fi
@@ -3164,21 +3164,21 @@ __loc_target_link_overwrite() {
 
     if ! { exist "$FILE_PATH" || [ -h "$FILE_PATH" ]; }; then
         ENOENT;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 2
     fi
 
     while :; do
         _info -white - 'Will symbolic link source/target:'
-        ftype "$FILE_PATH" -info
+        ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
-        ftype "$FILE_PATH_TARGET" -info
+        ftype "$FILE_PATH_TARGET" -info || :
         info - - " $FILE_PATH_TARGET"
 
         if ! loc_link "$FILE_PATH" "$FILE_PATH_TARGET"; then
             _err -red - 'Symbolic linking error:'
-            ftype "$FILE_PATH_TARGET" -err
+            ftype "$FILE_PATH_TARGET" -err || :
             err - - " $FILE_PATH_TARGET"
             exit 1
         fi
@@ -6387,7 +6387,7 @@ PROFILES_INI
 
     if ! exist "$FILE_PATH"; then
         ENOENT;
-        ftype "$FILE_PATH" -err
+        ftype "$FILE_PATH" -err || :
         err - - " $FILE_PATH"
         exit 2
     fi
@@ -6671,7 +6671,7 @@ CPU
 
     if ! exist "$FILE_PATH"/cpu0/cpufreq/scaling_governor; then
         ENOENT;
-        ftype "$FILE_PATH"/cpu0/cpufreq/scaling_governor -err
+        ftype "$FILE_PATH"/cpu0/cpufreq/scaling_governor -err || :
         err - - " $FILE_PATH"/cpu0/cpufreq/scaling_governor
         exit 2
     fi
@@ -6691,7 +6691,7 @@ SCALING_GOVERNOR
 
         if ! file_equiv "$FILE_PATH" "$FILE"; then
             _err -red - 'EERROR: Failed to set the governor:'
-            ftype "$FILE_PATH" -err
+            ftype "$FILE_PATH" -err || :
             err - - " $FILE_PATH"
             exit 1
         fi
@@ -6706,7 +6706,7 @@ CPU
 
     if ! exist "$FILE_PATH"/cpu0/cpufreq/scaling_governor; then
         ENOENT;
-        ftype "$FILE_PATH"/cpu0/cpufreq/scaling_governor -err
+        ftype "$FILE_PATH"/cpu0/cpufreq/scaling_governor -err || :
         err - - " $FILE_PATH"/cpu0/cpufreq/scaling_governor
         exit 2
     fi
@@ -6726,7 +6726,7 @@ SCALING_GOVERNOR
 
         if ! file_equiv "$FILE_PATH" "$FILE"; then
             _err -red - 'EERROR: Failed to set the governor:'
-            ftype "$FILE_PATH" -err
+            ftype "$FILE_PATH" -err || :
             err - - " $FILE_PATH"
             exit 1
         fi
