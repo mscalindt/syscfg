@@ -9698,9 +9698,11 @@ MEMTOTAL_BYTES=$((MEMTOTAL_BYTES * 1024))
 
 MEMHOG=$(
     set -- $CUR
-
     printf "%s" "$2 /"  # pid
-    printf "%s" "${11##*/} /"  # cmd
+
+    CUR="${CUR#*/}"
+    set -- $CUR
+    printf "%s" "${1##*/} /"  # cmd
 
     MEMHOG_BYTES=$((MEMTOTAL_BYTES * $CUR_F_PERC$CUR_S_PERC / 1000))  # base 2
     awk -v 'bytes_memhog'="$MEMHOG_BYTES" '
