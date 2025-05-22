@@ -361,13 +361,13 @@ writable() {
 # <$1> - color(
 #     '-'  - none
 #     '-black' - bold (`1;`) foreground (`3X`) black (`0`)
-#     '-red' - bold (`1;`) foreground (`3X`) red (`1`)
-#     '-green' - bold (`1;`) foreground (`3X`) green (`2`)
-#     '-yellow' - bold (`1;`) foreground (`3X`) yellow (`3`)
 #     '-blue' - bold (`1;`) foreground (`3X`) blue (`4`)
-#     '-magenta' - bold (`1;`) foreground (`3X`) magenta (`5`)
 #     '-cyan' - bold (`1;`) foreground (`3X`) cyan (`6`)
+#     '-green' - bold (`1;`) foreground (`3X`) green (`2`)
+#     '-magenta' - bold (`1;`) foreground (`3X`) magenta (`5`)
+#     '-red' - bold (`1;`) foreground (`3X`) red (`1`)
 #     '-white' - bold (`1;`) foreground (`3X`) white (`7`)
+#     '-yellow' - bold (`1;`) foreground (`3X`) yellow (`3`)
 #     .
 # )
 # <$2> - format(
