@@ -10232,21 +10232,9 @@ main() {
         trap "err_handler \$? EXIT" EXIT
 
         # env setup
-        { mkdir -p "$tmpd" && chmod 0700 "$tmpd"; } || {
-            set -- "$?"
-            err -red - "Cannot create tmpd: $tmpd"
-            exit "$1"
-        }
-        { : > "$tmpf" && chmod 0600 "$tmpf"; } || {
-            set -- "$?"
-            err -red - "Cannot create tmpf: $tmpf"
-            exit "$1"
-        }
-        { : > "$logf" && chmod 0600 "$logf"; } || {
-            set -- "$?"
-            err -red - "Cannot create logf: $logf"
-            exit "$1"
-        }
+        mkdir -p "$tmpd" && chmod 0700 "$tmpd"
+        { : > "$tmpf"; } && chmod 0600 "$tmpf"
+        { : > "$logf"; } && chmod 0600 "$logf"
 
         ( opd="$1"; readonly opd; "$opd"; )
 
