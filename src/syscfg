@@ -10225,7 +10225,6 @@ main() {
     while [ "$1" ]; do
         replchar_posix '-' '_' "$1" && set -- "_$_str" "$@" || exit "$?"
 
-        # use '|| :' to validate a command failure
         set -e
         trap "err_handler \$? INT" INT
         trap "err_handler \$? TERM" TERM
