@@ -2466,73 +2466,9 @@ __dir_target_write() {
 
 #! .desc:
 # Copy a directory at the specified path (overwrite path)
-#! .uses:
-# <FILE_PATH> $ - the directory
-# <FILE_PATH_TARGET> $ - the path to write the directory at
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
 #.
 __dir_target_write_overwrite() {
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
-        return 255
-    fi
-
-    if [ ! "$FILE_PATH_TARGET" ]; then
-        _err -red - 'Missing FILE_PATH_TARGET.'
-        return 255
-    fi
-
-    if ! exist "$FILE_PATH"; then
-        ENOENT;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
-        exit 2
-    fi
-
-    dir "$FILE_PATH" && readable "$FILE_PATH" || {
-        EINVAL;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
-        exit 22
-    }
-
-    while :; do
-        _info -white - 'Will copy from/to:'
-        ftype "$FILE_PATH" -info || :
-        info - - " $FILE_PATH"
-        ftype "$FILE_PATH_TARGET" -info || :
-        info - - " $FILE_PATH_TARGET"
-
-        info -white -- '> '
-        find "$FILE_PATH"//. ! -name . | grep -c // 2> /dev/null | \
-            while IFS= read -r _line0; do
-                printf "%s, " "$_line0"
-
-                info -white -- 'D '
-                find "$FILE_PATH"//. ! -name . -type d | \
-                    grep -c // 2> /dev/null | \
-                        while IFS= read -r _line1; do
-                            printf "%s, " "$_line1"
-
-                            info -white -- 'F '
-                            info - - "$((_line0 - _line1))"
-                        done
-            done
-
-        if ! dir_write "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            _err -red - 'Directory write error:'
-            ftype "$FILE_PATH_TARGET" -err || :
-            err - - " $FILE_PATH_TARGET"
-            exit 1
-        fi
-    break; done
-
-    if ! loc_own_user "$FILE_PATH_TARGET"; then
-        EERROR 'Failed to set user permissions.'
-    fi
+    __loc_delete && __dir_target_write;
 }
 
 #! .desc:
