@@ -10223,9 +10223,7 @@ main() {
     fi
 
     while [ "$1" ]; do
-        opd="_$1"; case "$opd" in
-            *'-'*) replchar_posix '-' '_' "$opd" && opd="$_str" ;;
-        esac
+        replchar_posix '-' '_' "$1" && set -- "_$_str" "$@" || exit "$?"
 
         # use '|| :' to validate a command failure
         set -e
@@ -10250,7 +10248,7 @@ main() {
             exit "$1"
         }
 
-        eval "info -blue - \"$1 -> ${opd}()\"; ( $opd; )"
+        ( opd="$1"; readonly opd; "$opd"; )
 
         # env reset
         FILE=; FILE_PATH_TARGET=
@@ -10263,9 +10261,9 @@ main() {
         trap - INT TERM EXIT
         set +e
 
-        info -green - 'Done!'
+        info -green - "${0##*/}:" "$2:" 'Done!'
 
-        shift
+        shift 2
     done
 
     # env cleanup
