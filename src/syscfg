@@ -2688,66 +2688,9 @@ __file_target_write() {
 
 #! .desc:
 # Copy a file at the specified path (overwrite path)
-#! .uses:
-# <FILE_PATH> $ - the directory
-# <FILE_PATH_TARGET> $ - the path to write the directory at
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
 #.
 __file_target_write_overwrite() {
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
-        return 255
-    fi
-
-    if [ ! "$FILE_PATH_TARGET" ]; then
-        _err -red - 'Missing FILE_PATH_TARGET.'
-        return 255
-    fi
-
-    if ! exist "$FILE_PATH"; then
-        ENOENT;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
-        exit 2
-    fi
-
-    file "$FILE_PATH" && readable "$FILE_PATH" || {
-        EINVAL;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
-        exit 22
-    }
-
-    while :; do
-        if [ "$always_write" = 0 ]; then
-            if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
-                _info -white - 'File write avoided:'
-                ftype "$FILE_PATH_TARGET" -info || :
-                info - - " $FILE_PATH_TARGET"
-                break
-            fi
-        fi
-
-        _info -white - 'Will copy from/to:'
-        ftype "$FILE_PATH" -info || :
-        info - - " $FILE_PATH"
-        ftype "$FILE_PATH_TARGET" -info || :
-        info - - " $FILE_PATH_TARGET"
-
-        if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
-            _err -red - 'File write error:'
-            ftype "$FILE_PATH_TARGET" -info || :
-            err - - " $FILE_PATH_TARGET"
-            exit 1
-        fi
-    break; done
-
-    if ! loc_own_user "$FILE_PATH_TARGET"; then
-        EERROR 'Failed to set user permissions.'
-    fi
+    __loc_delete && __file_target_write;
 }
 
 #! .desc:
