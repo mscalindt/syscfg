@@ -2609,67 +2609,9 @@ __file_write() {
 
 #! .desc:
 # Write a file at the specified path (overwrite path)
-#! .uses:
-# <FILE> $ - the file
-# <FILE_PATH> $ - the path to write the file at
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
 #.
 __file_write_overwrite() {
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
-        return 255
-    fi
-
-    if [ ! "$FILE" ]; then
-        _info -white - 'Empty FILE. File write cancelled:'
-        ftype "$FILE_PATH" -info || :
-        info - - " $FILE_PATH"
-        return 0
-    fi
-
-    while :; do
-        if [ "$always_write" = 0 ]; then
-            if file_equiv "$FILE_PATH" "$FILE"; then
-                _info -white - 'File write avoided:'
-                ftype "$FILE_PATH" -info || :
-                info - - " $FILE_PATH"
-                break
-            fi
-        fi
-
-        if LOG_written; then
-            _info -white - 'File changes:'
-            ftype "$FILE_PATH" -info || :
-            info - - " $FILE_PATH"
-            LOG_print;
-        else
-            _info -white - 'Will write a file:'
-            ftype "$FILE_PATH" -info || :
-            info - - " $FILE_PATH"
-            if [ "$silent_write" = 0 ]; then
-                info -white - '0:'; info - -- "$FILE"
-            fi
-        fi
-
-        if ! file_write "$FILE_PATH" "$FILE"; then
-            _err -red - 'File write error:'
-            ftype "$FILE_PATH" -err || :
-            err - - " $FILE_PATH"
-            exit 1
-        fi
-    break; done
-
-    if ! loc_own_user "$FILE_PATH"; then
-        EERROR 'Failed to set user permissions.'
-    fi
-
-    if ! LOG_clear; then
-        _err -red - 'Log clear error.'
-        exit 1
-    fi
+    __loc_delete && __file_write;
 }
 
 #! .desc:
