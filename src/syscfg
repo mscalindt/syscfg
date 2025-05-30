@@ -5807,8 +5807,8 @@ MOZ_ENABLE_WAYLAND=1
 BROWSER
 
         __file_write_overwrite;
-    elif [ "browser" = none ] || [ ! "$browser" ] || \
-        [ "display_server" = none ] || [ ! "$display_server" ]; then
+    elif [ "$browser" = none ] || [ ! "$browser" ] || \
+        [ "$display_server" = none ] || [ ! "$display_server" ]; then
         __loc_delete;
     fi
 
@@ -5824,7 +5824,7 @@ QT_STYLE_OVERRIDE=kvantum
 QT_THEME
 
         __file_write_overwrite;
-    elif [ "qt_theme" = none ] || [ ! "$qt_theme" ]; then
+    elif [ "$qt_theme" = none ] || [ ! "$qt_theme" ]; then
         __loc_delete;
     fi
 
