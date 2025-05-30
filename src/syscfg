@@ -3142,7 +3142,7 @@ DNSMASQ_SERVICE
 DNSMASQ_SERVICE
 
                 __loc_target_link_overwrite;
-            elif [ "dns0" = none ] || [ ! "$dns0" ]; then
+            elif [ "$dns0" = none ] || [ ! "$dns0" ]; then
                 FILE_PATH \
 <<'DNSMASQ_SERVICE'
 /etc/systemd/system/dnsmasq.service
@@ -3157,7 +3157,7 @@ DNSMASQ_SERVICE
 
                 __loc_delete;
             fi
-        elif [ "dns" = none ] || [ ! "$dns" ]; then
+        elif [ "$dns" = none ] || [ ! "$dns" ]; then
             FILE_PATH \
 <<'DNSMASQ_SERVICE'
 /etc/systemd/system/dnsmasq.service
@@ -3263,7 +3263,7 @@ IWD_SERVICE
 IWD_SERVICE
 
             __loc_target_link_overwrite;
-        elif [ "wland" = none ] || [ ! "$wland" ]; then
+        elif [ "$wland" = none ] || [ ! "$wland" ]; then
             FILE_PATH \
 <<'IWD_SERVICE'
 /etc/systemd/system/iwd.service
@@ -3313,7 +3313,7 @@ $home/.config/systemd/user/default.target.wants/moc.service
 MOC_SERVICE
 
             __loc_target_link_overwrite;
-        elif [ "audio_playerd" = none ] || [ ! "$audio_playerd" ]; then
+        elif [ "$audio_playerd" = none ] || [ ! "$audio_playerd" ]; then
             FILE_PATH \
 <<MOC_SERVICE
 $home/.config/systemd/user/moc.service
@@ -3395,7 +3395,7 @@ $home/.config/systemd/user/pipewire.service.wants/pipewire-media-session.service
 PIPEWIRE_MEDIA_SESSION_SERVICE
 
                 __loc_target_link_overwrite;
-            elif [ "pipewire_manager" = none ] || [ ! "$pipewire_manager" ]; then
+            elif [ "$pipewire_manager" = none ] || [ ! "$pipewire_manager" ]; then
                 FILE_PATH \
 <<PIPEWIRE_MEDIA_SESSION_SERVICE
 $home/.config/systemd/user/pipewire-media-session.service
@@ -3443,7 +3443,7 @@ $home/.config/systemd/user/pipewire.service.wants/pipewire-pulse.service
 PIPEWIRE_PULSE_SERVICE
 
             __loc_target_link_overwrite;
-        elif [ "audio_server" = none ] || [ ! "$audio_server" ]; then
+        elif [ "$audio_server" = none ] || [ ! "$audio_server" ]; then
             FILE_PATH \
 <<PIPEWIRE_SERVICE
 $home/.config/systemd/user/pipewire.service
@@ -3673,7 +3673,7 @@ $home/.config/systemd/user/pipewire-pulse.socket
 PIPEWIRE_PULSE_SOCKET
 
                 __loc_target_link_overwrite;
-            elif [ "audio_server" = none ] || [ ! "$audio_server" ]; then
+            elif [ "$audio_server" = none ] || [ ! "$audio_server" ]; then
                 FILE_PATH \
 <<PIPEWIRE_SOCKET
 $home/.config/systemd/user/pipewire.socket
@@ -3822,7 +3822,7 @@ ORG_FREEDESKTOP_PORTAL_DOCUMENTS_SERVICE
 
             __loc_delete;
         fi
-    elif [ "init" = none ] || [ ! "$init" ]; then
+    elif [ "$init" = none ] || [ ! "$init" ]; then
         FILE_PATH \
 <<'BLUETOOTH_SERVICE'
 /etc/systemd/system/bluetooth.service
