@@ -8473,7 +8473,7 @@ input type:pointer {
 # App keybindings {
     bindsym $mod+Return exec $term
     bindsym $mod+a exec $menu
-    bindsym $mod+t exec /usr/bin/telegram-desktop
+    bindsym $mod+t exec /usr/bin/Telegram
     bindsym $mod+b exec /usr/bin/blueman-manager
 # }
 
