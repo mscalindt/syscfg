@@ -6557,7 +6557,6 @@ _GTKRC_2_0
     FILE \
 <<'_GTKRC_2_0'
 gtk-cursor-theme-name="Breeze"
-gtk-theme-name="Arc-Dark-solid"
 gtk-font-name="Cantarell 12"
 gtk-document-font-name="DejaVu Serif 12"
 gtk-monospace-font-name="Cantarell 12"
@@ -6611,7 +6610,6 @@ SETTINGS_INI
 <<'SETTINGS_INI'
 [Settings]
 gtk-cursor-theme-name="Breeze"
-gtk-theme-name="Arc-Dark-solid"
 gtk-font-name="Cantarell 12"
 gtk-document-font-name="DejaVu Serif 12"
 gtk-monospace-font-name="Cantarell 12"
