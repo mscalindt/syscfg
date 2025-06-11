@@ -9263,7 +9263,7 @@ CONFIG
 exec_always sh -c 'rm -f "${TMPDIR:-/tmp}"/nettotal'
 CONFIG
 
-    __file_write;
+    __file_write_overwrite;
 }
 
 _swaylock_conf() {
