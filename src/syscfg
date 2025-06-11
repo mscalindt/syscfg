@@ -8663,6 +8663,9 @@ while read -r LINE; do
         'gtk-monospace-font-name='*)
             gsettings set "$gnome_schema" monospace-font-name "${LINE#*=}"
         ;;
+        'gtk-application-prefer-dark-theme='*true*)
+            gsettings set "$gnome_schema" color-scheme prefer-dark
+        ;;
     esac
 done < "$cfg"
 IMPORT_GSETTINGS
