@@ -7661,7 +7661,10 @@ PACMAN_CONF
             'ParallelDownloads = 5' \
             ~~3 \
             'VerbosePkgLists' \
-            'VerbosePkgLists'
+            'VerbosePkgLists' \
+            ~~3 \
+            'NoExtract' \
+            'NoExtract = etc/xdg/autostart/*.desktop'
 
     FILE=$(
         line_add() {
