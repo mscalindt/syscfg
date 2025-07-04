@@ -1,0 +1,63 @@
+syscfg NEWS
+
+
+2025-05-24 - 2025-06-19
+=======================
+* The client's name is now set and locked in a variable for the executed
+  client to use.
+
+* For regular files, the overwrite operation now deletes and creates
+  the file instead of doing an in-place (we call it 'soft'[1])
+  overwrite.
+
+[1] 47cf24bcec4c
+
+
+2025-05-06 - 2025-05-09
+=======================
+* Client output is separated from syscfg's output. More details here[1].
+
+* Standardized error codes. More details here[2].
+
+* Added __cmd() and __FILE_cmd() for centralized command execution.
+
+* Clients are now launched in a subshell. More details here[3].
+
+[1] d366385243ec
+[2] e69ae2b2b3b5
+[3] 9b51b665cbcb
+
+
+2025-04-22 - 2025-04-25
+=======================
+* Now exits with EPERM if not executed with root privileges.
+  More details here[1].
+
+* Separated the log file from the client's temporary file.
+
+[1] 2df3e7114c43
+
+
+2025-04-16
+==========
+* Added `CREDITS` and `DEPENDENCIES` files.
+
+* Moved `syscfg` to src/ (`src/syscfg`).
+
+* Created tag `250`, tagging 250 commits before major refactor.
+
+
+2023-01-22
+==========
+* Added software configuration stages to allow for immediate
+  reconfiguration.
+
+
+2022-12-26
+==========
+* Initial commit.
+
+
+========================================================================
+
+Copyright (C) 2021-2025 Dimitar Yurukov <mscalindt@protonmail.com>
