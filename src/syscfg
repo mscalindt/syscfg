@@ -3046,16 +3046,27 @@ __loc_target_link_overwrite() {
 }
 
 #! .desc:
-# Clone a git repository to $tmpd
+# Copy/clone a git repository to $tmpd
 #! .params:
-# <"$1"> - URL
+# <["$1"]> - directory path
+# ["$2"]+ - URL
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad input
 #.
 __git_get() {
-    assert -eq "$#" 1 || return 255
+    assert -min "$#" 1 || return 255
+
+    while [ "$1" ]; do
+        dir "$1" && exist "$1"/.git || break
+
+        dir_write "$1" "$tmpd/." || return "$?"
+
+        return 0
+    done
+
+    shift
 
     set -- "$@" '--depth' '1'
 
@@ -6241,7 +6252,7 @@ _firefox_conf() {
 $home/.mozilla/firefox/profiles.ini
 PROFILES_INI
 
-    __git_get 'https://github.com/mscalindt/firefox-profile-private'
+    __git_get '' 'https://github.com/mscalindt/firefox-profile-private'
 
     FILE_PATH \
 <<IRA5808S_MSCALINDT
@@ -6314,7 +6325,7 @@ EOF
 
     __file_write_overwrite;
 
-    __git_get 'https://github.com/mscalindt/firefox-profiles'
+    __git_get '' 'https://github.com/mscalindt/firefox-profiles'
 
     FILE_PATH \
 <<499SH1EV_HARDENED

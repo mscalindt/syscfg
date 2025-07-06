@@ -1,6 +1,12 @@
 syscfg NEWS
 
 
+2025-07-06
+==========
+* __git_get() now supports local repositories with first priority.
+  Breaking change; existing code requires adjustment.
+
+
 2025-05-24 - 2025-06-19
 =======================
 * The client's name is now set and locked in a variable for the executed
