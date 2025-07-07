@@ -6247,151 +6247,40 @@ FP_CONF
 }
 
 _firefox_conf() {
-    __git_get '' 'https://github.com/mscalindt/firefox-profile-private'
+    __git_get \
+        "$home/02-GIT/firefox-profiles" \
+        'https://github.com/mscalindt/firefox-profiles'
 
     FILE_PATH \
-<<IRA5808S_MSCALINDT
-$tmpd/firefox-profile-private/ira5808s.mscalindt
-IRA5808S_MSCALINDT
+<<MSCALINDT
+$tmpd/firefox-profiles/src/mscalindt
+MSCALINDT
 
     FILE_PATH_TARGET \
-<<IRA5808S_MSCALINDT
-$home/.mozilla/firefox/ira5808s.mscalindt
-IRA5808S_MSCALINDT
+<<MSCALINDT
+$home/.mozilla/firefox/mscalindt
+MSCALINDT
 
     __dir_target_write;
 
     FILE_PATH \
 <<PROFILES_INI
-$home/.mozilla/firefox/profiles.ini
+$tmpd/firefox-profiles/src/profiles.ini
 PROFILES_INI
 
-    __FILE_PATH_preload;
-
-    FILE=$(
-        line_add() {
-            while IFS= read -r line; do
-                i=$((i + 1))
-
-                LOG_write 1 "$i" "$line"
-
-                printf "%s\n" "$line"
-            done <<EOF
-$1
-EOF
-        }
-
-        case "${FILE#"${FILE%??}"}" in
-            "$LF$LF") : ;;
-            *"$LF") FILE="$FILE$LF" ;;
-            *) FILE="$FILE$LF$LF" ;;
-        esac
-
-        FLAG_PROFILE=0
-
-        i=0; j=0; printf "%s" "$FILE" | { while IFS= read -r LINE; do
-            i=$((i + 1))
-
-            case "$LINE" in
-                'Path=ira5808s.mscalindt')
-                    FLAG_PROFILE=1
-                ;;
-                '[Profile'*']')
-                    j=$((j + 1))
-                ;;
-            esac
-
-            printf "%s\n" "$LINE"
-        done
-
-        while :; do
-            if [ "$FLAG_PROFILE" = 0 ]; then
-                FLAG_PROFILE=1
-
-                line_add "[Profile${j}]"
-                line_add 'Name=mscalindt'
-                line_add 'IsRelative=1'
-                line_add 'Path=ira5808s.mscalindt'
-            else
-                break
-            fi
-        done; }
-    ); FILE="$FILE$LF"
-
-    __file_write_overwrite;
-
-    __git_get '' 'https://github.com/mscalindt/firefox-profiles'
-
-    FILE_PATH \
-<<499SH1EV_HARDENED
-$tmpd/firefox-profiles/499sh1ev.HARDENED
-499SH1EV_HARDENED
-
     FILE_PATH_TARGET \
-<<499SH1EV_HARDENED
-$home/.mozilla/firefox/499sh1ev.HARDENED
-499SH1EV_HARDENED
-
-    __dir_target_write;
-
-    FILE_PATH \
 <<PROFILES_INI
 $home/.mozilla/firefox/profiles.ini
 PROFILES_INI
 
-    __FILE_PATH_preload;
-
-    FILE=$(
-        line_add() {
-            while IFS= read -r line; do
-                i=$((i + 1))
-
-                LOG_write 1 "$i" "$line"
-
-                printf "%s\n" "$line"
-            done <<EOF
-$1
-EOF
-        }
-
-        case "${FILE#"${FILE%??}"}" in
-            "$LF$LF") : ;;
-            *"$LF") FILE="$FILE$LF" ;;
-            *) FILE="$FILE$LF$LF" ;;
-        esac
-
-        FLAG_PROFILE=0
-
-        i=0; j=0; printf "%s" "$FILE" | { while IFS= read -r LINE; do
-            i=$((i + 1))
-
-            case "$LINE" in
-                'Path=499sh1ev.HARDENED')
-                    FLAG_PROFILE=1
-                ;;
-                '[Profile'*']')
-                    j=$((j + 1))
-                ;;
-            esac
-
-            printf "%s\n" "$LINE"
-        done
-
-        while :; do
-            if [ "$FLAG_PROFILE" = 0 ]; then
-                FLAG_PROFILE=1
-
-                line_add "[Profile${j}]"
-                line_add 'Name=HARDENED'
-                line_add 'IsRelative=1'
-                line_add 'Path=499sh1ev.HARDENED'
-            else
-                break
-            fi
-        done; }
-    ); FILE="$FILE$LF"
-
     __file_write_overwrite;
+
+    FILE_PATH \
+<<INSTALLS_INI
+$home/.mozilla/firefox/installs.ini
+INSTALLS_INI
+
+    __loc_delete;
 }
 
 _fontconfig_conf() {
