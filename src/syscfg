@@ -6247,11 +6247,6 @@ FP_CONF
 }
 
 _firefox_conf() {
-    FILE_PATH \
-<<PROFILES_INI
-$home/.mozilla/firefox/profiles.ini
-PROFILES_INI
-
     __git_get '' 'https://github.com/mscalindt/firefox-profile-private'
 
     FILE_PATH \
