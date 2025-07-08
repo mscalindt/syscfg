@@ -2533,7 +2533,7 @@ __file_write_overwrite_soft() {
         fi
 
         if [ -s "$logf" ]; then  # log written
-            _info -white - 'File changes:'
+            _info -white - 'Will write original file; diff:'
             ftype "$FILE_PATH" -info || :
             info - - " $FILE_PATH"
             while IFS=" " read -r _n _line; do
