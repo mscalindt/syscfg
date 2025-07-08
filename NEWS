@@ -1,9 +1,12 @@
 syscfg NEWS
 
 
-2025-07-06
-==========
+2025-07-06 - 2025-07-08
+=======================
 * __git_get() now supports local repositories with first priority.
+  Breaking change; existing code requires adjustment.
+
+* Simplified log handling and removed its API.
   Breaking change; existing code requires adjustment.
 
 
