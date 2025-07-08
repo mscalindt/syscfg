@@ -9319,6 +9319,9 @@ main_assert_ops() {
 }
 
 err_handler() {
+    IFS=' 	''
+'
+
     trap - INT TERM EXIT
 
     # env cleanup
