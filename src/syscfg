@@ -1112,6 +1112,66 @@ chattr_remove() {
 }
 
 #! .desc:
+# Assert confirmation to continue
+#! .params:
+# [$1] - default_action(
+#     '-n' - forbidden
+#     '-y' - permitted
+#     .
+# )
+#! .uses.var:
+# [NO_COLOR] $ - environment variable;
+#                disable color
+#! .sets:
+# <_action> $ - "read -r" | 'N' | 'Y';
+# <_def_action> $ - 'N' | 'Y';
+#! .rc:
+# (0) true
+# (1) false
+# (255) bad input
+#! .desc.ext:
+# $1 specifies the default action to be used in case of empty input.
+# If omitted, the default action is set to 'forbidden'.
+#
+# By default, bold (`1;`) foreground (`3X`) white (`7`) color
+# escape sequence of ANSI is used in the prompt.
+#
+# The usage of color results in undefined behavior. For strict POSIX
+# compatibility, set variable `NO_COLOR` to a non-empty value.
+#.
+confirm_cont() {
+    # Set default action; defaults to `-n` if not specified.
+    case "${1:--n}" in
+        '-n')
+            _def_action='N'
+            _prompt='Continue? [y/N] '
+        ;;
+        '-y')
+            _def_action='Y'
+            _prompt='Continue? [Y/n] '
+        ;;
+        *)
+            return 255
+        ;;
+    esac
+
+    # Add white color to $_prompt if permitted.
+    [ "$NO_COLOR" ] || _prompt='\033[1;37m'"$_prompt"'\033[0m'
+
+    printf "%b" "$_prompt"
+
+    # Store input in $_action; if empty, $_def_action is stored instead.
+    read -r _action; [ "$_action" ] || _action="$_def_action"
+
+    # Return "permitted" if the first character entered is `Y` or `y`.
+    case "$_action" in
+        [Yy]*) return 0 ;;
+    esac
+
+    return 1
+}
+
+#! .desc:
 # Create a deterministic file data edit format
 #! .params:
 # <["$1"]> - file content
@@ -2674,27 +2734,28 @@ __FILE_PATH_preload() {
 #! .desc:
 # Modify file data in-place according to format (see fed())
 #! .params:
-# <["$1"]> - log file path
-# <$2>+ - operation(
-#     '-' - EOF add $3
+# <[$1]> - crc32 string to verify produced format against
+# <["$2"]> - log file path
+# <$3>+ - operation(
+#     '-' - EOF add $4
 #     '-m' - apply modifier for `-a`/`-r`/`-s`; see extended description
-#     '-a' - add $3
-#     '-r' - remove $3
-#     '-s' - substitute $3 with $4
+#     '-a' - add $4
+#     '-r' - remove $4
+#     '-s' - substitute $4 with $5
 #     .
 # )
-# ["$3"] - string
 # ["$4"] - string
+# ["$5"] - string
 #.
 __fed() {
-    assert -min "$#" 2 || return 255
+    assert -min "$#" 3 || return 255
 
     [ "$FILE" ] || __FILE_PATH_preload || exit "$?"
 
     set -- "$FILE" "$@"
 
     _fmt=$(
-        _a="$1"; shift 2
+        _a="$1"; shift 3
 
         fed "$_a" "$@" || {
             set -- "$?"; case "$1" in
@@ -2708,8 +2769,27 @@ __fed() {
 
     [ "$_fmt" ] || return 0
 
+    set -- "$_fmt" "$@"
+
+    _cksum=$(printf "%s" "$1" | cksum) && \
+    _cksum="${_cksum%%' '*}" || exit "$?"
+
+    if [ "$3" ] && [ "$3" != "$_cksum" ]; then
+        _info -yellow - "CRC32 mismatch. (exp. $3; got $_cksum)"
+        _info -white - 'Format:'
+        info - - "$1"
+
+        if [ "$confirm_crc" = 1 ]; then
+            _info -white - 'Auto accepted the mismatch.'
+        elif [ "$interactive" = 1 ]; then
+            confirm_cont || return 0
+        else
+            return 0
+        fi
+    fi
+
     FILE=$(
-        _a="$1"; _b="$2"; eval set -- "$_fmt"
+        _a="$2"; _b="$4"; eval set -- "$1"
 
         libfile "$_b" "$_a" "$@" || return "$?"
 
@@ -7556,7 +7636,7 @@ _makepkg_conf() {
 /etc/makepkg.conf
 MAKEPKG_CONF
 
-    __fed "$logf" \
+    __fed '' "$logf" \
         -m p -s \
         'CFLAGS="-march=x86-64 -mtune=' \
         'CFLAGS="-march=x86-64 -mtune=native -O2 -pipe -fno-plt -fexceptions \' \
@@ -7748,7 +7828,7 @@ _pacman_conf() {
 /etc/pacman.conf
 PACMAN_CONF
 
-    __fed "$logf" \
+    __fed '' "$logf" \
         -m s -s \
         'Color' \
         'Color' \
@@ -7762,94 +7842,16 @@ PACMAN_CONF
         'NoExtract' \
         'NoExtract = etc/xdg/autostart/*.desktop'
 
-    FILE=$(
-        line_add() {
-            while IFS= read -r line; do
-                i=$((i + 1))
-
-                printf "%d+ %s\n" "$i" "$line" >> "$logf"
-
-                printf "%s\n" "$line"
-            done <<EOF
-$1
-EOF
-        }
-
-        line_replace() {
-            l=0; while IFS= read -r line; do
-                l=$((l + 1))
-
-                if [ "$l" -ne 1 ]; then
-                    i=$((i + 1))
-                fi
-
-                if [ "$l" -eq 1 ]; then
-                    if [ "$LINE" != "$line" ]; then
-                        {
-                            printf "%d- %s\n" "$i" "$LINE"
-                            printf "%d+ %s\n" "$i" "$line"
-                        } >> "$logf"
-                    fi
-                else
-                    printf "%d+ %s\n" "$i" "$line" >> "$logf"
-                fi
-
-                printf "%s\n" "$line"
-            done <<EOF
-$1
-EOF
-        }
-
-        case "${FILE#"${FILE%??}"}" in
-            "$LF$LF") : ;;
-            *"$LF") FILE="$FILE$LF" ;;
-            *) FILE="$FILE$LF$LF" ;;
-        esac
-
-        _FLAG_MLIB=0; FLAG_MLIB=0
-
-        i=0; printf "%s" "$FILE" | { while IFS= read -r LINE; do
-            i=$((i + 1))
-
-            if [ "$_FLAG_MLIB" = 1 ]; then
-                _FLAG_MLIB=0
-
-                case "$LINE" in
-                    *'Include = '*)
-                        line_replace "Include = $arch_mirlist"
-                    ;;
-                    *)
-                        line_add "Include = $arch_mirlist"
-                    ;;
-                esac
-
-                continue
-            fi
-
-            case "$LINE" in
-                *'[multilib]'*)
-                    FLAG_MLIB=1; _FLAG_MLIB=1
-
-                    line_replace '[multilib]'
-
-                    continue
-                ;;
-            esac
-
-            printf "%s\n" "$LINE"
-        done
-
-        while :; do
-            if [ "$FLAG_MLIB" = 0 ]; then
-                FLAG_MLIB=1
-
-                line_add '[multilib]'
-                line_add "Include = $arch_mirlist"
-            else
-                break
-            fi
-        done; }
-    ); FILE="$FILE$LF"
+    # 2066821928 CRC32:
+    # `'-s' '92' '[multilib]'` \
+    # `'-s' '93' 'Include = /etc/pacman.d/mirrorlist'`
+    __fed 2066821928 "$logf" \
+        -m s -s \
+        '[multilib]' \
+        '[multilib]' \
+        -m 93 -s \
+        '' \
+        "Include = $arch_mirlist"
 
     __file_write_overwrite;
 }
@@ -7876,7 +7878,7 @@ FAILLOCK_CONF
 /etc/login.defs
 LOGIN_DEFS
 
-    __fed "$logf" \
+    __fed '' "$logf" \
         -m p -s \
         'FAIL_DELAY' \
         'FAIL_DELAY 0'
@@ -7888,62 +7890,12 @@ LOGIN_DEFS
 /etc/pam.d/su
 SU
 
-    __FILE_PATH_preload;
-
-    FILE=$(
-        line_replace() {
-            l=0; while IFS= read -r line; do
-                l=$((l + 1))
-
-                if [ "$l" -ne 1 ]; then
-                    i=$((i + 1))
-                fi
-
-                if [ "$l" -eq 1 ]; then
-                    if [ "$LINE" != "$line" ]; then
-                        {
-                            printf "%d- %s\n" "$i" "$LINE"
-                            printf "%d+ %s\n" "$i" "$line"
-                        } >> "$logf"
-                    fi
-                else
-                    printf "%d+ %s\n" "$i" "$line" >> "$logf"
-                fi
-
-                printf "%s\n" "$line"
-            done <<EOF
-$1
-EOF
-        }
-
-        case "${FILE#"${FILE%??}"}" in
-            "$LF$LF") : ;;
-            *"$LF") FILE="$FILE$LF" ;;
-            *) FILE="$FILE$LF$LF" ;;
-        esac
-
-        i=0; printf "%s" "$FILE" | while IFS= read -r LINE; do
-            i=$((i + 1))
-
-            case "$LINE" in
-                'auth'*'pam_unix.so'*)
-                    case "$LINE" in
-                        *'nodelay'*)
-                            printf "%s\n" "$LINE"
-
-                            continue
-                        ;;
-                    esac
-
-                    line_replace "${LINE} nodelay"
-
-                    continue
-                ;;
-            esac
-
-            printf "%s\n" "$LINE"
-        done
-    ); FILE="$FILE$LF"
+    # 3615679525 CRC32:
+    # `'-s' '7' 'auth            required        pam_unix.so nodelay'`
+    __fed 3615679525 "$logf" \
+        -m 7 -s \
+        '' \
+        'auth            required        pam_unix.so nodelay'
 
     __file_write_overwrite;
 
@@ -7952,62 +7904,13 @@ EOF
 /etc/pam.d/system-auth
 SYSTEM_AUTH
 
-    __FILE_PATH_preload;
-
-    FILE=$(
-        line_replace() {
-            l=0; while IFS= read -r line; do
-                l=$((l + 1))
-
-                if [ "$l" -ne 1 ]; then
-                    i=$((i + 1))
-                fi
-
-                if [ "$l" -eq 1 ]; then
-                    if [ "$LINE" != "$line" ]; then
-                        {
-                            printf "%d- %s\n" "$i" "$LINE"
-                            printf "%d+ %s\n" "$i" "$line"
-                        } >> "$logf"
-                    fi
-                else
-                    printf "%d+ %s\n" "$i" "$line" >> "$logf"
-                fi
-
-                printf "%s\n" "$line"
-            done <<EOF
-$1
-EOF
-        }
-
-        case "${FILE#"${FILE%??}"}" in
-            "$LF$LF") : ;;
-            *"$LF") FILE="$FILE$LF" ;;
-            *) FILE="$FILE$LF$LF" ;;
-        esac
-
-        i=0; printf "%s" "$FILE" | while IFS= read -r LINE; do
-            i=$((i + 1))
-
-            case "$LINE" in
-                'auth'*'pam_unix.so'*)
-                    case "$LINE" in
-                        *'nodelay'*)
-                            printf "%s\n" "$LINE"
-
-                            continue
-                        ;;
-                    esac
-
-                    line_replace "${LINE} nodelay"
-
-                    continue
-                ;;
-            esac
-
-            printf "%s\n" "$LINE"
-        done
-    ); FILE="$FILE$LF"
+    # 1797369364 CRC32:
+    # `'-s' '7' 'auth       [success=1 default=bad]     ` \
+    # `pam_unix.so          try_first_pass nullok nodelay'`
+    __fed 1797369364 "$logf" \
+        -m mof -m s -s \
+        'try_first_pass nullok' \
+        'try_first_pass nullok nodelay'
 
     __file_write_overwrite;
 }
@@ -9678,8 +9581,12 @@ main() {
     # Control switches
     # Always write files, even if the remote/fs content matches ours.
     always_write=0
+    # Automatically continue/confirm any CRC32 mismatch prompts.
+    confirm_crc=0
     # Force file writes by remote/fs object overwrite/removal:
     force_write=0
+    # Interactive mode; prompt for input on dual actions.
+    interactive=0
     # Disable command output:
     silent_cmd=0
     # Disable content output of file writes:
@@ -9815,14 +9722,18 @@ main() {
 
     # Enable always_write from cmdline:    ^AW as $1
     # Enable audio_hq_resamp from cmdline: ^AQ as $1
+    # Enable confirm_crc from cmdline:     ^CC as $1
     # Enable force_write from cmdline:     ^FW as $1
+    # Enable interactive from cmdline:     ^IE as $1
     # Enable ipv6 from cmdline:            ^I6 as $1
     # Enable silent_cmd from cmdline:      ^SC as $1
     # Enable silent_write from cmdline:    ^SW as $1
     while :; do case "$1" in
         '^AW') always_write=1; shift && continue ;;
         '^AQ') audio_hq_resamp=1; shift && continue ;;
+        '^CC') confirm_crc=1; shift && continue ;;
         '^FW') force_write=1; shift && continue ;;
+        '^IE') interactive=1; shift && continue ;;
         '^I6') ipv6=1; shift && continue ;;
         '^SC') silent_cmd=1; shift && continue ;;
         '^SW') silent_write=1; shift && continue ;;
@@ -9833,7 +9744,8 @@ main() {
              arch_linux audio_hq_resamp bluetooth browser dns dns0 init \
              ipv6 qt_theme display_server wm bg de user home efi_mnt \
              arch_mirlist ops audio_server hostname wland audio_playerd portal \
-             silent_cmd silent_write gid group uid pipewire_manager
+             silent_cmd silent_write gid group uid pipewire_manager \
+             confirm_crc interactive
 
     { assert -min "$#" 1 && main_assert_ops "$@"; } || {
         if [ "$#" -eq 0 ]; then

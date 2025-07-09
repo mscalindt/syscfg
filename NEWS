@@ -13,6 +13,9 @@ syscfg NEWS
   combo from `shell-glossary`.
   Breaking change; existing code requires adjustment.
 
+* __fed() now supports CRC32 verification for the format string.
+  Breaking change; existing code requires adjustment.
+
 
 2025-05-24 - 2025-06-19
 =======================
