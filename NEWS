@@ -1,7 +1,7 @@
 syscfg NEWS
 
 
-2025-07-06 - 2025-07-09
+2025-07-06 - 2025-07-10
 =======================
 * __git_get() now supports local repositories with first priority.
   Breaking change; existing code requires adjustment.
@@ -14,6 +14,9 @@ syscfg NEWS
   Breaking change; existing code requires adjustment.
 
 * __fed() now supports CRC32 verification for the format string.
+  Breaking change; existing code requires adjustment.
+
+* Optimized the handling of octal streams and clarified usage.
   Breaking change; existing code requires adjustment.
 
 
