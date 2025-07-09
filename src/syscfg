@@ -553,6 +553,53 @@ info() {
 # START utility_functions
 
 #! .desc:
+# Set with single-quote escape an argument into a variable
+#! .params:
+# <$1> - variable name
+# [["$2"]] - argument
+#! .uses.fn:
+# <assert> ('-shell-name' '$1');
+#          Assert a string
+# [replchar_posix] ('\'' '\'\\\'\'' '$2');
+#                  Replace a specific character with character(s) in a string
+#                  using PE
+#! .rc:
+# (0) success
+# (*) error
+#! .rc.fn:
+# (assert) (255) bad input
+# (replchar_posix) (*) error
+#! .desc.ext:
+# If $2 is unspecified/empty, an empty argument will be set in $1.
+#
+# For more information, refer to:
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Quoting".
+#.
+arg_set() {
+    assert -shell-name "$1" || return 255
+
+    # Escape any single quotes in the argument ($2).
+    _str="$2"; case "$_str" in
+        *\'*) replchar_posix \' \'\\\'\' "$_str" || return "$?" ;;
+    esac  # -> $_str
+
+    # The usage of `eval` here is safe. Assuming $_str is `"'\''abc` (we escape
+    # single quotes in $2 before they're passed to `eval`):
+    #
+    # First expansion (current shell):
+    # `eval "$1=\"'\$_str'\""` -> `eval a="'$_str'"` (lit.)
+    #
+    # Second expansion (`eval`):
+    # `eval a="'$_str'"` -> `a = '"'\''abc'` (illust. of meta expansion)
+    #
+    # Key points:
+    # - Due to the sophisticated escaping, single quotes from the first
+    #   expansion carry their significance to the second expansion.
+    eval "$1=\"'\$_str'\""
+}
+
+#! .desc:
 # Assert a string
 #! .params:
 # <$1> - type(
@@ -1065,6 +1112,305 @@ chattr_remove() {
 }
 
 #! .desc:
+# Create a deterministic file data edit format
+#! .params:
+# <["$1"]> - file content
+# <$2>+ - operation(
+#     '-' - EOF add $3
+#     '-m' - apply modifier for `-a`/`-r`/`-s`; see extended description
+#     '-a' - add $3
+#     '-r' - remove $3
+#     '-s' - substitute $3 with $4
+#     .
+# )
+# ["$3"] - string
+# ["$4"] - string
+#! .uses:
+# <()>
+# <<<>
+#! .uses.fn:
+# [arg_set] ("variable name" "argument");
+#           Set with single-quote escape an argument into a variable
+#! .gives:
+# (0) <"$_fmt"> - string;
+#                 shell-parseable evaluable line-sorted operations list
+#! .sets:
+# <fed_> ();
+#! .rc:
+# (0) success
+# (1) no operations to be created / error
+# (*) error
+# (255) bad input / bad usage / error
+#! .rc.fn:
+# (arg_set) (*) error
+#! .desc.ext:
+# The format of created operations is as follows (N - natural number):
+# `-a N X`, means at "N" line add "X" data;
+# `-r N`,   means remove "N" line;
+# `-s N X`, means substitute "N" line with "X" data.
+#
+# Created operations are line-sorted and FIFO.
+# Created EOF operations are specified after all line operations.
+#
+# FIFO operations take precedence over any additional operations.
+# Without modifiers, the default modification behavior is "line of".
+# The modifiers are stackable, but may override same-type incompatibility.
+#
+# $3 cannot be a multiline string, except for `-` and `-a`.
+#
+# Option `-m` offers the following primary type (conditional) modifier(s):
+# ``;
+# the following secondary type (modification behavior) modifier(s):
+# <n>:           a natural number that specifies a line;
+# `mof`:         substitution modification behavior is "match of";
+# and the following tertiary type (string matching behavior) modifier(s):
+# `e`:           exact string matching assert;
+# `p`:           prefix string matching assert;
+# `s`:           suffix string matching assert.
+#.
+fed() {
+    fed_() {
+        _line="$1"
+        _orig_offset="$2"
+        shift 2
+
+        # Test all operations against the current line in FIFO manner.
+        while [ "$#" -ge 1 ]; do
+            _mod_p=; _mod_s=; _mod_t=
+
+            # Set modifiers.
+            # `mof` -> `m` in $_mod_s
+            # <n> -> "<n>" in $_mod_s
+            # `e` -> `e` in $_mod_t
+            # `p` -> `p` in $_mod_t
+            # `s` -> `s` in $_mod_t
+            while :; do case "$1 $2" in
+                '-m mof')
+                    _mod_s="m ${_mod_s#'m '}"; shift 2 && continue
+                ;;
+                '-m e')
+                    _mod_t=e; shift 2 && continue
+                ;;
+                '-m p')
+                    _mod_t=p; shift 2 && continue
+                ;;
+                '-m s')
+                    _mod_t=s; shift 2 && continue
+                ;;
+                '-m '*)
+                    # Assert $2 is a natural number (`1`, `2`, ...).
+                    case "${2:-0}${2#*[!0123456789]}" in
+                        0*) return 255 ;;
+                        "$2$2") _mod_s="$_mod_s $2 "; shift 2 && continue ;;
+                        *) return 255 ;;
+                    esac
+                ;;
+                *)
+                    break
+                ;;
+            esac done
+
+            case "$1" in
+                '-')
+                    case "$#" in 1) return 255 ;; esac
+
+                    shift 2 && continue
+                ;;
+                '-a')  # $2 = string
+                    case "$#" in 1) return 255 ;; esac
+                    case "$_mod_s" in 'm '*) return 255 ;; esac
+
+                    # Test <n> modifier.
+                    case "${_mod_s:-0}" in
+                        *" $_orig_offset "*)
+                            set -- '-a' "$2" "$_orig_offset"
+                        ;;
+                        0)
+                            # Assert addition <noop>; is a valid operation,
+                            # hence is the line regarded as parsed.
+                            [ "$2" ] || return 0
+
+                            set -- '-s' "$_line$2" "$_orig_offset"
+                        ;;
+                        *)  # Operation <noop>.
+                            shift 2 && continue
+                        ;;
+                    esac
+
+                    arg_set _a "$2" || return "$?"
+
+                    # $3 = orig_offset
+                    printf "%s" " '$1' '$3' $_a"
+
+                    return 0
+                ;;
+                '-r')  # $2 = string
+                    case "$#" in 1) return 255 ;; esac
+                    case "$_mod_s" in 'm '*) return 255 ;; esac
+
+                    # Assert <n> modifier.
+                    case "${_mod_s:-0}" in
+                        *" $_orig_offset "* | 0) : ;;
+                        *) shift 2 && continue ;;  # Operation <noop>.
+                    esac
+
+                    # Test `e`/`p`/`s` string matching modifiers.
+                    case "$_mod_t" in
+                        e)
+                            case "$_line" in
+                                "$2") : ;;
+                                *) shift 2 && continue ;;
+                            esac
+                        ;;
+                        p)
+                            case "$_line" in
+                                "$2"*) : ;;
+                                *) shift 2 && continue ;;
+                            esac
+                        ;;
+                        s)
+                            case "$_line" in
+                                *"$2") : ;;
+                                *) shift 2 && continue ;;
+                            esac
+                        ;;
+                        *)
+                            # Test default string match.
+                            case "$_line" in
+                                *"$2"*) : ;;
+                                *) shift 2 && continue ;;
+                            esac
+                        ;;
+                    esac
+
+                    printf "%s" " '-r' '$_orig_offset'"
+
+                    return 0
+                ;;
+                '-s')  # $2 = string; $3 = string
+                    case "$#" in 1|2) return 255 ;; esac
+
+                    # Assert <n> modifier.
+                    case "${_mod_s:-m }" in
+                        *" $_orig_offset "* | 'm '*) : ;;
+                        *) shift 3 && continue ;;  # Operation <noop>.
+                    esac
+
+                    # Test `mof` (`m`) modifier.
+                    case "$_mod_s" in
+                        'm '*)
+                            # Assert operation <noop>.
+                            [ "$2" ] || { shift 3 && continue; }
+
+                            case "$_line" in
+                                *"$2"*)
+                                    _a="$2"; _b="$3"; shift 3
+                                    _b="${_line%%"$_a"*}$_b${_line#*"$_a"}"
+                                    set -- '' "$_a" "$_b" "$@"
+                                ;;
+                            esac
+                        ;;
+                    esac
+
+                    # Test `e`/`p`/`s` string matching modifiers.
+                    # Asserts addition <noop>; is a valid operation,
+                    # hence is the line regarded as parsed.
+                    case "$_mod_t" in
+                        e)
+                            case "$_line" in
+                                "$3") return 0 ;;  # Addition <noop>.
+                                "$2") : ;;
+                                *) shift 3 && continue ;;
+                            esac
+                        ;;
+                        p)
+                            case "$_line" in
+                                "$3") return 0 ;;  # Addition <noop>.
+                                "$2"*) : ;;
+                                *) shift 3 && continue ;;
+                            esac
+                        ;;
+                        s)
+                            case "$_line" in
+                                "$3") return 0 ;;  # Addition <noop>.
+                                *"$2") : ;;
+                                *) shift 3 && continue ;;
+                            esac
+                        ;;
+                        *)
+                            # Test default string match.
+                            case "$_line" in
+                                "$3") return 0 ;;  # Addition <noop>.
+                                *"$2"*) : ;;
+                                *) shift 3 && continue ;;
+                            esac
+                        ;;
+                    esac
+
+                    set -- '' '' "$3" "$_orig_offset"
+
+                    arg_set _a "$3" || return "$?"
+
+                    # $4 = orig_offset
+                    printf "%s" " '-s' '$4' $_a"
+
+                    return 0
+                ;;
+                *)
+                    return 255
+                ;;
+            esac
+        done
+    }
+
+    [ "$#" -ge 3 ] || return 255
+
+    # Save the file content into $_str.
+    #
+    # The current positional parameters become:
+    # $1  = orig_offset
+    # ... = "$@" (operations)
+    _str="$1"; shift; set -- 1 "$@"
+
+    # Store the output of `printf` in $_fmt using command substitution.
+    _fmt=$(
+        while IFS= read -r _line; do
+            fed_ "$_line" "$@" || return "$?"
+
+            # $1 = orig_offset
+            _a="$1" && shift 1
+            set -- "$((_a + 1))" "$@"
+        done \
+<<EOF
+$_str
+EOF
+
+        # Discard orig_offset.
+        shift
+
+        # Parse EOF operations.
+        while [ "$#" -ge 1 ]; do
+            case "$1" in
+                '-') : ;;
+                '-m' | '-a' | '-r') shift 2 && continue ;;
+                '-s') shift 3 && continue ;;
+                *) return 255 ;;
+            esac
+
+            arg_set _a "$2" || return "$?"
+
+            printf "%s" " '-' $_a"
+
+            shift 2
+        done
+    ) && \
+    _fmt="${_fmt# }" || \
+    return "$?"
+
+    [ "$_fmt" ] && return 0 || return 1
+}
+
+#! .desc:
 # Process each populated IFS field split with a function
 #! .params:
 # <"$1"> - string
@@ -1094,6 +1440,333 @@ ifs_map() {
 
         "$@" "$_field" || { set -- "$?"; set +f; return "$?"; }
     done && set +f
+}
+
+#! .desc:
+# Modify regular file data in-memory using a deterministic format
+#! .params:
+# <["$1"]> - log file path
+# <["$2"]> - file content
+# ["$3"] - operation
+# ["$4"]+ - operation argument
+#! .uses:
+# [&9]
+# [()]
+# [<<]
+# [>>]
+# [>]
+#! .uses.fn:
+# [libfile_n_add] ("natural N" "new string");
+#                 For natural N, add line content
+# [libfile_n_rem] ("natural N" "line string");
+#                 For natural N, remove line string
+#! .gives:
+# (0) <"$_file"> - [string];
+#                  [modified <$2>]
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input / bad usage / error
+#! .rc.fn:
+# (libfile_n_add) (*) error
+# (libfile_n_rem) (*) error
+#! .desc.ext:
+# The format of operations is as follows (N - natural number):
+# `- X`,    means at EOF add "X" data;
+# `-a N X`, means at "N" line add "X" data;
+# `-r N`,   means remove "N" line;
+# `-s N X`, means substitute "N" line with "X" data.
+#
+# Operations have to be line-sorted (FIFO).
+# Multiple operations on the same line are not specified.
+# EOF operations are only specified after all line operations.
+#
+# If a path to a valid file ($1) is given, a diff-style log of any changes
+# will be appended to it. If $1 is specified but not a valid file,
+# error code `255` (bad usage) will be returned.
+#
+# If an operation fails to apply, error code `255` (bad usage) will be
+# returned.
+#
+# For more information, refer to:
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: File Descriptor".
+# > "POSIX.1-2024, Volume: Base Definitions,
+#   Section: Directory Structure and Devices,
+#   Subsection: Directory Structure and Files".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Appending Redirected Output".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Command Substitution".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Duplicating an Output File Descriptor".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: exec".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Here-Document".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Redirecting Output".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Redirection".
+#.
+libfile() {
+    [ "$#" -ge 2 ] || return 255
+
+    _file=
+
+    [ "$2" ] && [ "$#" -ge 3 ] || return 0
+
+    # Assert the log file if specified.
+    if [ "$1" ] && [ ! -f "$1" ]; then
+        return 255
+    fi
+
+    # Open the log file (or /dev/null) using file descriptor `9`. The usage of
+    # a file descriptor avoids open/close and related syscall overhead,
+    # and also allows us to drop the log file positional parameter.
+    exec 9>> "${1:-/dev/null}" || return "$?"
+
+    # Save the file content into $_str.
+    #
+    # The current positional parameters become:
+    # $1  = orig_offset
+    # $2  = cur_offset (required for diff/log; tracks current line)
+    # $3  = delta_offset (required for diff/log; tracks consecutive difference)
+    # ... = "$@" (operations)
+    _str="$2"; shift 2; set -- 1 1 0 "$@"
+
+    # Store the output of `printf` in $_file using command substitution.
+    # The custom `x` character at the end and its subsequent removal
+    # outside the command substitution preserves any trailing <newline>
+    # characters stripped by command substitution.
+    _file=$(
+        # Modify the file content.
+        #
+        # Our diff algorithm is by definition streaming and FIFO-driven,
+        # heavily contrasting with a deferred hunk approach and/or LCS
+        # (longest common subsequence; ex. `diff -u`).
+        while IFS= read -r _line; do
+            # $1 = orig_offset
+            # $4 = operation
+            # $5 = operation argument (N)
+            case "$4 $5" in
+                "-a $1")
+                    # Preserve $_line as $1.
+                    set -- "$_line" "$@"
+
+                    # $1 = $_line
+                    # $3 = cur_offset
+                    # $7 = operation argument (X)
+                    #
+                    # Gives $_log, $_offset (cur_offset), and $_str.
+                    libfile_n_add "$3" "$7" || return "$?"
+                    _offset="$(($3 + 1 + _offset))"
+                    _str="$_str$1
+"
+                    _delta=0
+                    _shift=6  # <op params (from $4)> + 3
+                    shift
+
+                    # The log ($_log) and the added string ($_str)
+                    # always end with a <newline> character.
+                    printf "%s" "$_log" >&9
+                    printf "%s" "$_str"
+                ;;
+                "-r $1")
+                    # $2 = cur_offset
+                    # $3 = delta_offset
+                    #
+                    # Gives $_log, $_offset (cur_offset), and $_str.
+                    #
+                    # For multiple consecutive removals, delta_offset is used
+                    # in combination with cur_offset; essentially,
+                    # any consecutive line removal operations become
+                    # offset-aware for as long as the removal operations
+                    # span for.
+                    libfile_n_rem "$(($2 + $3))" "$_line" || return "$?"
+                    _offset="$(($2 + 1 + _offset))"
+                    _delta="$(($3 + 1))"
+                    _shift=5  # <op params (from $4)> + 3
+
+                    # The log always ends with a <newline> character.
+                    printf "%s" "$_log" >&9
+                ;;
+                "-s $1")
+                    # $2 = cur_offset
+                    # $3 = delta_offset
+                    #
+                    # Gives $_log, $_offset (cur_offset), and $_str.
+                    #
+                    # For multiple consecutive removals, delta_offset is used
+                    # in combination with cur_offset; essentially,
+                    # any consecutive line removal operations become
+                    # offset-aware for as long as the removal operations
+                    # span for.
+                    libfile_n_rem "$(($2 + $3))" "$_line" || return "$?"
+
+                    # Preserve $_log, $_offset, and $_str as $1, $2, and $3,
+                    # respectively.
+                    set -- "$_log" "$_offset" "$_str" "$@"
+
+                    # $1 = $_log
+                    # $2 = $_offset
+                    # $3 = $_str
+                    # $5 = cur_offset
+                    # $9 = operation argument (X)
+                    #
+                    # Gives $_log, $_offset (cur_offset), and $_str.
+                    # The old values always end with a <newline> character.
+                    libfile_n_add "$5" "$9" || return "$?"
+                    # Simplify a lookahead (self) replacement.
+                    case "$_log" in
+                        "${1%%'-'*}+${1#*'-'}"*) _log="${_log#*"${1#*'-'}"}" ;;
+                        *) _log="$1$_log" ;;
+                    esac
+                    _offset="$(($2 + $5 + 1 + _offset))"
+                    _str="$3$_str"
+                    _delta=0
+                    _shift=6  # <op params (from $4)> + 3
+                    shift 3
+
+                    # The log ($_log) and the replaced string ($_str)
+                    # always end with a <newline> character.
+                    printf "%s" "$_log" >&9
+                    printf "%s" "$_str"
+                ;;
+                *)
+                    _offset="$(($2 + 1))"; _delta=0; _shift=3
+
+                    printf "%s\n" "$_line"
+                ;;
+            esac
+
+            # $1 = orig_offset
+            _a="$1" && shift "$_shift"
+            set -- "$((_a + 1))" "$_offset" "$_delta" "$@"
+        done \
+<<EOF
+$_str
+EOF
+
+        # Discard orig_offset and delta_offset, but keep cur_offset.
+        shift 3
+        set -- "$_offset" "$@"
+
+        # Parse EOF operations.
+        while :; do
+            # $2 = operation
+            case "$2" in
+                '-') : ;;
+                *) break ;;
+            esac
+
+            # $1 = cur_offset
+            # $3 = operation argument (X)
+            #
+            # Gives $_log, $_offset (cur_offset), and $_str.
+            libfile_n_add "$1" "$3" || return "$?"
+            _offset="$(($1 + _offset))"
+            shift 3
+
+            # The log ($_log) and the added string ($_str)
+            # always end with a <newline> character.
+            printf "%s" "$_log" >&9
+            printf "%s" "$_str"
+
+            set -- "$_offset" "$@"
+        done
+
+        [ "$#" -eq 1 ] || return 255
+
+        printf "%s" x
+    ) && \
+    _file="${_file%?}" && \
+    _file="${_file%?}"
+
+    set -- "$?"
+
+    # Release file descriptor `9` to close the associated log file.
+    if [ "$1" = 0 ]; then
+        exec 9>&-; set -- "$?"
+    else
+        exec 9>&-
+    fi
+
+    return "$1"
+}
+
+#! .desc:
+# For natural N, add line content
+#! .params:
+# <$1> - natural N
+# ["$2"] - new string
+#! .uses:
+# <<<>
+#! .gives:
+# (0) <"$_log"> - string;
+#                 diff-style log guaranteed to end with <newline>
+# (0) <"$_offset"> - integer;
+#                    line offset
+# (0) <"$_str"> - string;
+#                 raw $2 guaranteed to end with <newline>
+#! .rc:
+# (0) success
+# (*) error
+#! .desc.ext:
+# $2 can be a multiline string.
+#
+# For more information, refer to:
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Here-Document".
+#.
+libfile_n_add() {
+    _log=
+    _offset=0
+
+    while IFS= read -r _line; do
+        _log="$_log$(($1 + _offset))+ $_line
+"
+        _offset=$((_offset + 1))
+    done \
+<<EOF
+$2
+EOF
+
+    _str="$2
+"
+}
+
+#! .desc:
+# For natural N, remove line string
+#! .params:
+# <$1> - natural N
+# ["$2"] - line string
+#! .gives:
+# (0) <"$_log"> - string;
+#                 diff-style log guaranteed to end with <newline>
+#! .sets:
+# (0) <_offset> $ - '-1';
+# (0) <_str> $ - '';
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input / error
+#! .desc.ext:
+# $2 cannot be a multiline string and error code `255` (bad input) will be
+# returned.
+#.
+libfile_n_rem() {
+    case "$2" in
+        *'
+'*)
+            return 255
+        ;;
+    esac
+
+    _log="${1}- $2
+"
+    _offset=-1
+    _str=
 }
 
 #! .desc:
@@ -1349,390 +2022,6 @@ EISDIR() {
 EINVAL() { _err -red - 'EINVAL:'; }
 
 # END std_err_functions
-
-#! .desc:
-# Modify a file in-place according to format
-# A - anywhere; E - exact; P - prefix; S - suffix
-# + - add; - - remove; ~ - replace
-#! .params (<2+>):
-# <$1> - type(
-#     '+' - {+} pre-line
-#     '+0' - {E} pre-line & {+} post-line
-#     '+1' - {P} pre-line & {+} post-line
-#     '+2' - {S} pre-line & {+} post-line
-#     '+3' - {A} pre-line & {+} post-line
-#     '-0' - {E} pre-line & {-}
-#     '-1' - {P} pre-line & {-}
-#     '-2' - {S} pre-line & {-}
-#     '-3' - {A} pre-line & {-}
-#     '~0' - {E} pre-line {~} post-line
-#     '~1' - {P} pre-line {~} post-line
-#     '~2' - {S} pre-line {~} post-line
-#     '~3' - {A} pre-line {~} post-line
-#     '~~1' - {P} pre-line {~} post-line | {+} post-line
-#     '~~2' - {S} pre-line {~} post-line | {+} post-line
-#     '~~3' - {A} pre-line {~} post-line | {+} post-line
-#     '~~~1' - {P} pre-line & match {~} post-line
-#         {
-#             <"$1"> - match
-#         }
-#     '~~~2' - {S} pre-line & match {~} post-line
-#         {
-#             <"$1"> - match
-#         }
-#     '~~~3' - {A} pre-line & match {~} post-line
-#         {
-#             <"$1"> - match
-#         }
-#     .
-# )
-# {["$1"] - pre-line
-# ["$2"]}+ - post-line
-#! .uses (<1+>):
-# [FILE] $ - an already parsed file
-# [FILE_PATH] $ - absolute path
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input/usage
-#.
-libfile() {
-    assert -min "$#" 2 || return 255
-
-    if [ ! "$FILE" ]; then
-        if ! __FILE_PATH_preload; then
-            return 0
-        fi
-    fi
-
-    line_add() {
-        while IFS= read -r line; do
-            i=$((i + 1))
-
-            # In a later stage, log writing can be made an internal
-            # setting, effectively increasing the number of conditional
-            # checks to a total of two. This way, specific line additions
-            # can be abbreviated (or not) as desired in the log file,
-            # without disabling the logging of other line additions.
-            printf "%d+ %s\n" "$i" "$line" >> "$logf"
-
-            printf "%s\n" "$line"
-        done <<EOF
-$1
-EOF
-    }
-
-    line_replace() {
-        # Here, $l is used to determine the current iteration of line.
-        l=0; while IFS= read -r line; do
-            l=$((l + 1))
-
-            # If $l is 1, it means we are in the first iteration. For the
-            # first iteration we do not increment the file line counter
-            # because we are simply replacing the line. For the following
-            # iterations we increment the file line counter because we are
-            # adding lines.
-            if [ "$l" -ne 1 ]; then
-                i=$((i + 1))
-            fi
-
-            # If $l is 1, it means we are in the first iteration. For the
-            # first iteration we log line replace, for the following
-            # iterations we log line addition.
-            if [ "$l" -eq 1 ]; then
-                if [ "$LINE" != "$line" ]; then
-                    {
-                        printf "%d- %s\n" "$i" "$LINE"
-                        printf "%d+ %s\n" "$i" "$line"
-                    } >> "$logf"
-                fi
-            else
-                printf "%d+ %s\n" "$i" "$line" >> "$logf"
-            fi
-
-            printf "%s\n" "$line"
-        done <<EOF
-$1
-EOF
-    }
-
-    parse_args() {
-        j=0; m=0; while [ "$#" -ge 2 ]; do case "$1" in
-            # + - {+} pre-line; $2
-            '+')
-                # The following variable helps to later compare and
-                # determine which lines requsted to be added should
-                # actually be added. It does this by noting the current
-                # iteration of lines requsted to be added.
-                j=$((j + 1))
-
-                case "$LINE" in
-                    "$2")
-                        # The line requested to be added already exists.
-                        # Note it in the following variable to later
-                        # compare and add any missing requested lines, if
-                        # any. The comma character is used as a delimiter
-                        # between the numbers for easy and fail-safe number
-                        # grep.
-                        k="${k},${j},"
-
-                        printf "%s\n" "$LINE"
-
-                        return;
-                    ;;
-                    *)
-                        shift 2
-                    ;;
-                esac
-            ;;
-            # +0 - {E} pre-line & {+} post-line; $2 & $3 respectively
-            # +1 - {P} pre-line & {+} post-line; $2 & $3 respectively
-            # +2 - {S} pre-line & {+} post-line; $2 & $3 respectively
-            # +3 - {A} pre-line & {+} post-line; $2 & $3 respectively
-            '+0'|'+1'|'+2'|'+3')
-                assert -min "$#" 3 || exit 255
-
-                case "$2" in
-                    *"$LF"*) exit 255 ;;
-                esac
-
-                case "$1$LINE" in
-                    "+0$2" | \
-                    "+1$2"* | \
-                    '+2'*"$2" | \
-                    '+3'*"$2"*)
-                        printf "%s\n" "$LINE"
-
-                        # Properly print $3 and increment the file line
-                        # counter if $3 contains newlines, i.e. if $3 is
-                        # multiple lines in one string. This function
-                        # automatically writes the relevant details to the
-                        # log file.
-                        line_add "$3"
-
-                        return;
-                    ;;
-                    *)
-                        shift 3
-                    ;;
-                esac
-            ;;
-            # -0 - {E} pre-line & {-}; $2 & $LINE respectively
-            # -1 - {P} pre-line & {-}; $2 & $LINE respectively
-            # -2 - {S} pre-line & {-}; $2 & $LINE respectively
-            # -3 - {A} pre-line & {-}; $2 & $LINE respectively
-            '-0'|'-1'|'-2'|'-3')
-                case "$2" in
-                    *"$LF"*) exit 255 ;;
-                esac
-
-                case "$1$LINE" in
-                    "-0$2" | \
-                    "-1$2"* | \
-                    '-2'*"$2" | \
-                    '-3'*"$2"*)
-                        printf "%d- %s\n" "$i" "$LINE" >> "$logf"
-
-                        i=$((i - 1))
-
-                        return;
-                    ;;
-                    *)
-                        shift 2
-                    ;;
-                esac
-            ;;
-            # ~0 - {E} pre-line {~} post-line; $2 & $3 respectively
-            # ~1 - {P} pre-line {~} post-line; $2 & $3 respectively
-            # ~2 - {S} pre-line {~} post-line; $2 & $3 respectively
-            # ~3 - {A} pre-line {~} post-line; $2 & $3 respectively
-            '~0'|'~1'|'~2'|'~3')
-                assert -min "$#" 3 || exit 255
-
-                case "$2" in
-                    *"$LF"*) exit 255 ;;
-                esac
-
-                case "$1$LINE" in
-                    "~0$2" | \
-                    "~1$2"* | \
-                    '~2'*"$2" | \
-                    '~3'*"$2"*)
-                        # Properly replace the line with $3 and increment
-                        # the file line counter if $3 contains newlines,
-                        # i.e. if $3 is multiple lines in one string. This
-                        # function automatically writes the relevant
-                        # details to the log file.
-                        line_replace "$3"
-
-                        return;
-                    ;;
-                    *)
-                        shift 3
-                    ;;
-                esac
-            ;;
-            # ~~1 - {P} pre-line {~} post-line | {+} post-line; $2 & $3
-            # ~~2 - {S} pre-line {~} post-line | {+} post-line; $2 & $3
-            # ~~3 - {A} pre-line {~} post-line | {+} post-line; $2 & $3
-            '~~1'|'~~2'|'~~3')
-                assert -min "$#" 3 || exit 255
-
-                case "$2" in
-                    *"$LF"*) exit 255 ;;
-                esac
-
-                m=$((m + 1))
-
-                case "$1$LINE" in
-                    "~~1$2"* | \
-                    '~~2'*"$2" | \
-                    '~~3'*"$2"*)
-                        n="${n},${m},"
-
-                        # Properly replace the line with $3 and increment
-                        # the file line counter if $3 contains newlines,
-                        # i.e. if $3 is multiple lines in one string. This
-                        # function automatically writes the relevant
-                        # details to the log file.
-                        line_replace "$3"
-
-                        return;
-                    ;;
-                    *)
-                        shift 3
-                    ;;
-                esac
-            ;;
-            # ~~~1 - {P} pre-line & match {~} post-line; $3 & $2 & $4
-            # ~~~2 - {S} pre-line & match {~} post-line; $3 & $2 & $4
-            # ~~~3 - {A} pre-line & match {~} post-line; $3 & $2 & $4
-            '~~~1'|'~~~2'|'~~~3')
-                assert -min "$#" 4 || exit 255
-
-                case "$2$3" in
-                    *"$LF"*) exit 255 ;;
-                esac
-
-                case "$1$LINE" in
-                    "~~~1$3"* | \
-                    '~~~2'*"$3" | \
-                    '~~~3'*"$3"*)
-                        case "$LINE" in
-                            *"$2"*) : ;;
-                            *) shift 4 && continue ;;
-                        esac
-
-                        # Properly replace the line with $4 and increment
-                        # the file line counter if $4 contains newlines,
-                        # i.e. if $4 is multiple lines in one string. This
-                        # function automatically writes the relevant
-                        # details to the log file.
-                        line_replace "$4"
-
-                        return;
-                    ;;
-                    *)
-                        shift 4
-                    ;;
-                esac
-            ;;
-            *)
-                exit 255
-            ;;
-        esac; done
-
-        assert -eq "$#" 0 || exit 255
-
-        # Print the line as-is since no match was found.
-        printf "%s\n" "$LINE"
-    }
-
-    parse_args_post() {
-        j=0; m=0; while [ "$#" -ge 2 ]; do case "$1" in
-            '+')
-                j=$((j + 1))
-
-                case "$k" in
-                    *",${j},"*)
-                        : # line already added
-                    ;;
-                    *)
-                        # Properly print $2 and increment the file line counter
-                        # if $2 contains newlines, i.e. if $2 is multiple lines
-                        # in one string. This function automatically writes the
-                        # relevant details to the log file.
-                        line_add "$2"
-                    ;;
-                esac
-
-                shift 2
-            ;;
-            '~~1'|'~~2'|'~~3')
-                assert -min "$#" 3 || exit 255
-
-                case "$2" in
-                    *"$LF"*) exit 255 ;;
-                esac
-
-                m=$((m + 1))
-
-                case "$n" in
-                    *",${m},"*)
-                        : # line already replaced
-                    ;;
-                    *)
-                        # Properly print $3 and increment the file line counter
-                        # if $3 contains newlines, i.e. if $3 is multiple lines
-                        # in one string. This function automatically writes the
-                        # relevant details to the log file.
-                        line_add "$3"
-                    ;;
-                esac
-
-                shift 3
-            ;;
-            '-0'|'-1'|'-2'|'-3')
-                shift 2
-            ;;
-            '+0'|'+1'|'+2'|'+3'|'~0'|'~1'|'~2'|'~3')
-                shift 3
-            ;;
-            '~~~1'|'~~~2'|'~~~3')
-                shift 4
-            ;;
-            *)
-                exit 255
-            ;;
-        esac; done
-
-        assert -eq "$#" 0 || exit 255
-    }
-
-    FILE=$(
-        # It is almost always preferred that any lines added by us are placed
-        # distinguishably, i.e. they are separated by our newline. This has the
-        # added benefit of standardizing the process of line addition as the
-        # count of trailing newlines in the original file, be it zero or more
-        # than one, will not matter. This could be made configurable at a later
-        # stage.
-        case "${FILE#"${FILE%??}"}" in
-            "$LF$LF") : ;;
-            *"$LF") FILE="$FILE$LF" ;;
-            *) FILE="$FILE$LF$LF" ;;
-        esac
-
-        i=0; printf "%s" "$FILE" | { while IFS= read -r LINE; do
-            i=$((i + 1)); parse_args "$@"
-        done
-
-        # Add lines remaining to be added, if any.
-        parse_args_post "$@"; }
-    )
-
-    # Add a newline, as the command substitution removed all trailing ones.
-    FILE="$FILE$LF"
-}
 
 #! .desc:
 # Read STDIN into $FILE
@@ -2380,6 +2669,52 @@ __FILE_PATH_preload() {
         err - - " $FILE_PATH"
         exit 1
     }
+}
+
+#! .desc:
+# Modify file data in-place according to format (see fed())
+#! .params:
+# <["$1"]> - log file path
+# <$2>+ - operation(
+#     '-' - EOF add $3
+#     '-m' - apply modifier for `-a`/`-r`/`-s`; see extended description
+#     '-a' - add $3
+#     '-r' - remove $3
+#     '-s' - substitute $3 with $4
+#     .
+# )
+# ["$3"] - string
+# ["$4"] - string
+#.
+__fed() {
+    assert -min "$#" 2 || return 255
+
+    [ "$FILE" ] || __FILE_PATH_preload || exit "$?"
+
+    set -- "$FILE" "$@"
+
+    _fmt=$(
+        _a="$1"; shift 2
+
+        fed "$_a" "$@" || {
+            set -- "$?"; case "$1" in
+                1) [ ! "$_fmt" ] || return "$1" ;;
+                *) return "$1" ;;
+            esac
+        }
+
+        printf "%s" "$_fmt"
+    ) || exit "$?"
+
+    [ "$_fmt" ] || return 0
+
+    FILE=$(
+        _a="$1"; _b="$2"; eval set -- "$_fmt"
+
+        libfile "$_b" "$_a" "$@" || return "$?"
+
+        printf "%s" "${_file}x"
+    ) && FILE="${FILE%?}" || exit "$?"
 }
 
 #! .desc:
@@ -7221,13 +7556,13 @@ _makepkg_conf() {
 /etc/makepkg.conf
 MAKEPKG_CONF
 
-    libfile ~~~1 \
-            ' -O2 -pipe -fno-plt -fexceptions \' \
-            'CFLAGS="-march=x86-64 -mtune=' \
-            'CFLAGS="-march=x86-64 -mtune=native -O2 -pipe -fno-plt -fexceptions \' \
-            ~~3 \
-            'MAKEFLAGS="-j' \
-            'MAKEFLAGS="-j6"'
+    __fed "$logf" \
+        -m p -s \
+        'CFLAGS="-march=x86-64 -mtune=' \
+        'CFLAGS="-march=x86-64 -mtune=native -O2 -pipe -fno-plt -fexceptions \' \
+        -s \
+        'MAKEFLAGS="-j' \
+        'MAKEFLAGS="-j6"'
 
     __file_write_overwrite;
 }
@@ -7413,18 +7748,19 @@ _pacman_conf() {
 /etc/pacman.conf
 PACMAN_CONF
 
-    libfile ~~3 \
-            'Color' \
-            'Color' \
-            ~~3 \
-            'ParallelDownloads' \
-            'ParallelDownloads = 5' \
-            ~~3 \
-            'VerbosePkgLists' \
-            'VerbosePkgLists' \
-            ~~3 \
-            'NoExtract' \
-            'NoExtract = etc/xdg/autostart/*.desktop'
+    __fed "$logf" \
+        -m s -s \
+        'Color' \
+        'Color' \
+        -s \
+        'ParallelDownloads' \
+        'ParallelDownloads = 5' \
+        -m s -s \
+        'VerbosePkgLists' \
+        'VerbosePkgLists' \
+        -s \
+        'NoExtract' \
+        'NoExtract = etc/xdg/autostart/*.desktop'
 
     FILE=$(
         line_add() {
@@ -7540,9 +7876,10 @@ FAILLOCK_CONF
 /etc/login.defs
 LOGIN_DEFS
 
-    libfile ~1 \
-            'FAIL_DELAY' \
-            'FAIL_DELAY 0'
+    __fed "$logf" \
+        -m p -s \
+        'FAIL_DELAY' \
+        'FAIL_DELAY 0'
 
     __file_write_overwrite;
 
