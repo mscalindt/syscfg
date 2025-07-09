@@ -8350,20 +8350,17 @@ MIRRORLIST
         --latest 10 \
         --number 3
 
-    FILE=$(
-        printf "%s\n" "$FILE" | while IFS= read -r LINE; do
-            if str_pfix 'Server =' "$LINE"; then
-                printf "%s\n" "$LINE"
-            fi
-        done
-    )
+    __fed '' '' \
+        -m mof -m p -s \
+        'Server =' \
+        'Server =' \
+        -r '' \
+        - ''
 
-    if [ "$FILE" ]; then
-        FILE="$FILE$LF"
-    else
+    [ "$FILE" ] || {
         _err -red - 'reflector: Failed.'
         _err -red - 'Try again on a static network condition.'; exit 1
-    fi
+    }
 
     __file_write_overwrite;
 }
