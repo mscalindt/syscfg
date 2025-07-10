@@ -3002,7 +3002,8 @@ __file_write() {
             ftype "$FILE_PATH" -info || :
             info - - " $FILE_PATH"
             if [ "$silent_write" = 0 ]; then
-                info -white - '0:'; info - -- "$FILE"
+                info -white - '0:'; info - - "${FILE%'
+'}"
             fi
         fi
 
