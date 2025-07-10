@@ -9730,15 +9730,15 @@ main() {
         info -white -- "${0##*/}: "
         info -yellow - 'Assuming `^AW ^FW`.'
 
+        force_write=1
+
         if [ "$interactive" = 1 ]; then
-            confirm_cont -y && {
-                force_write=1
-            } || {
+            confirm_cont -y || {
                 info -white -- "${0##*/}: "
                 info -white - 'Interactive correction: `^AW`.'
+
+                force_write=0
             }
-        else
-            force_write=1
         fi
     fi
 
