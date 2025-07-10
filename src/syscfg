@@ -9719,6 +9719,23 @@ main() {
         *) break ;;
     esac done
 
+    # `^AW` implies `^AW ^FW`.
+    if [ "$always_write" = 1 ] && [ "$force_write" = 0 ]; then
+        info -white -- "${0##*/}: "
+        info -yellow - 'Assuming `^AW ^FW`.'
+
+        if [ "$interactive" = 1 ]; then
+            confirm_cont -y && {
+                force_write=1
+            } || {
+                info -white -- "${0##*/}: "
+                info -white - 'Interactive correction: `^AW`.'
+            }
+        else
+            force_write=1
+        fi
+    fi
+
     readonly tmpd tmpf logf always_write force_write m533ia \
              arch_linux audio_hq_resamp bluetooth browser dns dns0 init \
              ipv6 qt_theme display_server wm bg de user home efi_mnt \
