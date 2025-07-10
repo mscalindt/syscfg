@@ -19,6 +19,8 @@ syscfg NEWS
 * Optimized the handling of octal streams and clarified usage.
   Breaking change; existing code requires adjustment.
 
+* $LF has been deprecated and removed.
+
 
 2025-05-24 - 2025-06-19
 =======================

@@ -2641,7 +2641,8 @@ __bin_write() {
         info - - " $FILE_PATH"
 
         (
-            IFS="$LF"'\'
+            IFS='\''
+'
             CC=0; for _octal in $FILE; do CC=$((CC + 1)); done
             info -white -- 'CC: '; info - - "$CC"
             info -white -- 'SIZE: '; bytes_size "$CC"
@@ -9781,9 +9782,6 @@ main() {
     }
 
     LC_ALL=C; export LC_ALL
-    LF='
-'
-    readonly LF
 
     # past env cleanup from SIGKILL or something else
     if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ]; then
