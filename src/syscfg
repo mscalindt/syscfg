@@ -9561,6 +9561,8 @@ err_handler() {
 }
 
 main() {
+    LC_ALL=C; export LC_ALL
+
     # Control switches
     # Always write files, even if the remote/fs content matches ours.
     always_write=0
@@ -9780,8 +9782,6 @@ main() {
     [ "$(id -u)" = 0 ] || {
         err -red - 'Missing root rights.'; exit 1
     }
-
-    LC_ALL=C; export LC_ALL
 
     # past env cleanup from SIGKILL or something else
     if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ]; then
