@@ -9751,7 +9751,7 @@ main() {
             err -red - "Unrecognized operation: '$_opd'"
         fi
 
-        ifs_map "$ops" info -white -
+        ifs_map "$ops" info -white - || return "$?"
         info -white - 'SWITCH: always_write ^AW'
         info -white - 'SWITCH: audio_hq_resamp ^AQ'
         info -white - 'SWITCH: confirm_crc ^CC'
