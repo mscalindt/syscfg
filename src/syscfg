@@ -9736,7 +9736,9 @@ main() {
         ifs_map "$ops" info -white -
         info -white - 'SWITCH: always_write ^AW'
         info -white - 'SWITCH: audio_hq_resamp ^AQ'
+        info -white - 'SWITCH: confirm_crc ^CC'
         info -white - 'SWITCH: force_write ^FW'
+        info -white - 'SWITCH: interactive ^IE'
         info -white - 'SWITCH: ipv6 ^I6'
         info -white - 'SWITCH: silent_cmd ^SC'
         info -white - 'SWITCH: silent_write ^SW'
