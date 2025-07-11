@@ -9798,9 +9798,7 @@ main() {
         trap "err_handler \$? EXIT" EXIT
 
         # env setup
-        mkdir -p "$tmpd" && chmod 0700 "$tmpd"
-        { : > "$tmpf"; } && chmod 0600 "$tmpf"
-        { : > "$logf"; } && chmod 0600 "$logf"
+        ( umask 077; mkdir -p "$tmpd"; : > "$tmpf" > "$logf"; )
 
         ( opd="$1"; readonly opd; "$opd"; )
 
