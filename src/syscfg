@@ -9553,7 +9553,9 @@ err_handler() {
         rm -rf "$tmpd" "$tmpf" "$logf"
     fi
 
-    if [ "$2" = INT ]; then
+    if [ "$1" = 0 ]; then
+        exit 0
+    elif [ "$2" = INT ]; then
         err -red - "${0##*/}: Received INT signal. ($1)"; kill -2 "$$"
     else
         err -red - "${0##*/}: Received $2 signal. ($1)"; exit "$1"
@@ -9562,6 +9564,10 @@ err_handler() {
 
 main() {
     LC_ALL=C; export LC_ALL
+    set -e
+    trap "err_handler \$? INT" INT
+    trap "err_handler \$? TERM" TERM
+    trap "err_handler \$? EXIT" EXIT
 
     # Control switches
     # Always write files, even if the remote/fs content matches ours.
@@ -9756,7 +9762,7 @@ main() {
             err -red - "Unrecognized operation: '$_opd'"
         fi
 
-        ifs_map "$ops" info -white - || return "$?"
+        ifs_map "$ops" info -white -
         info -white - 'SWITCH: always_write ^AW'
         info -white - 'SWITCH: audio_hq_resamp ^AQ'
         info -white - 'SWITCH: confirm_crc ^CC'
@@ -9790,12 +9796,7 @@ main() {
     fi
 
     while [ "$1" ]; do
-        replchar_posix '-' '_' "$1" && set -- "_$_str" "$@" || exit "$?"
-
-        set -e
-        trap "err_handler \$? INT" INT
-        trap "err_handler \$? TERM" TERM
-        trap "err_handler \$? EXIT" EXIT
+        replchar_posix '-' '_' "$1" && set -- "_$_str" "$@"
 
         # env setup
         ( umask 077; mkdir "$tmpd"; : > "$tmpf" > "$logf"; )
@@ -9808,19 +9809,10 @@ main() {
             rm -rf "$tmpd" "$tmpf" "$logf"
         fi
 
-        trap - INT TERM EXIT
-        set +e
-
         info -green - "${0##*/}:" "$2:" 'Done!'
 
         shift 2
     done
-
-    # env cleanup
-    if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ]; then
-        chattr -R -ia "$tmpd" "$tmpf" "$logf" > /dev/null 2>&1 || :
-        rm -rf "$tmpd" "$tmpf" "$logf"
-    fi
 
     return 0
 }
