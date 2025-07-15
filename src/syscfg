@@ -5149,7 +5149,7 @@ gpg_e() {
 
 # tar
 tar_c() {
-    tar --numeric-owner -cvpf "$1".tar "$1"
+    tar --numeric-owner -cvpf "${1%.tar}".tar "${1%.tar}"
 }
 tar_e() {
     if [ ! -e "$1" ] && [ -e "$1".tar ]; then
