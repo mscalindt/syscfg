@@ -9545,7 +9545,7 @@ err_handler() {
     IFS=' 	''
 '
 
-    trap - INT TERM EXIT
+    trap - INT TERM
 
     # env cleanup
     if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ]; then
@@ -9567,7 +9567,6 @@ main() {
     set -e
     trap "err_handler \$? INT" INT
     trap "err_handler \$? TERM" TERM
-    trap "err_handler \$? EXIT" EXIT
 
     # Control switches
     # Always write files, even if the remote/fs content matches ours.
@@ -9799,9 +9798,9 @@ main() {
         replchar_posix '-' '_' "$1" && set -- "_$_str" "$@"
 
         # env setup
-        ( umask 077; mkdir "$tmpd"; : > "$tmpf" > "$logf"; )
+        ( umask 077; mkdir "$tmpd"; : > "$tmpf" > "$logf"; ) || return "$?"
 
-        ( opd="$1"; readonly opd; "$opd"; )
+        ( opd="$1" && readonly opd && "$opd"; ) || return "$?"
 
         # env reset
         if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ]; then
@@ -9822,4 +9821,4 @@ helper_functions;
 utility_functions;
 utility_functions_err;
 utility_functions_out;
-main "$@"
+main "$@" || { err_handler "$?" 'ERR'; }
