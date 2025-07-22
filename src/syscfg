@@ -8210,11 +8210,11 @@ input type:pointer {
     bindsym $mod+x exec pamixer -i5
     bindsym $mod+c exec brightnessctl s 5%-
     bindsym $mod+v exec brightnessctl s 5%+
-    bindsym print exec grim -l 9 $(date +'SS_%Y-%m-%d_%H%M%S.png')
+    bindsym print exec grim -l 9 $(date +'SS_%Y%m%d_%H%M%S.png')
     bindsym $mod+p exec grim -l 9 -g "$(slurp)" \
-                            $(date +'SS_%Y-%m-%d_%H%M%S.png')
+                            $(date +'SS_%Y%m%d_%H%M%S.png')
     bindsym $mod+Shift+p exec grim -l 9 -g "$(slurp; sleep 2.5)" \
-                                  $(date +'SS_%Y-%m-%d_%H%M%S.png')
+                                  $(date +'SS_%Y%m%d_%H%M%S.png')
 
     # Extended functions
     # get hex color of a pixel
