@@ -2705,19 +2705,27 @@ __cmd() {
 #! .desc:
 # Run a command and store output in $FILE
 #! .params:
-# <"$1"> - command
-# <"$2">+ -  arguments
+# <[$1]> - option_block(
+#     'e' - missing output is an error condition
+#     'n' - preserve final <newline> characters as given
+#     's' - (only with `n`) always strip one final <newline> character
+#     .
+# )
+# <"$2"> - command
+# <"$3">+ -  arguments
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad usage
 #.
 __FILE_cmd() {
-    cmd "$1" || {
+    assert -min "$#" 2 || return 255
+
+    cmd "$2" || {
         _err -red - 'Missing command:'
 
         err -white -- '`'
-        err - -- "$1"
+        err - -- "$2"
         err -white - '`'
 
         exit 127
@@ -2726,10 +2734,33 @@ __FILE_cmd() {
     _info -white - 'Running command:'
 
     info -white -- '`'
-    info - -- "$@"
+    ( shift; info - -- "$@"; )
     info -white - '`'
 
-    FILE=$(command "$@")
+    case "$1" in
+        *n*s*)
+            FILE=$(shift && command "$@" && printf "%s" x) && \
+            FILE="${FILE%?}" && \
+            FILE="${FILE%?}"
+        ;;
+        *n*)
+            FILE=$(shift && command "$@" && printf "%s" x) && \
+            FILE="${FILE%?}"
+        ;;
+        *)
+            FILE=$(shift && command "$@")
+        ;;
+    esac
+
+    case "$1" in
+        *e*)
+            [ "$FILE" ] || {
+                _err -red - 'No output has been received.'
+
+                exit 1
+            }
+        ;;
+    esac
 }
 
 #! .desc:
@@ -7278,7 +7309,7 @@ _reflector_bg() {
 $arch_mirlist
 MIRRORLIST
 
-    __FILE_cmd reflector \
+    __FILE_cmd '' reflector \
         --country Bulgaria \
         --connection-timeout 1 \
         --download-timeout 20 \
@@ -7316,7 +7347,7 @@ _reflector_de() {
 $arch_mirlist
 MIRRORLIST
 
-    __FILE_cmd reflector \
+    __FILE_cmd '' reflector \
         --country Germany \
         --connection-timeout 1 \
         --download-timeout 60 \
