@@ -6597,24 +6597,75 @@ MPV_CONF
 
     FILE \
 <<'MPV_CONF'
-profile=gpu-hq
-scale=ewa_lanczossharp
-cscale=ewa_lanczossharp
-override-display-fps=60
-video-sync=display-resample
-interpolation=yes
-tscale=oversample
-hwdec=auto
-border=no
-msg-color=yes
-cursor-autohide=1000
-screenshot-template="%F - [%P]v%#01n"
+# UI & Appearance (non‑GPU)
+fullscreen
+border=no               # no window border
+msg-color=yes           # colored terminal output
+cursor-autohide=1000    # hide cursor after 1 s of inactivity
+
+# Session
 save-position-on-quit=yes
+
+# Language & Subtitles
 alang=en
 slang=en
 sub-auto=fuzzy
 sub-bold=yes
+
+# HW / Performance
+# Named profile for performance on Ryzen low-end APUs
+# 0 frame drops on 4k60fps+HDR
+[performance]  # Additional target is compatiblity
+hwdec=vaapi  # compat
+vo=gpu  # compat
+interpolation=no  # compat; interpolation causes frame glitches here
+hdr-compute-peak=no  # compat; reported to break certain drivers
+scale=bilinear  # Fast, 2‑tap linear filter; exact when no resizing
+cscale=bilinear  # Same for chroma; avoids heavier chroma filters
+dither-depth=8  # 8 bpc output (matches most SDR displays; cuts shader work)
+tone-mapping=clip  # Hard‑clip out‑of‑range HDR values; zero shader overhead
+video-sync=audio  # Let compositor handle any pacing mismatch / "judder"
+
+# Named profile for quality on Ryzen low-end APUs
+# Overlay on top of [performance] for anything FHD and below
+# 0 frame drops
+[quality]
+hdr-peak-percentile=99.995  # gpu-hq/high-quality default
+hdr-contrast-recovery=0.30  # gpu-hq/high-quality default
+scale=ewa_lanczossharp  # gpu-hq/high-quality default
 MPV_CONF
+
+    __file_write;
+
+    FILE_PATH \
+<<AUTOPROFILE_LUA
+$home/.config/mpv/scripts/autoprofile.lua
+AUTOPROFILE_LUA
+
+    FILE \
+<<'AUTOPROFILE_LUA'
+-- Apply 4K or FHD profiles once on file-load, then never reapply on seek.
+
+local applied = false
+
+mp.register_event("file-loaded", function()
+    applied = false
+end)
+
+mp.observe_property("video-params/w", "number", function(_, w)
+    if not applied and w then
+        if w >= 3840 then
+            mp.command("apply-profile performance")
+            mp.osd_message("Profile: 4K (performance)", 1.5)
+        elseif w <= 1920 then
+            mp.command("apply-profile performance")
+            mp.command("apply-profile quality")
+            mp.osd_message("Profile: 1080p (performance+quality)", 1.5)
+        end
+        applied = true
+    end
+end)
+AUTOPROFILE_LUA
 
     __file_write;
 }
