@@ -5600,19 +5600,7 @@ _GITCONFIG
 }
 
 _gov_performance() {
-    FILE_PATH \
-<<'CPU'
-/sys/devices/system/cpu
-CPU
-
-    if ! exist "$FILE_PATH"/cpu0/cpufreq/scaling_governor; then
-        ENOENT;
-        ftype "$FILE_PATH"/cpu0/cpufreq/scaling_governor -err || :
-        err - - " $FILE_PATH"/cpu0/cpufreq/scaling_governor
-        exit 2
-    fi
-
-    for core in "$FILE_PATH"/cpu*/cpufreq/scaling_governor; do
+    for core in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
         FILE_PATH \
 <<SCALING_GOVERNOR
 $core
