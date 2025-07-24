@@ -7290,72 +7290,38 @@ _reflector() {
         return 0
     fi
 
+    FILE_PATH \
+<<MIRRORLIST
+$arch_mirlist
+MIRRORLIST
+
     if [ "$bg" = 1 ]; then
-        _reflector_bg;
+        __FILE_cmd -e reflector \
+            --country Bulgaria \
+            --connection-timeout 1 \
+            --download-timeout 20 \
+            --protocol https \
+            --completion-percent 100 \
+            --sort rate \
+            --threads 8 \
+            --latest 10 \
+            --number 3
     elif [ "$de" = 1 ]; then
-        _reflector_de;
+        __FILE_cmd -e reflector \
+            --country Germany \
+            --connection-timeout 1 \
+            --download-timeout 60 \
+            --protocol https \
+            --completion-percent 100 \
+            --sort rate \
+            --threads 8 \
+            --latest 15 \
+            --number 3
     else
         _info -white - 'Nothing to be done.'
 
         return 0
     fi
-}
-
-_reflector_bg() {
-    if [ "$arch_linux" != 1 ]; then
-        _info -white - 'Nothing to be done.'
-
-        return 0
-    fi
-
-    FILE_PATH \
-<<MIRRORLIST
-$arch_mirlist
-MIRRORLIST
-
-    __FILE_cmd -e reflector \
-        --country Bulgaria \
-        --connection-timeout 1 \
-        --download-timeout 20 \
-        --protocol https \
-        --completion-percent 100 \
-        --sort rate \
-        --threads 8 \
-        --latest 10 \
-        --number 3
-
-    __fed '' '' \
-        -m mof -m p -s \
-        'Server =' \
-        'Server =' \
-        -r '' \
-        - ''
-
-    __file_write_overwrite;
-}
-
-_reflector_de() {
-    if [ "$arch_linux" != 1 ]; then
-        _info -white - 'Nothing to be done.'
-
-        return 0
-    fi
-
-    FILE_PATH \
-<<MIRRORLIST
-$arch_mirlist
-MIRRORLIST
-
-    __FILE_cmd -e reflector \
-        --country Germany \
-        --connection-timeout 1 \
-        --download-timeout 60 \
-        --protocol https \
-        --completion-percent 100 \
-        --sort rate \
-        --threads 8 \
-        --latest 15 \
-        --number 3
 
     __fed '' '' \
         -m mof -m p -s \
@@ -8364,39 +8330,20 @@ kernel.sysrq = 1
 
 _tz() {
     if [ "$bg" = 1 ]; then
-        _tz_bg;
+        FILE_PATH \
+<<'SOFIA'
+/usr/share/zoneinfo/Europe/Sofia
+SOFIA
     elif [ "$de" = 1 ]; then
-        _tz_de;
+        FILE_PATH \
+<<'BERLIN'
+/usr/share/zoneinfo/Europe/Berlin
+BERLIN
     else
         _info -white - 'Nothing to be done.'
 
         return 0
     fi
-}
-
-# Bulgarian timezone (Europe/Sofia)
-_tz_bg() {
-    FILE_PATH \
-<<'SOFIA'
-/usr/share/zoneinfo/Europe/Sofia
-SOFIA
-
-    FILE_PATH_TARGET \
-<<'LOCALTIME'
-/etc/localtime
-LOCALTIME
-
-    __loc_target_link_overwrite;
-
-    __cmd hwclock -w
-}
-
-# German timezone (Europe/Berlin)
-_tz_de() {
-    FILE_PATH \
-<<'BERLIN'
-/usr/share/zoneinfo/Europe/Berlin
-BERLIN
 
     FILE_PATH_TARGET \
 <<'LOCALTIME'
