@@ -7342,7 +7342,7 @@ _reflector_de() {
 $arch_mirlist
 MIRRORLIST
 
-    __FILE_cmd '' reflector \
+    __FILE_cmd -e reflector \
         --country Germany \
         --connection-timeout 1 \
         --download-timeout 60 \
@@ -7359,11 +7359,6 @@ MIRRORLIST
         'Server =' \
         -r '' \
         - ''
-
-    [ "$FILE" ] || {
-        _err -red - 'reflector: Failed.'
-        _err -red - 'Try again on a static network condition.'; exit 1
-    }
 
     __file_write_overwrite;
 }
