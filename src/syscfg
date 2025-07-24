@@ -4869,6 +4869,7 @@ export EDITOR=nano
 alias ls='ls --color'
 alias grep='grep --color=always'
 alias ip='ip --color'
+alias yt-dlp='yt-dlp --mtime'
 alias clr='tput reset; stty -ixon susp undef'
 alias gfix='git add .; git commit --amend --date="now" -s'
 alias gfixf='git add .; git commit --amend --date="now" --no-edit -s'
