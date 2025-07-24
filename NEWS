@@ -2,7 +2,7 @@ syscfg NEWS
 
 
 2025-07-16 - 2025-07-24
-==========
+=======================
 * EXIT signal is now completely in-house simulated, enhancing portability.
 
 * __FILE_cmd() now supports extended behavior, using an option block.
