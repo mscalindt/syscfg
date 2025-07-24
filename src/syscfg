@@ -7309,7 +7309,7 @@ _reflector_bg() {
 $arch_mirlist
 MIRRORLIST
 
-    __FILE_cmd '' reflector \
+    __FILE_cmd -e reflector \
         --country Bulgaria \
         --connection-timeout 1 \
         --download-timeout 20 \
@@ -7326,11 +7326,6 @@ MIRRORLIST
         'Server =' \
         -r '' \
         - ''
-
-    [ "$FILE" ] || {
-        _err -red - 'reflector: Failed.'
-        _err -red - 'Try again on a static network condition.'; exit 1
-    }
 
     __file_write_overwrite;
 }
