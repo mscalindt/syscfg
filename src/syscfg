@@ -4933,7 +4933,6 @@ _conf_1() {
     _git_conf;
     _gtk_conf;
     _hostname;
-    _imv_conf;
     _iwd_conf;
     _kitty_conf;
     _kvantum_conf;
@@ -5861,21 +5860,6 @@ HOSTS
 127.0.1.1        m533ia
 HOSTS
     fi
-
-    __file_write;
-}
-
-_imv_conf() {
-    FILE_PATH \
-<<CONFIG
-$home/.config/imv/config
-CONFIG
-
-    FILE \
-<<'CONFIG'
-[options]
-background = 696969
-CONFIG
 
     __file_write;
 }
@@ -8593,7 +8577,6 @@ main() {
     ops="$ops gtk-conf"
     ops="$ops hostname"
     ops="$ops hosts"
-    ops="$ops imv-conf"
     ops="$ops initramfs-conf"
     ops="$ops iwd-conf"
     ops="$ops kitty-conf"
