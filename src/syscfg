@@ -58,39 +58,9 @@ utility_functions_out() { # START utility_functions_out
 #! .desc:
 # Print formatted text to stderr (syscfg client string)
 #! .params:
-# <$1> - color(
-#     '-'  - none
-#     '-black' - bold (`1;`) foreground (`3X`) black (`0`)
-#     '-blue' - bold (`1;`) foreground (`3X`) blue (`4`)
-#     '-cyan' - bold (`1;`) foreground (`3X`) cyan (`6`)
-#     '-green' - bold (`1;`) foreground (`3X`) green (`2`)
-#     '-magenta' - bold (`1;`) foreground (`3X`) magenta (`5`)
-#     '-red' - bold (`1;`) foreground (`3X`) red (`1`)
-#     '-white' - bold (`1;`) foreground (`3X`) white (`7`)
-#     '-yellow' - bold (`1;`) foreground (`3X`) yellow (`3`)
-#     .
-# )
-# <$2> - format(
-#     '-' - raw
-#     '--' - raw; no <newline>
-#     .
-# )
-# <"$3">+ - text
-#! .uses.var.err:
-# [NO_COLOR] $ - environment variable;
-#                disable color
-#! .uses.fn:
-# <err> ('$@');
-#       Print formatted text
-#! .rc.fn:
-# (err) (0) success
-# (err) (*) error
+# <"$@"> - err()
 #! .desc.ext:
-# The colors are bold, foreground text, escape sequences of ANSI.
-#
-# The usage of color results in undefined behavior. For strict POSIX
-# compatibility, specify `-` for $1 or set variable `NO_COLOR`
-# to a non-empty value.
+# For more information, refer to the documentation of err().
 #.
 _err() {
     _clr="$1"
@@ -104,39 +74,9 @@ _err() {
 #! .desc:
 # Print formatted text to stdout (syscfg client string)
 #! .params:
-# <$1> - color(
-#     '-'  - none
-#     '-black' - bold (`1;`) foreground (`3X`) black (`0`)
-#     '-blue' - bold (`1;`) foreground (`3X`) blue (`4`)
-#     '-cyan' - bold (`1;`) foreground (`3X`) cyan (`6`)
-#     '-green' - bold (`1;`) foreground (`3X`) green (`2`)
-#     '-magenta' - bold (`1;`) foreground (`3X`) magenta (`5`)
-#     '-red' - bold (`1;`) foreground (`3X`) red (`1`)
-#     '-white' - bold (`1;`) foreground (`3X`) white (`7`)
-#     '-yellow' - bold (`1;`) foreground (`3X`) yellow (`3`)
-#     .
-# )
-# <$2> - format(
-#     '-' - raw
-#     '--' - raw; no <newline>
-#     .
-# )
-# <"$3">+ - text
-#! .uses.var.info:
-# [NO_COLOR] $ - environment variable;
-#                disable color
-#! .uses.fn:
-# <info> ('$@');
-#        Print formatted text
-#! .rc:
-# (info) (0) success
-# (info) (*) error
+# <"$@"> - info()
 #! .desc.ext:
-# The colors are bold, foreground text, escape sequences of ANSI.
-#
-# The usage of color results in undefined behavior. For strict POSIX
-# compatibility, specify `-` for $1 or set variable `NO_COLOR`
-# to a non-empty value.
+# For more information, refer to the documentation of info().
 #.
 _info() {
     _clr="$1"
@@ -361,39 +301,9 @@ writable() {
 #! .desc:
 # Print formatted text to stderr
 #! .params:
-# <$1> - color(
-#     '-'  - none
-#     '-black' - bold (`1;`) foreground (`3X`) black (`0`)
-#     '-blue' - bold (`1;`) foreground (`3X`) blue (`4`)
-#     '-cyan' - bold (`1;`) foreground (`3X`) cyan (`6`)
-#     '-green' - bold (`1;`) foreground (`3X`) green (`2`)
-#     '-magenta' - bold (`1;`) foreground (`3X`) magenta (`5`)
-#     '-red' - bold (`1;`) foreground (`3X`) red (`1`)
-#     '-white' - bold (`1;`) foreground (`3X`) white (`7`)
-#     '-yellow' - bold (`1;`) foreground (`3X`) yellow (`3`)
-#     .
-# )
-# <$2> - format(
-#     '-' - raw
-#     '--' - raw; no <newline>
-#     .
-# )
-# <"$3">+ - text
-#! .uses.var.info:
-# [NO_COLOR] $ - environment variable;
-#                disable color
-#! .uses.fn:
-# <info> ('$@');
-#        Print formatted text
-#! .rc.fn:
-# (info) (0) success
-# (info) (*) error
+# <"$@"> - info()
 #! .desc.ext:
-# The colors are bold, foreground text, escape sequences of ANSI.
-#
-# The usage of color results in undefined behavior. For strict POSIX
-# compatibility, specify `-` for $1 or set variable `NO_COLOR`
-# to a non-empty value.
+# For more information, refer to the documentation of info().
 #.
 err() {
     info "$@" >&2
@@ -510,6 +420,7 @@ ftype() {
 # <$2> - format(
 #     '-' - raw
 #     '--' - raw; no <newline>
+#     '---' - raw; no <newline>; arg offset
 #     .
 # )
 # <"$3">+ - text
@@ -548,6 +459,7 @@ info() {
     shift 2; case "$_format" in
         '-') printf "%b%s%b\n" "$_color" "$*" "$_reset" ;;
         '--') printf "%b%s%b" "$_color" "$*" "$_reset" ;;
+        '---') printf " %b%s%b" "$_color" "$*" "$_reset" ;;
         *) return 255 ;;
     esac
 }
