@@ -1745,6 +1745,106 @@ libfile_n_rem() {
 }
 
 #! .desc:
+# Process each argument with a function
+#! .params:
+# <"$1"> - $#
+# <"$2"> - $@
+# <"$3"> - function name
+# <"$4">+ - function argument
+#! .gives:
+# <"$_arg"> - [string];
+#             [last processed <$2>]
+#! .sets:
+# <map_> ();
+#! .rc:
+# (0) success
+#! .rc.fn:
+# ($3) (*) error
+#.
+map() {
+    map_() {
+        if [ "$1" -gt 7 ]; then
+            _a="$2"; _b="$3"; _c="$4"; _d="$5"; _e="$6"; _f="$7"; _g="$8"
+            _h="$9"; _pos=0; shift "$(($1 + 1))"
+
+            for _arg in "$_a" "$_b" "$_c" "$_d" "$_e" "$_f" "$_g" "$_h"; do
+                [ "$_pos" = 0 ] || { _pos="$((_pos + 1))"; continue; }
+
+                "$@" "$_arg" && _pos=0 || { _rc="$?"; _pos=1; _len=8; }
+            done
+        else
+            _a="$2"; _b="$3"; _c="$4"; _d="$5"; _e="$6"; _f="$7"; _g="$8"
+            _args="$1"; _pos=0; shift "$(($1 + 1))"
+
+            case "$_args" in
+                7)
+                    for _arg in "$_a" "$_b" "$_c" "$_d" "$_e" "$_f" "$_g"; do
+                        [ "$_pos" = 0 ] || { _pos="$((_pos + 1))"; continue; }
+
+                        "$@" "$_arg" && _pos=0 || { _rc="$?"; _pos=1; _len=7; }
+                    done
+                ;;
+                6)
+                    for _arg in "$_a" "$_b" "$_c" "$_d" "$_e" "$_f"; do
+                        [ "$_pos" = 0 ] || { _pos="$((_pos + 1))"; continue; }
+
+                        "$@" "$_arg" && _pos=0 || { _rc="$?"; _pos=1; _len=6; }
+                    done
+                ;;
+                5)
+                    for _arg in "$_a" "$_b" "$_c" "$_d" "$_e"; do
+                        [ "$_pos" = 0 ] || { _pos="$((_pos + 1))"; continue; }
+
+                        "$@" "$_arg" && _pos=0 || { _rc="$?"; _pos=1; _len=5; }
+                    done
+                ;;
+                4)
+                    for _arg in "$_a" "$_b" "$_c" "$_d"; do
+                        [ "$_pos" = 0 ] || { _pos="$((_pos + 1))"; continue; }
+
+                        "$@" "$_arg" && _pos=0 || { _rc="$?"; _pos=1; _len=4; }
+                    done
+                ;;
+                3)
+                    for _arg in "$_a" "$_b" "$_c"; do
+                        [ "$_pos" = 0 ] || { _pos="$((_pos + 1))"; continue; }
+
+                        "$@" "$_arg" && _pos=0 || { _rc="$?"; _pos=1; _len=3; }
+                    done
+                ;;
+                2)
+                    for _arg in "$_a" "$_b"; do
+                        [ "$_pos" = 0 ] || { _pos="$((_pos + 1))"; continue; }
+
+                        "$@" "$_arg" && _pos=0 || { _rc="$?"; _pos=1; _len=2; }
+                    done
+                ;;
+                1)
+                    "$@" "$_a" && _pos=0 || { _rc="$?"; _pos=1; _len=1; }
+                ;;
+            esac
+        fi
+
+        [ "$_pos" = 0 ] && return 0 || return "$_rc"
+    }
+
+    # Parse $2/$@ in chunks of 8.
+    # $1/$# reflects the argument count at all times.
+    _arg=; while [ "$1" -gt 0 ]; do
+        # On error, returns $_len, $_pos, and $_rc.
+        map_ "$@" || {
+            shift "$(((_len - _pos) + 1))"; _arg="$1"
+
+            return "$_rc"
+        }
+
+        _a="$1"; [ "$#" -ge 9 ] && shift 9 || :; set -- "$(($_a - 8))" "$@"
+    done
+
+    return 0
+}
+
+#! .desc:
 # Create the parents of a file/directory
 #! .params:
 # <"$1"> - absolute path
@@ -1769,6 +1869,45 @@ mkdir_parents() {
     # arguments to mkdir. Important to note that in such situation, error
     # handling would be on us, including the handling of race conditions.
     mkdir -p "${1%/*}" 2> /dev/null
+}
+
+#! .desc:
+# Offset arguments by N for a function call
+#! .params:
+# <[$1]> - N
+# <"$@"> - map()
+#! .uses.fn:
+# <assert> ('-whole-n' "string");
+#          Assert a string
+#! .rc:
+# (0) success
+# (*) error
+#! .rc.fn:
+# (assert) (255) bad input / bad usage
+#! .desc.ext:
+# If the first character of $1 is `-` or value is `0`, no offset will occur.
+#
+# For more information, refer to the documentation of map().
+#.
+offset() {
+    _a="$1" && \
+    _a="${_a%%\-*}" && \
+    _a="${_a:-0}" && \
+    assert -whole-n "$_a" || return 255
+
+    _a="$1" && \
+    _a="${_a%%\-*}" && \
+    _a="${_a:-0}" && \
+    [ "$_a" != 0 ] || { shift && map "$@" && return 0 || return "$?"; }
+
+    # Bad usage: offset exceeds the arguments.
+    [ "$1" -le "$2" ] || return 255
+
+    _a="$1" && \
+    _b="$2" && \
+    shift "$((_a + 2))" && \
+    set -- "$((_b - _a))" "$@" && \
+    map "$@"
 }
 
 #! .desc:
@@ -2646,7 +2785,7 @@ __FILE_cmd() {
     _info -white - 'Running command:'
 
     info -white -- '`'
-    ( shift; info - -- "$@"; )
+    info - -- "$2"; offset 2 "$#" "$@" info - ---
     info -white - '`'
 
     case "$1" in
