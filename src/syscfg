@@ -8222,7 +8222,7 @@ input type:keyboard {
 }
 
 # Disable mouse acceleration
-input type:pointer {
+input * {
     accel_profile flat
 }
 
