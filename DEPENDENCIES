@@ -4,6 +4,7 @@
   The fields are to appear respectively:
   - web address (W)
   - name (N)
+  - copyright notice (C)
   - description (D)
   - version (V)
   - license name (L)
@@ -15,6 +16,7 @@
 
 W: https://github.com/mscalindt/shell-glossary
 N: shell-glossary
+C: Copyright (C) 2021 Dimitar Yurukov <mscalindt@protonmail.com>
 D: shell-glossary is a glossary of reusable POSIX shell functions
 L: BSD 2-Clause "Simplified" License
 S: BSD-2-Clause
