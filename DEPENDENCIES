@@ -1,6 +1,6 @@
   This file lists external dependencies used in syscfg.
   Formatted by fields for easier automated parsing.
-  New dependency entries are added at the end.
+  New entries are added at the end.
   The fields are to appear respectively:
   - web address (W)
   - name (N)
