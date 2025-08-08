@@ -6,7 +6,7 @@
 
 ## License
 
-[BSD 2-Clause "Simplified" License](LICENSE)
+[KEYCLA 1.0 License](LICENSE)
 
 For a list of external dependencies and their licenses,
 refer to the [DEPENDENCIES](DEPENDENCIES) file.

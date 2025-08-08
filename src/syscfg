@@ -1,5 +1,4 @@
 #!/bin/sh
-# SPDX-License-Identifier: BSD-2-Clause
 # Copyright (C) 2021-2025 Dimitar Yurukov <mscalindt@protonmail.com>
 #
 # syscfg - declarative OS configuration

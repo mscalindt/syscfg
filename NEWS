@@ -1,12 +1,17 @@
 syscfg NEWS
 
 
-2025-07-16 - 2025-07-24
+2025-07-16 - 2025-08-08
 =======================
 * EXIT signal is now completely in-house simulated, enhancing portability.
 
 * __FILE_cmd() now supports extended behavior, using an option block.
   Breaking change; existing code requires adjustment.
+
+* Switched from BSD 2-Clause "Simplified" License to KEYCLA 1.0[1][2].
+
+[1] https://github.com/mscalindt/keycla-license
+[2] https://gitlab.com/mscalindt/keycla-license
 
 
 2025-07-06 - 2025-07-10
