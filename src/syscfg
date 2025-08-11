@@ -5521,12 +5521,12 @@ FP_CONF
 
 _firefox_conf() {
     __git_get \
-        "$home/02-GIT/firefox-profiles" \
-        'https://github.com/mscalindt/firefox-profiles'
+        "$home/1-GIT/firefox-profile" \
+        'https://github.com/mscalindt/firefox-profile'
 
     FILE_PATH \
 <<MSCALINDT
-$tmpd/firefox-profiles/src/mscalindt
+$tmpd/firefox-profile/src/mscalindt
 MSCALINDT
 
     FILE_PATH_TARGET \
@@ -5538,7 +5538,7 @@ MSCALINDT
 
     FILE_PATH \
 <<PROFILES_INI
-$tmpd/firefox-profiles/src/profiles.ini
+$tmpd/firefox-profile/src/profiles.ini
 PROFILES_INI
 
     FILE_PATH_TARGET \
