@@ -18,7 +18,6 @@ W: https://github.com/mscalindt/shell-glossary
 N: shell-glossary
 C: Copyright (C) 2021 Dimitar Yurukov <mscalindt@protonmail.com>
 D: shell-glossary is a glossary of reusable POSIX shell functions
-L: BSD 2-Clause "Simplified" License
-S: BSD-2-Clause
+L: KEYCLA 1.0 License
 A: Dimitar Yurukov
 E: mscalindt@protonmail.com
