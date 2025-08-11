@@ -2,7 +2,6 @@
 
 1. [License](#license)
 2. [Notice](#notice)
-3. [Author](#author)
 
 ## License
 
@@ -18,7 +17,3 @@ There is NO WARRANTY, to the extent permitted by law.
 
 For detailed information on external dependencies,
 see the [DEPENDENCIES](DEPENDENCIES) file.
-
-## Author
-
-Dimitar Yurukov (mscalindt@protonmail.com)
