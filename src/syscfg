@@ -4632,9 +4632,6 @@ sys_pwr_reset() { pwr_reset "$@"; }
 sys_pkg_get() { pkg_get "$@"; }
 sys_pkg_rm() { pkg_rm "$@"; }
 sys_pkg_rmF() { pkg_rmF "$@"; }
-sys_pkg_pip_get() { pkg_pip_get "$@"; }
-sys_pkg_pip_get_req() { pkg_pip_get_req "$@"; }
-sys_pkg_pip_rm() { pkg_pip_rm "$@"; }
 sys_up() { up; }
 sys_upF() { upF; }
 
@@ -4697,68 +4694,6 @@ pkg_rmF() (
     done
 
     eval "su -c 'pacman ${ARGS}'"
-)
-pkg_pip_get() (
-    case ":$1" in
-        :)
-            printf "%bERROR:%b No package(s) specified.\n" \
-                   "\033[1;31m" "\033[0m"
-            exit 2
-        ;;
-    esac
-
-    ARGS='-m pip'
-    ARGS="$ARGS"' install'
-    ARGS="$ARGS"' --user'
-    ARGS="$ARGS"' --break-system-packages'
-
-    while [ "$1" ]; do
-        ARGS="$ARGS"" \"$1\""
-        shift
-    done
-
-    eval "python ${ARGS}"
-)
-pkg_pip_get_req() (
-    case ":$1" in
-        :)
-            printf "%bERROR:%b No file(s) specified.\n" \
-                   "\033[1;31m" "\033[0m"
-            exit 2
-        ;;
-    esac
-
-    ARGS='-m pip'
-    ARGS="$ARGS"' install'
-    ARGS="$ARGS"' --user'
-    ARGS="$ARGS"' --break-system-packages'
-
-    while [ "$1" ]; do
-        ARGS="$ARGS"" --requirement \"$1\""
-        shift
-    done
-
-    eval "python ${ARGS}"
-)
-pkg_pip_rm() (
-    case ":$1" in
-        :)
-            printf "%bERROR:%b No package(s) specified.\n" \
-                   "\033[1;31m" "\033[0m"
-            exit 2
-        ;;
-    esac
-
-    ARGS='-m pip'
-    ARGS="$ARGS"' uninstall'
-    ARGS="$ARGS"' --yes'
-
-    while [ "$1" ]; do
-        ARGS="$ARGS"" \"$1\""
-        shift
-    done
-
-    eval "python ${ARGS}"
 )
 
 # Power management
