@@ -3188,8 +3188,8 @@ __file_write_overwrite_soft() {
 #! .desc:
 # Copy a file at the specified path
 #! .uses:
-# <FILE_PATH> $ - the directory
-# <FILE_PATH_TARGET> $ - the path to write the directory at
+# <FILE_PATH> $ - the file
+# <FILE_PATH_TARGET> $ - the path to write the file at
 #! .rc:
 # (0) success
 # (*) error
