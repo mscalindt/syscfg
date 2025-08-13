@@ -4851,8 +4851,6 @@ RC=\$?; \
 '\[\033[1;31m\]\W\[\033[1;32m\]]\$\[\033[0m\] '
 
 export HISTCONTROL=ignoreboth:erasedups
-export PATH="${PATH}:$HOME/.local/bin:$HOME/scripts"
-export EDITOR=nano
 
 alias ls='ls --color'
 alias grep='grep --color=always'
@@ -5302,6 +5300,19 @@ DISPLAY_SERVER
     elif [ "$display_server" = none ] || [ ! "$display_server" ]; then
         __loc_delete;
     fi
+
+    FILE_PATH \
+<<ENV
+$home/.syscfg_env/env
+ENV
+
+    FILE \
+<<'ENV'
+EDITOR=nano
+PATH="${PATH}:$HOME/.local/bin:$HOME/scripts"
+ENV
+
+    __file_write_overwrite;
 
     FILE_PATH \
 <<WM
