@@ -4763,7 +4763,10 @@ gpg_e() {
 
 # tar
 tar_c() {
-    tar --numeric-owner -cvpf "${1%.tar}".tar "${1%.tar}"
+    [ -e "$1" ] || { echo ENOENT; return 1; }
+    [ ! -e "$1".tar ] || { echo EEXIST; return 1; }
+
+    tar --numeric-owner -cvpf "$1".tar "$1"
 }
 tar_e() {
     if [ ! -e "$1" ] && [ -e "$1".tar ]; then
