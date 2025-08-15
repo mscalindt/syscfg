@@ -5124,18 +5124,15 @@ DHCPCD_CONF
         FILE \
 <<'DHCPCD_CONF'
 static domain_name_servers=::1 127.0.0.1
-slaac private
 duid
-noipv4ll
+slaac private
 
 DHCPCD_CONF
     else
         FILE \
 <<'DHCPCD_CONF'
 static domain_name_servers=127.0.0.1
-slaac hwaddr
 clientid
-noipv6rs
 noipv6
 
 DHCPCD_CONF
@@ -5148,10 +5145,10 @@ option interface_mtu
 option host_name
 option rapid_commit
 require dhcp_server_identifier
-vendorclassid
 
 noarp
 nohook resolv.conf
+noipv4ll
 DHCPCD_CONF
 
     __file_write_overwrite;
