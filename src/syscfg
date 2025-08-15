@@ -5817,17 +5817,10 @@ _hostname() {
 /etc/hostname
 HOSTNAME
 
-    if [ "$m533ia" = 1 ]; then
-        FILE \
-<<'HOSTNAME'
-m533ia
-HOSTNAME
-    else
-        FILE \
+    FILE \
 <<HOSTNAME
 $hostname
 HOSTNAME
-    fi
 
     __file_write;
 }
