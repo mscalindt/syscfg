@@ -5844,12 +5844,10 @@ HOSTS
 HOSTS
     fi
 
-    if [ "$m533ia" = 1 ]; then
-        FILE \
-<<'HOSTS'
-127.0.1.1        m533ia
+    FILE \
+<<HOSTS
+127.0.1.1        $hostname
 HOSTS
-    fi
 
     __file_write;
 }
