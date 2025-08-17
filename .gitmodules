@@ -1,0 +1,3 @@
+[submodule "lib/shell-glossary"]
+	path = lib/shell-glossary
+	url = https://github.com/mscalindt/shell-glossary.git
