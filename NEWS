@@ -1,0 +1,105 @@
+syscfg NEWS
+
+
+2025-08-17 - 2025-08-17
+=======================
+* Created tag `pre-split`.
+
+* History starts anew, as syscfg is now general-purpose software not locked
+  to a certain configuration.
+
+
+2025-07-16 - 2025-08-08
+=======================
+* EXIT signal is now completely in-house simulated, enhancing portability.
+
+* __FILE_cmd() now supports extended behavior, using an option block.
+  Breaking change; existing code requires adjustment.
+
+* Switched from BSD 2-Clause "Simplified" License to KEYCLA 1.0[1][2].
+
+[1] https://github.com/mscalindt/keycla-license
+[2] https://gitlab.com/mscalindt/keycla-license
+
+
+2025-07-06 - 2025-07-10
+=======================
+* __git_get() now supports local repositories with first priority.
+  Breaking change; existing code requires adjustment.
+
+* Simplified log handling and removed its API.
+  Breaking change; existing code requires adjustment.
+
+* libfile() of syscfg has been replaced with the powerful fed() + libfile()
+  combo from `shell-glossary`.
+  Breaking change; existing code requires adjustment.
+
+* __fed() now supports CRC32 verification for the format string.
+  Breaking change; existing code requires adjustment.
+
+* Optimized the handling of octal streams and clarified usage.
+  Breaking change; existing code requires adjustment.
+
+* $LF has been deprecated and removed.
+
+
+2025-05-24 - 2025-06-19
+=======================
+* The client's name is now set and locked in a variable for the executed
+  client to use.
+
+* For regular files, the overwrite operation now deletes and creates
+  the file instead of doing an in-place (we call it 'soft'[1])
+  overwrite.
+
+[1] 47cf24bcec4c
+
+
+2025-05-06 - 2025-05-09
+=======================
+* Client output is separated from syscfg's output. More details here[1].
+
+* Standardized error codes. More details here[2].
+
+* Added __cmd() and __FILE_cmd() for centralized command execution.
+
+* Clients are now launched in a subshell. More details here[3].
+
+[1] d366385243ec
+[2] e69ae2b2b3b5
+[3] 9b51b665cbcb
+
+
+2025-04-22 - 2025-04-25
+=======================
+* Now exits with EPERM if not executed with root privileges.
+  More details here[1].
+
+* Separated the log file from the client's temporary file.
+
+[1] 2df3e7114c43
+
+
+2025-04-16
+==========
+* Added `CREDITS` and `DEPENDENCIES` files.
+
+* Moved `syscfg` to src/ (`src/syscfg`).
+
+* Created tag `250`, tagging 250 commits before major refactor.
+
+
+2023-01-22
+==========
+* Added software configuration stages to allow for immediate
+  reconfiguration.
+
+
+2022-12-26
+==========
+* Initial commit.
+
+
+========================================================================
+
+Copyright (C) 2021-2025 Dimitar Yurukov <mscalindt@protonmail.com>

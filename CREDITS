@@ -1,0 +1,22 @@
+  This file lists entities that have contributed to syscfg.
+  Formatted by fields for easier automated parsing.
+  New entries are added at the end.
+  The fields are to appear respectively:
+  - name (N)
+  - email (E)
+  - web address (W)
+  - description (D)
+  - PGP key fingerprint (P)
+  - country of origin (C)
+  - affiliation or organization (O)
+  - address (A)
+  - year of first contribution (Y)
+
+---
+
+N: Dimitar Yurukov
+E: mscalindt@protonmail.com
+D: Original author of syscfg
+P: 7D1F56FAD6FB86652A60BEE65BC3343816EAB179
+C: Bulgaria
+Y: 2021

@@ -1,0 +1,23 @@
+  This file lists external dependencies used in syscfg.
+  Formatted by fields for easier automated parsing.
+  New entries are added at the end.
+  The fields are to appear respectively:
+  - web address (W)
+  - name (N)
+  - copyright notice (C)
+  - description (D)
+  - version (V)
+  - license name (L)
+  - SPDX license identifier (S)
+  - author name (A)
+  - maintainer email (E)
+
+---
+
+W: https://github.com/mscalindt/shell-glossary
+N: shell-glossary
+C: Copyright (C) 2021 Dimitar Yurukov <mscalindt@protonmail.com>
+D: shell-glossary is a glossary of reusable POSIX shell functions
+L: KEYCLA 1.0 License
+A: Dimitar Yurukov
+E: mscalindt@protonmail.com

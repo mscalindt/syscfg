@@ -1,0 +1,3707 @@
+#!/bin/sh
+# Copyright (C) 2021-2025 Dimitar Yurukov <mscalindt@protonmail.com>
+#
+# syscfg - declarative OS configuration
+#
+# Table of syscfg-defined error codes:
+# ---
+# (1): EERROR: "General operation error".
+# ---
+# STANDARD:
+# (1): EPERM: "Operation not permitted".
+# (2): ENOENT: "No such file or directory".
+# (17): EEXIST: "Already exists".
+# (20): ENOTDIR: "Not a directory".
+# (21): EISDIR: "Is a directory".
+# (22): EINVAL: "Invalid argument".
+# ---
+# SPECIAL CUSTOM:
+# (255): Bad function input/usage error.
+#
+# Use to_octal() or to_octal_offset() to obtain the POSIX shell-compatible
+# octal escape sequence(s) of octal byte streams produced by `od -b -An` or
+# `od -b`, respectively.
+
+# Maintainer note for any functions in assertive_functions():
+#
+# Assertive functions shall not return `255` on empty input, and instead,
+# simply return true/false appropriately. `255` is only returned when input is
+# unspecified. If a function cannot adhere to the aforementioned, it does not
+# belong in assertive_functions().
+assertive_functions() { # START assertive_functions
+    :
+} # END assertive_functions
+
+helper_functions() { # START helper_functions
+    :
+} # END helper_functions
+
+# Maintainer note for any functions in utility_functions():
+#
+# Utility functions shall always begin with two underscore characters.
+utility_functions() { # START utility_functions
+    :
+} # END utility_functions
+
+# Maintainer note for any functions in utility_functions_err():
+#
+# Utility error functions shall always begin with an underscore character.
+utility_functions_err() { # START utility_functions_err
+    :
+} # END utility_functions_err
+
+# Maintainer note for any functions in utility_functions_out():
+#
+# Utility output functions shall always begin with an underscore character.
+utility_functions_out() { # START utility_functions_out
+#! .desc:
+# Print formatted text to stderr (syscfg client string)
+#! .params:
+# <"$@"> - err()
+#! .desc.ext:
+# For more information, refer to the documentation of err().
+#.
+_err() {
+    _clr="$1"
+    _fmt="$2"
+
+    shift 2 && set -- "$_clr" "$_fmt" "[E $$ $opd]" "$@"
+
+    err "$@"
+}
+
+#! .desc:
+# Print formatted text to stdout (syscfg client string)
+#! .params:
+# <"$@"> - info()
+#! .desc.ext:
+# For more information, refer to the documentation of info().
+#.
+_info() {
+    _clr="$1"
+    _fmt="$2"
+
+    shift 2 && set -- "$_clr" "$_fmt" "[I $$ $opd]" "$@"
+
+    info "$@"
+}
+} # END utility_functions_out
+
+# START boilerplate_functions
+
+#! .desc:
+# Check if a command exists
+#! .params:
+# <"$1"> - command
+#! .rc:
+# (0) yes
+# (*) no
+# (255) bad input
+#.
+cmd() {
+    assert -eq "$#" 1 || return 255
+
+    command -v "$1" > /dev/null 2>&1
+}
+
+#! .desc:
+# Check if a given path is a directory
+#! .params:
+# <"$1"> - path
+#! .rc:
+# (0) yes
+# (1) no
+# (255) bad input
+#.
+dir() {
+    assert -eq "$#" 1 || return 255
+
+    [ -d "$1" ]
+}
+
+#! .desc:
+# Check if a given path exists
+#! .params:
+# <"$1"> - path
+#! .rc:
+# (0) yes
+# (1) no
+# (255) bad input
+#.
+exist() {
+    assert -eq "$#" 1 || return 255
+
+    [ -e "$1" ]
+}
+
+#! .desc:
+# Check if a given path is a regular file
+#! .params:
+# <"$1"> - path
+#! .rc:
+# (0) yes
+# (1) no
+# (255) bad input
+#.
+file() {
+    assert -eq "$#" 1 || return 255
+
+    [ -f "$1" ]
+}
+
+#! .desc:
+# Assert a given string is strict POSIX shell-compatible octal escape
+# sequence(s)
+#! .params:
+# <["$1"]> - string
+#! .uses.fn:
+# <assert> ('-eq' '$#' '1');
+#          Assert a string
+#! .uses.util:
+# <awk> ("program" '$1');
+#       pattern scanning and processing language
+#! .rc.fn:
+# (assert) (255) bad input
+#! .rc.util:
+# (awk) (0) true
+# (awk) (1) false / error
+# (awk) (*) error
+#.
+is_octal() {
+    assert -eq "$#" 1 || return 255
+
+    awk '
+function is_valid_chunk(chunk) {
+	return chunk ~ /^\\0[0-7]{3}$/ ? 0 : 1
+}
+
+BEGIN {
+	string=ARGV[1]
+	delete ARGV
+
+	if (length(string) % 5 != 0)
+		exit 1
+
+	for (i = 1; i <= length(string); i += 5) {
+		chunk = substr(string, i, 5)
+
+		if (is_valid_chunk(chunk) == 1)
+			exit 1
+	}
+
+	exit 0
+}
+    ' "$1"
+}
+
+#! .desc:
+# Check if the system is booted in UEFI mode
+#! .rc:
+# (0) yes
+# (1) no
+#.
+is_uefi() {
+    dir '/sys/firmware/efi/efivars'
+}
+
+#! .desc:
+# Check if a given path is readable
+#! .params:
+# <"$1"> - path
+#! .rc:
+# (0) yes
+# (1) no
+# (255) bad input
+#.
+readable() {
+    assert -eq "$#" 1 || return 255
+
+    [ -r "$1" ]
+}
+
+#! .desc:
+# Check if text appears anywhere in a given string
+#! .params:
+# <"$1"> - text
+# <"$2"> - string
+#! .rc:
+# (0) yes
+# (1) no
+# (255) bad input
+#.
+str() {
+    assert -eq "$#" 2 || return 255
+
+    case "$2" in
+        *"$1"*) return 0 ;;
+    esac
+
+    return 1
+}
+
+#! .desc:
+# Check if text appears at the left side of a given string
+#! .params:
+# <"$1"> - text
+# <"$2"> - string
+#! .rc:
+# (0) yes
+# (1) no
+# (255) bad input
+#.
+str_pfix() {
+    assert -eq "$#" 2 || return 255
+
+    case "$2" in
+        "$1"*) return 0 ;;
+    esac
+
+    return 1
+}
+
+#! .desc:
+# Check if text appears at the right side of a given string
+#! .params:
+# <"$1"> - text
+# <"$2"> - string
+#! .rc:
+# (0) yes
+# (1) no
+# (255) bad input
+#.
+str_sfix() {
+    assert -eq "$#" 2 || return 255
+
+    case "$2" in
+        *"$1") return 0 ;;
+    esac
+
+    return 1
+}
+
+#! .desc:
+# Check if a given path is writable
+#! .params:
+# <"$1"> - path
+#! .rc:
+# (0) yes
+# (1) no
+# (255) bad input
+#.
+writable() {
+    assert -eq "$#" 1 || return 255
+
+    [ -w "$1" ]
+}
+
+# END boilerplate_functions
+# START output_functions
+
+#! .desc:
+# Print formatted text to stderr
+#! .params:
+# <"$@"> - info()
+#! .desc.ext:
+# For more information, refer to the documentation of info().
+#.
+err() {
+    info "$@" >&2
+}
+
+#! .desc:
+# Identify the type of an object on the filesystem
+#! .params:
+# <"$1"> - path
+# [$2] - fd(
+#     '-err' - print to stderr; &2
+#     '-info' - print to stdout; &1
+#     .
+# )
+#! .uses.var.err:
+# [NO_COLOR] $ - environment variable;
+#                disable color
+#! .uses.var.info:
+# [NO_COLOR] $ - environment variable;
+#                disable color
+#! .uses.fn:
+# (-err) <err> ('-red' '--' "text");
+#              Print formatted text to stderr
+# (-info) <info> ('-white' '--' "text");
+#                Print formatted text
+#! .sets:
+# (0) <_type> $ - 'B' | 'C' | 'D' | 'F' | 'L' | 'P' | 'S' | '?';
+# (1) <_type> $ - '>';
+#! .rc:
+# (0) success
+# (1) does not exist
+# (255) bad input
+#! .rc.fn:
+# (err) (*) error
+# (info) (*) error
+#! .desc.ext:
+# The function denotes the type of the specified object using a letter.
+# File categorization will take precedence over directory categorization,
+# but exceptions[1] apply. Special file categorization will take precedence
+# over regular file categorization according to implicit POSIX behavior,
+# depicted below in absolute order.
+#
+# `L` means "symbolic link";
+# `B` means "block special file";
+# `C` means "character special file";
+# `S` means "socket";
+# `P` means "FIFO / named pipe";
+# `F` means "regular file";
+# `D` means "directory";
+# `?` means "unrecognized file type"[2];
+# `>` means "does not exist".
+#
+# The usage of color results in undefined behavior. For strict POSIX
+# compatibility, set variable `NO_COLOR` to a non-empty value.
+#
+# For more information, refer to:
+# > "POSIX.1-2024, Volume: Base Definitions, Section: General Concepts,
+#   Subsection: Pathname Resolution".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Utilities,
+#   Utility: test".
+#
+# [1] A trailing slash in the path string can affect the assert, effectively
+#     forcing the type to resolve to a directory or otherwise inexistence.
+#     See the "Pathname Resolution" POSIX reference for details.
+# [2] Practically, on POSIX shells and systems, `?` (unrecognized file type)
+#     should never be returned, but nonetheless exists as a catch-all
+#     on non-POSIX platforms.
+#.
+ftype() {
+    case "$2" in
+        '-err') set -- "$1" 'err' '-red' '--' ;;
+        '-info') set -- "$1" 'info' '-white' '--' ;;
+        *) [ ! "$2" ] || return 255; set -- "$1" ':' ;;
+    esac
+
+    if [ -h "$1" ]; then
+        shift; _type='L'; "$@" 'L' || return "$?"
+    elif [ -b "$1" ]; then
+        shift; _type='B'; "$@" 'B' || return "$?"
+    elif [ -c "$1" ]; then
+        shift; _type='C'; "$@" 'C' || return "$?"
+    elif [ -S "$1" ]; then
+        shift; _type='S'; "$@" 'S' || return "$?"
+    elif [ -p "$1" ]; then
+        shift; _type='P'; "$@" 'P' || return "$?"
+    elif [ -f "$1" ]; then
+        shift; _type='F'; "$@" 'F' || return "$?"
+    elif [ -d "$1" ]; then
+        shift; _type='D'; "$@" 'D' || return "$?"
+    elif [ -e "$1" ]; then
+        shift; _type='?'; "$@" '?' || return "$?"
+    else
+        shift; _type='>'; "$@" '>' || return "$?"; return 1
+    fi
+
+    return 0
+}
+
+#! .desc:
+# Print formatted text
+#! .params:
+# <$1> - color(
+#     '-'  - none
+#     '-black' - bold (`1;`) foreground (`3X`) black (`0`)
+#     '-blue' - bold (`1;`) foreground (`3X`) blue (`4`)
+#     '-cyan' - bold (`1;`) foreground (`3X`) cyan (`6`)
+#     '-green' - bold (`1;`) foreground (`3X`) green (`2`)
+#     '-magenta' - bold (`1;`) foreground (`3X`) magenta (`5`)
+#     '-red' - bold (`1;`) foreground (`3X`) red (`1`)
+#     '-white' - bold (`1;`) foreground (`3X`) white (`7`)
+#     '-yellow' - bold (`1;`) foreground (`3X`) yellow (`3`)
+#     .
+# )
+# <$2> - format(
+#     '-' - raw
+#     '--' - raw; no <newline>
+#     '---' - raw; no <newline>; arg offset
+#     .
+# )
+# <"$3">+ - text
+#! .uses.var:
+# [NO_COLOR] $ - environment variable;
+#                disable color
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input / error
+#! .desc.ext:
+# The colors are bold, foreground text, escape sequences of ANSI.
+#
+# The usage of color results in undefined behavior. For strict POSIX
+# compatibility, specify `-` for $1 or set variable `NO_COLOR`
+# to a non-empty value.
+#.
+info() {
+    _reset='\033[0m'; case $1 in
+        '-') _color=; _reset= ;;
+        '-black') _color='\033[1;30m' ;;
+        '-red') _color='\033[1;31m' ;;
+        '-green') _color='\033[1;32m' ;;
+        '-yellow') _color='\033[1;33m' ;;
+        '-blue') _color='\033[1;34m' ;;
+        '-magenta') _color='\033[1;35m' ;;
+        '-cyan') _color='\033[1;36m' ;;
+        '-white') _color='\033[1;37m' ;;
+        *) return 255 ;;
+    esac
+
+    _format="$2"
+
+    [ ! "$NO_COLOR" ] || { _color=; _reset=; }
+
+    shift 2; case "$_format" in
+        '-') printf "%b%s%b\n" "$_color" "$*" "$_reset" ;;
+        '--') printf "%b%s%b" "$_color" "$*" "$_reset" ;;
+        '---') printf " %b%s%b" "$_color" "$*" "$_reset" ;;
+        *) return 255 ;;
+    esac
+}
+
+# END output_functions
+# START utility_functions
+
+#! .desc:
+# Set with single-quote escape an argument into a variable
+#! .params:
+# <$1> - variable name
+# [["$2"]] - argument
+#! .uses.fn:
+# <assert> ('-shell-name' '$1');
+#          Assert a string
+# [replchar_posix] ('\'' '\'\\\'\'' '$2');
+#                  Replace a specific character with character(s) in a string
+#                  using PE
+#! .rc:
+# (0) success
+# (*) error
+#! .rc.fn:
+# (assert) (255) bad input
+# (replchar_posix) (*) error
+#! .desc.ext:
+# If $2 is unspecified/empty, an empty argument will be set in $1.
+#
+# For more information, refer to:
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Quoting".
+#.
+arg_set() {
+    assert -shell-name "$1" || return 255
+
+    # Escape any single quotes in the argument ($2).
+    _str="$2"; case "$_str" in
+        *\'*) replchar_posix \' \'\\\'\' "$_str" || return "$?" ;;
+    esac  # -> $_str
+
+    # The usage of `eval` here is safe. Assuming $_str is `"'\''abc` (we escape
+    # single quotes in $2 before they're passed to `eval`):
+    #
+    # First expansion (current shell):
+    # `eval "$1=\"'\$_str'\""` -> `eval a="'$_str'"` (lit.)
+    #
+    # Second expansion (`eval`):
+    # `eval a="'$_str'"` -> `a = '"'\''abc'` (illust. of meta expansion)
+    #
+    # Key points:
+    # - Due to the sophisticated escaping, single quotes from the first
+    #   expansion carry their significance to the second expansion.
+    eval "$1=\"'\$_str'\""
+}
+
+#! .desc:
+# Assert a string
+#! .params:
+# <$1> - type(
+#     '-single-quote-escaped-argument' - argument escaped with single quotes
+#     '-single-quotes-array' - pseudo array of single-quote-escaped arguments
+#     '-bit' - N that represents a valid bit (valid bit position)
+#     '-eq' - N [0,1,00,01...] (integer) equal to another N
+#     '-max' - N [0,1,00,01...] (integer) maximum of another N
+#     '-min' - N [0,1,00,01...] (integer) minimum of another N
+#     '-n' - N [0,1,00,01...] (integer)
+#     '-greater-n' - N [0,1,00,01...] (integer) greater than another N
+#     '-lower-n' - N [0,1,00,01...] (integer) lower than another N
+#     '-natural-n' - natural N [1...] (positive integer)
+#     '-whole-n' - whole N [0,1...] (non-negative integer)
+#     '-portable-name' - portable ("Portable Filename") name
+#     '-absolute-path' - absolute path (/*)
+#     '-canonical-path' - lexically canonical (assertable) path
+#     '-directory-path' - directory path
+#     '-file-path' - file path
+#     '-fs-canonical-path' - semantically canonical (assertable) path
+#     '-relative-path' - relative path
+#     '-shell-array' - shell-parseable evaluable array of arguments
+#     '-shell-name' - portable shell-parseable name
+#     '-shell-whitespace' - is "IFS white space" (<space>, <tab>, <newline>)
+#     '-has-shell-whitespace' - contains "IFS white space" characters
+#     .
+# )
+# <"$2"> - string
+# ["$3"] - string
+#! .uses:
+# [()]
+#! .rc:
+# (0) true
+# (1) false
+# (2) false due to bad operand(s)
+#! .ec:
+# (255) bad input
+#! .desc.ext:
+# Empty input will assert false (return code `1`) by default; on string types
+# with multiple input, `2` might be returned instead.
+#
+# For `-shell-array`, it is implementation-defined whether the array
+# is evaluable, in part with what consists part of "IFS white space";
+# the result of the assert is therefore made according to the locale in effect.
+#
+# For `-shell-whitespace` and `-has-shell-whitespace`, it is
+# implementation-defined whether any other, in addition to
+# the specified characters, consist part of "IFS white space";
+# the result of the assert is therefore made according to the locale in effect.
+#
+# For more information, refer to:
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: Absolute Pathname".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: Argument".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: Name".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: Portable Filename".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: Portable Filename Character Set".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: Relative Pathname".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: User Name".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: General Concepts,
+#   Subsection: Pathname Resolution".
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Regular Expressions,
+#   Subsection: RE Bracket Expression".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Escape Character (Backslash)".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: eval".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Field Splitting".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Quoting".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: set".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Single-Quotes".
+#.
+assert() {
+    case "$1" in
+        # Assert $2 is a valid single-quote-escaped argument.
+        #
+        # A valid single-quote-escaped argument is a shell-parseable string
+        # enclosed in single quotes. A single-quote inside
+        # a single-quote-escaped argument is escaped
+        # with the syntactical expression `'\''`.
+        #
+        # This string is semantically safe for `eval`.
+        '-single-quote-escaped-argument')
+            set -- "$2"; while [ "$1" ] || return 1; do
+                [ "${1#\'}" != "$1" ] && set -- "${1#\'}" || return 1
+
+                while [ "$1" ]; do
+                    case "${1#*\'}" in
+                        \\\'\'*) set -- "${1#*\'\\\'\'}"; continue ;;
+                        '') return 0 ;;
+                    esac
+
+                    return 1
+                done
+            done
+        ;;
+        # Assert $2 is a valid single-quotes array of arguments.
+        #
+        # A valid single-quotes array is a shell-parseable string consisting
+        # of at least one argument, each enclosed in single quotes
+        # and delimited by <space>. A single-quote inside
+        # a single-quote-escaped argument is escaped
+        # with the syntactical expression `'\''`.
+        #
+        # This string is semantically safe for `eval`.
+        '-single-quotes-array')
+            set -- "${2%"${2##*[! ]}"}"; while [ "$1" ] || return 1; do
+                set -- "${1#"${1%%[! ]*}"}"
+
+                [ "${1#\'}" != "$1" ] && set -- "${1#\'}" || return 1
+
+                while [ "$1" ]; do
+                    case "${1#*\'}" in
+                        \\\'\'*) set -- "${1#*\'\\\'\'}"; continue ;;
+                        \ *) set -- "${1#*\'}"; continue 2 ;;
+                        '') return 0 ;;
+                    esac
+
+                    return 1
+                done
+            done
+        ;;
+        # Assert $2 is a number that represents a valid bit.
+        #
+        # A valid bit is a natural number that represents a specific bit
+        # position in a bitmask and is always a power of 2 (`1`, `2`, `4`, `8`,
+        # ...). This is also known as "valid bit position".
+        #
+        # A number is a power of 2 if performing bitwise AND in the expression
+        # `N & (N - 1)` results in zero (the binary representation turns to all
+        # zeroes due to the single 1-bit being flipped off, given N is
+        # a positive integer that is a power of 2).
+        '-bit')
+            assert -natural-n "$2" || return 2
+
+            [ "$(($2 & ($2 - 1)))" = 0 ] || return 1
+        ;;
+        # Assert $2 is a number equal to $3.
+        #
+        # Leading zeroes are ignored, except `[0] -eq [0]` is true. This
+        # comparison essentially emulates the behavior of operator `-eq` of
+        # `test` in POSIX shells, just with support for extremely large
+        # numbers. This comparison is also known as
+        # "lexicographical numeric comparison".
+        '-eq')
+            assert -n "$2" || return 2
+            assert -n "$3" || return 2
+
+            set -- "${2#"${2%%[!0]*}"}" "${3#"${3%%[!0]*}"}"
+
+            [ "$1" = "$2" ] || return 1
+        ;;
+        # Assert $2 is a number maximum of $3.
+        #
+        # Leading zeroes are ignored, except `[0] -eq [0]` is true. This
+        # comparison essentially emulates the behavior of operator `-le` of
+        # `test` in POSIX shells, just with support for extremely large
+        # numbers. This comparison is also known as
+        # "lexicographical numeric comparison".
+        '-max')
+            assert -lower-n "$2" "$3" || \
+            assert -eq "$2" "$3" || \
+            return "$?"
+        ;;
+        # Assert $2 is a number minimum of $3.
+        #
+        # Leading zeroes are ignored, except `[0] -eq [0]` is true. This
+        # comparison essentially emulates the behavior of operator `-ge` of
+        # `test` in POSIX shells, just with support for extremely large
+        # numbers. This comparison is also known as
+        # "lexicographical numeric comparison".
+        '-min')
+            assert -greater-n "$2" "$3" || \
+            assert -eq "$2" "$3" || \
+            return "$?"
+        ;;
+        # Assert $2 is a number (`0`, `1`, `00`, `01`, ...).
+        #
+        # A number is any string consisting only of digits. This is also
+        # well known as "integer".
+        '-n')
+            case "${2:-0}${2#*[!0123456789]}" in
+                "$2$2") return 0 ;;
+            esac
+
+            return 1
+        ;;
+        # Assert $2 is a number greater than $3.
+        #
+        # To determine which number is greater, leading zeroes are removed,
+        # and the numbers are first compared by length, followed by
+        # digit comparison if the lengths are the same. This comparison
+        # essentially emulates the behavior of operator `-gt` of `test`
+        # in POSIX shells, just with support for extremely large
+        # numbers. This comparison is also known as
+        # "lexicographical numeric comparison".
+        '-greater-n')
+            assert -n "$2" && assert -n "$3" || return 2
+
+            set -- "${2#"${2%%[!0]*}"}" "${3#"${3%%[!0]*}"}"
+
+            [ ! "$1" = "$2" ] && [ ! "${#1}" -lt "${#2}" ] || return 1
+            [ ! "${#1}" -gt "${#2}" ] || return 0
+
+            while [ "$1" ]; do
+                case "$1" in
+                    "${2%"${2#?}"}"*) set -- "${1#?}" "${2#?}"; continue ;;
+                esac
+
+                if [ "${1%"${1#?}"}" -gt "${2%"${2#?}"}" ]; then
+                    return 0
+                fi
+
+                return 1
+            done
+        ;;
+        # Assert $2 is a number lower than $3.
+        #
+        # To determine which number is lower, leading zeroes are removed,
+        # and the numbers are first compared by length, followed by
+        # digit comparison if the lengths are the same. This comparison
+        # essentially emulates the behavior of operator `-lt` of `test`
+        # in POSIX shells, just with support for extremely large
+        # numbers. This comparison is also known as
+        # "lexicographical numeric comparison".
+        '-lower-n')
+            assert -n "$2" && assert -n "$3" || return 2
+
+            set -- "${2#"${2%%[!0]*}"}" "${3#"${3%%[!0]*}"}"
+
+            [ ! "$1" = "$2" ] && [ ! "${#1}" -gt "${#2}" ] || return 1
+            [ ! "${#1}" -lt "${#2}" ] || return 0
+
+            while [ "$1" ]; do
+                case "$1" in
+                    "${2%"${2#?}"}"*) set -- "${1#?}" "${2#?}"; continue ;;
+                esac
+
+                if [ "${1%"${1#?}"}" -lt "${2%"${2#?}"}" ]; then
+                    return 0
+                fi
+
+                return 1
+            done
+        ;;
+        # Assert $2 is a natural number (`1`, `2`, ...).
+        #
+        # A natural number is any string consisting only of digits,
+        # of which the first is not `0`. Also known as "positive integer"
+        # in the POSIX standard.
+        '-natural-n')
+            case "${2:-0}${2#*[!0123456789]}" in
+                0*) return 1 ;;
+                "$2$2") return 0 ;;
+            esac
+
+            return 1
+        ;;
+        # Assert $2 is a whole number (`0`, `1`, `2`, ...).
+        #
+        # A whole number is `0` and any string consisting only of digits,
+        # of which the first is not `0`. Also known as "non-negative integer"
+        # in the POSIX standard.
+        '-whole-n')
+            assert -natural-n "$2" || \
+            assert -eq "$2" 0 || \
+            return "$?"
+        ;;
+        # Assert $2 is a portable ("Portable Filename") name.
+        #
+        # A portable name is a string composed of the characters in
+        # the portable filename character set,
+        # with the following exceptions:
+        #
+        # - Should not begin with a <hyphen-minus> character. This exception
+        #   is currently not being asserted.
+        #
+        # The character classes have been intentionally expanded to be
+        # locale-independent.
+        '-portable-name')
+            case "$2" in
+                *[!0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_\.\-]*)
+                    return 1
+                ;;
+            esac
+
+            [ "$2" ] || return 1
+        ;;
+        # Assert $2 is an absolute (/*) path.
+        #
+        # An absolute path is any string of which the first character
+        # is `/`.
+        '-absolute-path')
+            case "$2" in
+                '/'*) return 0 ;;
+            esac
+
+            return 1
+        ;;
+        # Assert $2 is a lexically canonical (assertable) path.
+        #
+        # A canonical path is largely implementation-defined string that
+        # refers to the normalized absolute path. Therefore,
+        # a lexical canonical path is:
+        #
+        # - Assertive: Multiple consecutive slashes (`//`) are removed,
+        #   `.` and `..` are resolved. The only exception is two consecutive
+        #   slashes (`//`) at the beginning of the string, which is specified
+        #   by the POSIX standard as an "implementation-defined" exception.
+        #
+        # - Absolute: The path is always rooted from `/`.
+        '-canonical-path')
+            case "$2" in
+                '//'*) set -- "${2#/}" ;;
+                *) set -- "$2" ;;
+            esac
+
+            case "$1" in
+                *'//'*) return 1 ;;
+                '/'*) : ;;
+                *) return 1 ;;
+            esac
+
+            case "$1/" in
+                *'/./'* | *'/../'*) return 1 ;;
+            esac
+
+            return 0
+        ;;
+        # Assert $2 is a directory (directory-resolving) path.
+        #
+        # A directory path is any string containing at least one non-<slash>
+        # (`/`) character and that ends with one or more trailing <slash>
+        # characters.
+        '-directory-path')
+            case "$2" in
+                *[!/]*/) return 0 ;;
+            esac
+
+            return 1
+        ;;
+        # Assert $2 is a file (file-resolving) path.
+        #
+        # A file path is any string containing at least one non-<slash>
+        # (`/`) character and that does not end with trailing <slash>
+        # characters.
+        '-file-path')
+            case "$2" in
+                *[!/]*/) return 1 ;;
+                *[!/]*) return 0 ;;
+            esac
+
+            return 1
+        ;;
+        # Assert $2 is a semantically canonical (assertable) path.
+        #
+        # A canonical path is largely implementation-defined string that
+        # refers to the normalized absolute path. Therefore,
+        # a semantic canonical path is:
+        #
+        # - Semantic: Neither the path nor its segments are a symbolic link on
+        #   the filesystem. The actual existence of the path or its segments is
+        #   ignored.
+        #
+        # - Assertive: Multiple consecutive slashes (`//`) are removed,
+        #   `.` and `..` are resolved.
+        #
+        # - Absolute: The path is always rooted from `/`.
+        '-fs-canonical-path')
+            case "$2" in
+                '/') return 0 ;;
+                *'//'*) return 1 ;;
+                '/'*) set -- "${2%/}/" ;;
+                *) return 1 ;;
+            esac
+
+            case "$1" in
+                *'/./'* | *'/../'*) return 1 ;;
+            esac
+
+            while [ ! -h "${1%/}" ] || return 1; do
+                [ "${1%/*/}" ] && set -- "${1%/*/}/" || return 0
+            done
+        ;;
+        # Assert $2 is a relative (partial) path.
+        #
+        # A relative path is any string of which the first character
+        # is not `/`.
+        '-relative-path')
+            case "$2" in
+                '/'*) return 1 ;;
+            esac
+
+            [ "$2" ] || return 1
+        ;;
+        # Assert $2 is a shell-parseable evaluable array of arguments.
+        #
+        # A valid shell-parseable evaluable array is a parseable,
+        # according to the shell grammar, whole string consisting of
+        # at least one argument.
+        #
+        # This string is semantically safe for `eval`.
+        '-shell-array')
+            [ "$2" ] && ( eval set -- "$2" && [ "$#" -ge 1 ]; ) || return 1
+        ;;
+        # Assert $2 is a portable shell-parseable name.
+        #
+        # A portable shell-parseable name is a string composed of
+        # the characters in the portable filename character set,
+        # with the following exceptions:
+        #
+        # - Cannot begin with a digit.
+        # - Cannot contain a <hyphen-minus> character.
+        # - Cannot contain a <period> character.
+        #
+        # The character classes have been intentionally expanded to be
+        # locale-independent.
+        '-shell-name')
+            case "$2" in
+                [0123456789]*)
+                    return 1
+                ;;
+                *[!0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_]*)
+                    return 1
+                ;;
+            esac
+
+            [ "$2" ] || return 1
+        ;;
+        # Assert $2 consists of "IFS white space" (<space>, <tab>, <newline>)
+        # characters.
+        '-shell-whitespace')
+            [ "$2" ] && set -- $2 && [ "$#" -eq 0 ] || return 1
+        ;;
+        # Assert $2 contains "IFS white space" (<space>, <tab>, <newline>)
+        # characters.
+        '-has-shell-whitespace')
+            [ "$2" ] && set -- .$2. && [ "$#" -ne 1 ] || return 1
+        ;;
+        *)
+            exit 255
+        ;;
+    esac
+}
+
+#! .desc:
+# Print bytes in human-readable fmt: "N" "X"iB / "N" "X"B
+#! .params:
+# <$1> - bytes
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input
+#.
+bytes_size() {
+    assert -eq "$#" 1 || return 255
+
+    awk -v 'bytes'="$1" '
+	function hsize(x, base) {
+		basesuf = (base == "1024") ? "iB" : "B"
+
+		s = "BKMGTEPYZ"
+		while (x >= base && length(s) > 1)
+			{x /= base; s = substr(s, 2)}
+		s = substr(s, 1, 1)
+
+		xf = (s == "B") ? "%d" : "%.2f"
+
+		if (s != "B")
+			s = s basesuf
+
+		printf((xf " %s"), x, s)
+	}
+
+	BEGIN {
+		printf hsize(bytes, 1024)
+		printf " / "
+		print hsize(bytes, 1000)
+	}
+    ' 2> /dev/null
+}
+
+#! .desc:
+# Remove the filesystem flag protection of a physical file
+#! .params:
+# <"$1"> - absolute path
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input
+#.
+chattr_remove() {
+    assert -eq "$#" 1 || return 255
+
+    cmd 'chattr' || return 0
+
+    { [ -f "$1" ] && [ ! -h "$1" ]; } || return 0
+
+    chattr -ia "$1" 2> /dev/null || :
+}
+
+#! .desc:
+# Assert confirmation to continue
+#! .params:
+# [$1] - default_action(
+#     '-n' - forbidden
+#     '-y' - permitted
+#     .
+# )
+#! .uses.var:
+# [NO_COLOR] $ - environment variable;
+#                disable color
+#! .sets:
+# <_action> $ - "read -r" | 'N' | 'Y';
+# <_def_action> $ - 'N' | 'Y';
+#! .rc:
+# (0) true
+# (1) false
+# (255) bad input
+#! .desc.ext:
+# $1 specifies the default action to be used in case of empty input.
+# If omitted, the default action is set to 'forbidden'.
+#
+# By default, bold (`1;`) foreground (`3X`) white (`7`) color
+# escape sequence of ANSI is used in the prompt.
+#
+# The usage of color results in undefined behavior. For strict POSIX
+# compatibility, set variable `NO_COLOR` to a non-empty value.
+#.
+confirm_cont() {
+    # Set default action; defaults to `-n` if not specified.
+    case "${1:--n}" in
+        '-n')
+            _def_action='N'
+            _prompt='Continue? [y/N] '
+        ;;
+        '-y')
+            _def_action='Y'
+            _prompt='Continue? [Y/n] '
+        ;;
+        *)
+            return 255
+        ;;
+    esac
+
+    # Add white color to $_prompt if permitted.
+    [ "$NO_COLOR" ] || _prompt='\033[1;37m'"$_prompt"'\033[0m'
+
+    printf "%b" "$_prompt"
+
+    # Store input in $_action; if empty, $_def_action is stored instead.
+    read -r _action; [ "$_action" ] || _action="$_def_action"
+
+    # Return "permitted" if the first character entered is `Y` or `y`.
+    case "$_action" in
+        [Yy]*) return 0 ;;
+    esac
+
+    return 1
+}
+
+#! .desc:
+# Create a deterministic file data edit format
+#! .params:
+# <["$1"]> - file content
+# <$2>+ - operation(
+#     '-' - EOF add $3
+#     '-m' - apply modifier for `-a`/`-r`/`-s`; see extended description
+#     '-a' - add $3
+#     '-r' - remove $3
+#     '-s' - substitute $3 with $4
+#     .
+# )
+# ["$3"] - string
+# ["$4"] - string
+#! .uses:
+# <()>
+# <<<>
+#! .uses.fn:
+# [arg_set] ("variable name" "argument");
+#           Set with single-quote escape an argument into a variable
+#! .gives:
+# (0) <"$_fmt"> - string;
+#                 shell-parseable evaluable line-sorted operations list
+#! .sets:
+# <fed_> ();
+#! .rc:
+# (0) success
+# (1) no operations to be created / error
+# (*) error
+# (255) bad input / bad usage / error
+#! .rc.fn:
+# (arg_set) (*) error
+#! .desc.ext:
+# The format of created operations is as follows (N - natural number):
+# `-a N X`, means at "N" line add "X" data;
+# `-r N`,   means remove "N" line;
+# `-s N X`, means substitute "N" line with "X" data.
+#
+# Created operations are line-sorted and FIFO.
+# Created EOF operations are specified after all line operations.
+#
+# FIFO operations take precedence over any additional operations.
+# Without modifiers, the default modification behavior is "line of".
+# The modifiers are stackable, but may override same-type incompatibility.
+#
+# $3 cannot be a multiline string, except for `-` and `-a`.
+#
+# Option `-m` offers the following primary type (conditional) modifier(s):
+# ``;
+# the following secondary type (modification behavior) modifier(s):
+# <n>:           a natural number that specifies a line;
+# `mof`:         substitution modification behavior is "match of";
+# and the following tertiary type (string matching behavior) modifier(s):
+# `e`:           exact string matching assert;
+# `p`:           prefix string matching assert;
+# `s`:           suffix string matching assert.
+#.
+fed() {
+    fed_() {
+        _line="$1"
+        _orig_offset="$2"
+        shift 2
+
+        # Test all operations against the current line in FIFO manner.
+        while [ "$#" -ge 1 ]; do
+            _mod_p=; _mod_s=; _mod_t=
+
+            # Set modifiers.
+            # `mof` -> `m` in $_mod_s
+            # <n> -> "<n>" in $_mod_s
+            # `e` -> `e` in $_mod_t
+            # `p` -> `p` in $_mod_t
+            # `s` -> `s` in $_mod_t
+            while :; do case "$1 $2" in
+                '-m mof')
+                    _mod_s="m ${_mod_s#'m '}"; shift 2 && continue
+                ;;
+                '-m e')
+                    _mod_t=e; shift 2 && continue
+                ;;
+                '-m p')
+                    _mod_t=p; shift 2 && continue
+                ;;
+                '-m s')
+                    _mod_t=s; shift 2 && continue
+                ;;
+                '-m '*)
+                    # Assert $2 is a natural number (`1`, `2`, ...).
+                    case "${2:-0}${2#*[!0123456789]}" in
+                        0*) return 255 ;;
+                        "$2$2") _mod_s="$_mod_s $2 "; shift 2 && continue ;;
+                        *) return 255 ;;
+                    esac
+                ;;
+                *)
+                    break
+                ;;
+            esac done
+
+            case "$1" in
+                '-')
+                    case "$#" in 1) return 255 ;; esac
+
+                    shift 2 && continue
+                ;;
+                '-a')  # $2 = string
+                    case "$#" in 1) return 255 ;; esac
+                    case "$_mod_s" in 'm '*) return 255 ;; esac
+
+                    # Test <n> modifier.
+                    case "${_mod_s:-0}" in
+                        *" $_orig_offset "*)
+                            set -- '-a' "$2" "$_orig_offset"
+                        ;;
+                        0)
+                            # Assert addition <noop>; is a valid operation,
+                            # hence is the line regarded as parsed.
+                            [ "$2" ] || return 0
+
+                            set -- '-s' "$_line$2" "$_orig_offset"
+                        ;;
+                        *)  # Operation <noop>.
+                            shift 2 && continue
+                        ;;
+                    esac
+
+                    arg_set _a "$2" || return "$?"
+
+                    # $3 = orig_offset
+                    printf "%s" " '$1' '$3' $_a"
+
+                    return 0
+                ;;
+                '-r')  # $2 = string
+                    case "$#" in 1) return 255 ;; esac
+                    case "$_mod_s" in 'm '*) return 255 ;; esac
+
+                    # Assert <n> modifier.
+                    case "${_mod_s:-0}" in
+                        *" $_orig_offset "* | 0) : ;;
+                        *) shift 2 && continue ;;  # Operation <noop>.
+                    esac
+
+                    # Test `e`/`p`/`s` string matching modifiers.
+                    case "$_mod_t" in
+                        e)
+                            case "$_line" in
+                                "$2") : ;;
+                                *) shift 2 && continue ;;
+                            esac
+                        ;;
+                        p)
+                            case "$_line" in
+                                "$2"*) : ;;
+                                *) shift 2 && continue ;;
+                            esac
+                        ;;
+                        s)
+                            case "$_line" in
+                                *"$2") : ;;
+                                *) shift 2 && continue ;;
+                            esac
+                        ;;
+                        *)
+                            # Test default string match.
+                            case "$_line" in
+                                *"$2"*) : ;;
+                                *) shift 2 && continue ;;
+                            esac
+                        ;;
+                    esac
+
+                    printf "%s" " '-r' '$_orig_offset'"
+
+                    return 0
+                ;;
+                '-s')  # $2 = string; $3 = string
+                    case "$#" in 1|2) return 255 ;; esac
+
+                    # Assert <n> modifier.
+                    case "${_mod_s:-m }" in
+                        *" $_orig_offset "* | 'm '*) : ;;
+                        *) shift 3 && continue ;;  # Operation <noop>.
+                    esac
+
+                    # Test `mof` (`m`) modifier.
+                    case "$_mod_s" in
+                        'm '*)
+                            # Assert operation <noop>.
+                            [ "$2" ] || { shift 3 && continue; }
+
+                            case "$_line" in
+                                *"$2"*)
+                                    _a="$2"; _b="$3"; shift 3
+                                    _b="${_line%%"$_a"*}$_b${_line#*"$_a"}"
+                                    set -- '' "$_a" "$_b" "$@"
+                                ;;
+                            esac
+                        ;;
+                    esac
+
+                    # Test `e`/`p`/`s` string matching modifiers.
+                    # Asserts addition <noop>; is a valid operation,
+                    # hence is the line regarded as parsed.
+                    case "$_mod_t" in
+                        e)
+                            case "$_line" in
+                                "$3") return 0 ;;  # Addition <noop>.
+                                "$2") : ;;
+                                *) shift 3 && continue ;;
+                            esac
+                        ;;
+                        p)
+                            case "$_line" in
+                                "$3") return 0 ;;  # Addition <noop>.
+                                "$2"*) : ;;
+                                *) shift 3 && continue ;;
+                            esac
+                        ;;
+                        s)
+                            case "$_line" in
+                                "$3") return 0 ;;  # Addition <noop>.
+                                *"$2") : ;;
+                                *) shift 3 && continue ;;
+                            esac
+                        ;;
+                        *)
+                            # Test default string match.
+                            case "$_line" in
+                                "$3") return 0 ;;  # Addition <noop>.
+                                *"$2"*) : ;;
+                                *) shift 3 && continue ;;
+                            esac
+                        ;;
+                    esac
+
+                    set -- '' '' "$3" "$_orig_offset"
+
+                    arg_set _a "$3" || return "$?"
+
+                    # $4 = orig_offset
+                    printf "%s" " '-s' '$4' $_a"
+
+                    return 0
+                ;;
+                *)
+                    return 255
+                ;;
+            esac
+        done
+    }
+
+    [ "$#" -ge 3 ] || return 255
+
+    # Save the file content into $_str.
+    #
+    # The current positional parameters become:
+    # $1  = orig_offset
+    # ... = "$@" (operations)
+    _str="$1"; shift; set -- 1 "$@"
+
+    # Store the output of `printf` in $_fmt using command substitution.
+    _fmt=$(
+        while IFS= read -r _line; do
+            fed_ "$_line" "$@" || return "$?"
+
+            # $1 = orig_offset
+            _a="$1" && shift 1
+            set -- "$((_a + 1))" "$@"
+        done \
+<<EOF
+$_str
+EOF
+
+        # Discard orig_offset.
+        shift
+
+        # Parse EOF operations.
+        while [ "$#" -ge 1 ]; do
+            case "$1" in
+                '-') : ;;
+                '-m' | '-a' | '-r') shift 2 && continue ;;
+                '-s') shift 3 && continue ;;
+                *) return 255 ;;
+            esac
+
+            arg_set _a "$2" || return "$?"
+
+            printf "%s" " '-' $_a"
+
+            shift 2
+        done
+    ) && \
+    _fmt="${_fmt# }" || \
+    return "$?"
+
+    [ "$_fmt" ] && return 0 || return 1
+}
+
+#! .desc:
+# Process each populated IFS field split with a function
+#! .params:
+# <"$1"> - string
+# <$2> - function name
+# ["$3"]+ - function argument
+#! .uses.var:
+# <IFS> $ - environment variable;
+#           list of characters that is used for field splitting
+#! .sets:
+# <set +f>;
+#! .rc:
+# (0) success
+# (*) error
+#! .rc.fn:
+# ($2) (*) error
+#! .desc.ext:
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Field Splitting".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: set".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Shell Variables".
+#.
+ifs_map() {
+    set -f && _str="$1" && shift && for _field in $_str; do
+        [ "$_field" ] || continue
+
+        "$@" "$_field" || { set -- "$?"; set +f; return "$?"; }
+    done && set +f
+}
+
+#! .desc:
+# Modify regular file data in-memory using a deterministic format
+#! .params:
+# <["$1"]> - log file path
+# <["$2"]> - file content
+# ["$3"] - operation
+# ["$4"]+ - operation argument
+#! .uses:
+# [&9]
+# [()]
+# [<<]
+# [>>]
+# [>]
+#! .uses.fn:
+# [libfile_n_add] ("natural N" "new string");
+#                 For natural N, add line content
+# [libfile_n_rem] ("natural N" "line string");
+#                 For natural N, remove line string
+#! .gives:
+# (0) <"$_file"> - [string];
+#                  [modified <$2>]
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input / bad usage / error
+#! .rc.fn:
+# (libfile_n_add) (*) error
+# (libfile_n_rem) (*) error
+#! .desc.ext:
+# The format of operations is as follows (N - natural number):
+# `- X`,    means at EOF add "X" data;
+# `-a N X`, means at "N" line add "X" data;
+# `-r N`,   means remove "N" line;
+# `-s N X`, means substitute "N" line with "X" data.
+#
+# Operations have to be line-sorted (FIFO).
+# Multiple operations on the same line are not specified.
+# EOF operations are only specified after all line operations.
+#
+# If a path to a valid file ($1) is given, a diff-style log of any changes
+# will be appended to it. If $1 is specified but not a valid file,
+# error code `255` (bad usage) will be returned.
+#
+# If an operation fails to apply, error code `255` (bad usage) will be
+# returned.
+#
+# For more information, refer to:
+# > "POSIX.1-2024, Volume: Base Definitions, Section: Definitions,
+#   Subsection: File Descriptor".
+# > "POSIX.1-2024, Volume: Base Definitions,
+#   Section: Directory Structure and Devices,
+#   Subsection: Directory Structure and Files".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Appending Redirected Output".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Command Substitution".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Duplicating an Output File Descriptor".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: exec".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Here-Document".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Redirecting Output".
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Redirection".
+#.
+libfile() {
+    [ "$#" -ge 2 ] || return 255
+
+    _file=
+
+    [ "$2" ] && [ "$#" -ge 3 ] || return 0
+
+    # Assert the log file if specified.
+    if [ "$1" ] && [ ! -f "$1" ]; then
+        return 255
+    fi
+
+    # Open the log file (or /dev/null) using file descriptor `9`. The usage of
+    # a file descriptor avoids open/close and related syscall overhead,
+    # and also allows us to drop the log file positional parameter.
+    exec 9>> "${1:-/dev/null}" || return "$?"
+
+    # Save the file content into $_str.
+    #
+    # The current positional parameters become:
+    # $1  = orig_offset
+    # $2  = cur_offset (required for diff/log; tracks current line)
+    # $3  = delta_offset (required for diff/log; tracks consecutive difference)
+    # ... = "$@" (operations)
+    _str="$2"; shift 2; set -- 1 1 0 "$@"
+
+    # Store the output of `printf` in $_file using command substitution.
+    # The custom `x` character at the end and its subsequent removal
+    # outside the command substitution preserves any trailing <newline>
+    # characters stripped by command substitution.
+    _file=$(
+        # Modify the file content.
+        #
+        # Our diff algorithm is by definition streaming and FIFO-driven,
+        # heavily contrasting with a deferred hunk approach and/or LCS
+        # (longest common subsequence; ex. `diff -u`).
+        while IFS= read -r _line; do
+            # $1 = orig_offset
+            # $4 = operation
+            # $5 = operation argument (N)
+            case "$4 $5" in
+                "-a $1")
+                    # Preserve $_line as $1.
+                    set -- "$_line" "$@"
+
+                    # $1 = $_line
+                    # $3 = cur_offset
+                    # $7 = operation argument (X)
+                    #
+                    # Gives $_log, $_offset (cur_offset), and $_str.
+                    libfile_n_add "$3" "$7" || return "$?"
+                    _offset="$(($3 + 1 + _offset))"
+                    _str="$_str$1
+"
+                    _delta=0
+                    _shift=6  # <op params (from $4)> + 3
+                    shift
+
+                    # The log ($_log) and the added string ($_str)
+                    # always end with a <newline> character.
+                    printf "%s" "$_log" >&9
+                    printf "%s" "$_str"
+                ;;
+                "-r $1")
+                    # $2 = cur_offset
+                    # $3 = delta_offset
+                    #
+                    # Gives $_log, $_offset (cur_offset), and $_str.
+                    #
+                    # For multiple consecutive removals, delta_offset is used
+                    # in combination with cur_offset; essentially,
+                    # any consecutive line removal operations become
+                    # offset-aware for as long as the removal operations
+                    # span for.
+                    libfile_n_rem "$(($2 + $3))" "$_line" || return "$?"
+                    _offset="$(($2 + 1 + _offset))"
+                    _delta="$(($3 + 1))"
+                    _shift=5  # <op params (from $4)> + 3
+
+                    # The log always ends with a <newline> character.
+                    printf "%s" "$_log" >&9
+                ;;
+                "-s $1")
+                    # $2 = cur_offset
+                    # $3 = delta_offset
+                    #
+                    # Gives $_log, $_offset (cur_offset), and $_str.
+                    #
+                    # For multiple consecutive removals, delta_offset is used
+                    # in combination with cur_offset; essentially,
+                    # any consecutive line removal operations become
+                    # offset-aware for as long as the removal operations
+                    # span for.
+                    libfile_n_rem "$(($2 + $3))" "$_line" || return "$?"
+
+                    # Preserve $_log, $_offset, and $_str as $1, $2, and $3,
+                    # respectively.
+                    set -- "$_log" "$_offset" "$_str" "$@"
+
+                    # $1 = $_log
+                    # $2 = $_offset
+                    # $3 = $_str
+                    # $5 = cur_offset
+                    # $9 = operation argument (X)
+                    #
+                    # Gives $_log, $_offset (cur_offset), and $_str.
+                    # The old values always end with a <newline> character.
+                    libfile_n_add "$5" "$9" || return "$?"
+                    # Simplify a lookahead (self) replacement.
+                    case "$_log" in
+                        "${1%%'-'*}+${1#*'-'}"*) _log="${_log#*"${1#*'-'}"}" ;;
+                        *) _log="$1$_log" ;;
+                    esac
+                    _offset="$(($2 + $5 + 1 + _offset))"
+                    _str="$3$_str"
+                    _delta=0
+                    _shift=6  # <op params (from $4)> + 3
+                    shift 3
+
+                    # The log ($_log) and the replaced string ($_str)
+                    # always end with a <newline> character.
+                    printf "%s" "$_log" >&9
+                    printf "%s" "$_str"
+                ;;
+                *)
+                    _offset="$(($2 + 1))"; _delta=0; _shift=3
+
+                    printf "%s\n" "$_line"
+                ;;
+            esac
+
+            # $1 = orig_offset
+            _a="$1" && shift "$_shift"
+            set -- "$((_a + 1))" "$_offset" "$_delta" "$@"
+        done \
+<<EOF
+$_str
+EOF
+
+        # Discard orig_offset and delta_offset, but keep cur_offset.
+        shift 3
+        set -- "$_offset" "$@"
+
+        # Parse EOF operations.
+        while :; do
+            # $2 = operation
+            case "$2" in
+                '-') : ;;
+                *) break ;;
+            esac
+
+            # $1 = cur_offset
+            # $3 = operation argument (X)
+            #
+            # Gives $_log, $_offset (cur_offset), and $_str.
+            libfile_n_add "$1" "$3" || return "$?"
+            _offset="$(($1 + _offset))"
+            shift 3
+
+            # The log ($_log) and the added string ($_str)
+            # always end with a <newline> character.
+            printf "%s" "$_log" >&9
+            printf "%s" "$_str"
+
+            set -- "$_offset" "$@"
+        done
+
+        [ "$#" -eq 1 ] || return 255
+
+        printf "%s" x
+    ) && \
+    _file="${_file%?}" && \
+    _file="${_file%?}"
+
+    set -- "$?"
+
+    # Release file descriptor `9` to close the associated log file.
+    if [ "$1" = 0 ]; then
+        exec 9>&-; set -- "$?"
+    else
+        exec 9>&-
+    fi
+
+    return "$1"
+}
+
+#! .desc:
+# For natural N, add line content
+#! .params:
+# <$1> - natural N
+# ["$2"] - new string
+#! .uses:
+# <<<>
+#! .gives:
+# (0) <"$_log"> - string;
+#                 diff-style log guaranteed to end with <newline>
+# (0) <"$_offset"> - integer;
+#                    line offset
+# (0) <"$_str"> - string;
+#                 raw $2 guaranteed to end with <newline>
+#! .rc:
+# (0) success
+# (*) error
+#! .desc.ext:
+# $2 can be a multiline string.
+#
+# For more information, refer to:
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Here-Document".
+#.
+libfile_n_add() {
+    _log=
+    _offset=0
+
+    while IFS= read -r _line; do
+        _log="$_log$(($1 + _offset))+ $_line
+"
+        _offset=$((_offset + 1))
+    done \
+<<EOF
+$2
+EOF
+
+    _str="$2
+"
+}
+
+#! .desc:
+# For natural N, remove line string
+#! .params:
+# <$1> - natural N
+# ["$2"] - line string
+#! .gives:
+# (0) <"$_log"> - string;
+#                 diff-style log guaranteed to end with <newline>
+#! .sets:
+# (0) <_offset> $ - '-1';
+# (0) <_str> $ - '';
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input / error
+#! .desc.ext:
+# $2 cannot be a multiline string and error code `255` (bad input) will be
+# returned.
+#.
+libfile_n_rem() {
+    case "$2" in
+        *'
+'*)
+            return 255
+        ;;
+    esac
+
+    _log="${1}- $2
+"
+    _offset=-1
+    _str=
+}
+
+#! .desc:
+# Process each argument with a function
+#! .params:
+# <"$1"> - $#
+# <"$2"> - $@
+# <"$3"> - function name
+# <"$4">+ - function argument
+#! .gives:
+# <"$_arg"> - [string];
+#             [last processed <$2>]
+#! .sets:
+# <map_> ();
+#! .rc:
+# (0) success
+#! .rc.fn:
+# ($3) (*) error
+#.
+map() {
+    map_() {
+        if [ "$1" -gt 7 ]; then
+            _a="$2"; _b="$3"; _c="$4"; _d="$5"; _e="$6"; _f="$7"; _g="$8"
+            _h="$9"; _pos=0; shift "$(($1 + 1))"
+
+            for _arg in "$_a" "$_b" "$_c" "$_d" "$_e" "$_f" "$_g" "$_h"; do
+                [ "$_pos" = 0 ] || { _pos="$((_pos + 1))"; continue; }
+
+                "$@" "$_arg" && _pos=0 || { _rc="$?"; _pos=1; _len=8; }
+            done
+        else
+            _a="$2"; _b="$3"; _c="$4"; _d="$5"; _e="$6"; _f="$7"; _g="$8"
+            _args="$1"; _pos=0; shift "$(($1 + 1))"
+
+            case "$_args" in
+                7)
+                    for _arg in "$_a" "$_b" "$_c" "$_d" "$_e" "$_f" "$_g"; do
+                        [ "$_pos" = 0 ] || { _pos="$((_pos + 1))"; continue; }
+
+                        "$@" "$_arg" && _pos=0 || { _rc="$?"; _pos=1; _len=7; }
+                    done
+                ;;
+                6)
+                    for _arg in "$_a" "$_b" "$_c" "$_d" "$_e" "$_f"; do
+                        [ "$_pos" = 0 ] || { _pos="$((_pos + 1))"; continue; }
+
+                        "$@" "$_arg" && _pos=0 || { _rc="$?"; _pos=1; _len=6; }
+                    done
+                ;;
+                5)
+                    for _arg in "$_a" "$_b" "$_c" "$_d" "$_e"; do
+                        [ "$_pos" = 0 ] || { _pos="$((_pos + 1))"; continue; }
+
+                        "$@" "$_arg" && _pos=0 || { _rc="$?"; _pos=1; _len=5; }
+                    done
+                ;;
+                4)
+                    for _arg in "$_a" "$_b" "$_c" "$_d"; do
+                        [ "$_pos" = 0 ] || { _pos="$((_pos + 1))"; continue; }
+
+                        "$@" "$_arg" && _pos=0 || { _rc="$?"; _pos=1; _len=4; }
+                    done
+                ;;
+                3)
+                    for _arg in "$_a" "$_b" "$_c"; do
+                        [ "$_pos" = 0 ] || { _pos="$((_pos + 1))"; continue; }
+
+                        "$@" "$_arg" && _pos=0 || { _rc="$?"; _pos=1; _len=3; }
+                    done
+                ;;
+                2)
+                    for _arg in "$_a" "$_b"; do
+                        [ "$_pos" = 0 ] || { _pos="$((_pos + 1))"; continue; }
+
+                        "$@" "$_arg" && _pos=0 || { _rc="$?"; _pos=1; _len=2; }
+                    done
+                ;;
+                1)
+                    "$@" "$_a" && _pos=0 || { _rc="$?"; _pos=1; _len=1; }
+                ;;
+            esac
+        fi
+
+        [ "$_pos" = 0 ] && return 0 || return "$_rc"
+    }
+
+    # Parse $2/$@ in chunks of 8.
+    # $1/$# reflects the argument count at all times.
+    _arg=; while [ "$1" -gt 0 ]; do
+        # On error, returns $_len, $_pos, and $_rc.
+        map_ "$@" || {
+            shift "$(((_len - _pos) + 1))"; _arg="$1"
+
+            return "$_rc"
+        }
+
+        _a="$1"; [ "$#" -ge 9 ] && shift 9 || :; set -- "$(($_a - 8))" "$@"
+    done
+
+    return 0
+}
+
+#! .desc:
+# Create the parents of a file/directory
+#! .params:
+# <"$1"> - absolute path
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input
+#.
+mkdir_parents() {
+    assert -eq "$#" 1 || return 255
+
+    if str_sfix '/' "$1"; then
+        set -- "${1%?}"
+    fi
+
+    if dir "${1%/*}"; then
+        return 0
+    fi
+
+    # Shall consider implementing 'mkdir -p' within the shell by path
+    # traversing the function argument and passing separate consequental
+    # arguments to mkdir. Important to note that in such situation, error
+    # handling would be on us, including the handling of race conditions.
+    mkdir -p "${1%/*}" 2> /dev/null
+}
+
+#! .desc:
+# Offset arguments by N for a function call
+#! .params:
+# <[$1]> - N
+# <"$@"> - map()
+#! .uses.fn:
+# <assert> ('-whole-n' "string");
+#          Assert a string
+#! .rc:
+# (0) success
+# (*) error
+#! .rc.fn:
+# (assert) (255) bad input / bad usage
+#! .desc.ext:
+# If the first character of $1 is `-` or value is `0`, no offset will occur.
+#
+# For more information, refer to the documentation of map().
+#.
+offset() {
+    _a="$1" && \
+    _a="${_a%%\-*}" && \
+    _a="${_a:-0}" && \
+    assert -whole-n "$_a" || return 255
+
+    _a="$1" && \
+    _a="${_a%%\-*}" && \
+    _a="${_a:-0}" && \
+    [ "$_a" != 0 ] || { shift && map "$@" && return 0 || return "$?"; }
+
+    # Bad usage: offset exceeds the arguments.
+    [ "$1" -le "$2" ] || return 255
+
+    _a="$1" && \
+    _b="$2" && \
+    shift "$((_a + 2))" && \
+    set -- "$((_b - _a))" "$@" && \
+    map "$@"
+}
+
+#! .desc:
+# Print the return code of a command
+#! .params:
+# <"$1"> - command
+# ["$2"+] - arguments
+#! .rc:
+# (0) success
+# (127) command does not exist
+# (255) bad input
+#.
+rc() {
+    assert -min "$#" 1 || return 255
+
+    if cmd "$1"; then
+        "$@" > /dev/null 2>&1
+        printf "%d" "$?"
+    else
+        return 127
+    fi
+
+    return 0
+}
+
+#! .desc:
+# Replace a specific character with character(s) in a string using PE
+#! .params:
+# ["$1"] - specific character
+# ["$2"] - character(s)
+# ["$3"] - string
+#! .uses.fn:
+# <assert> ('-max' '${#1}' '1');
+#          Assert a string
+#! .gives:
+# (0) <"$_str"> - [string];
+#                 [modified <$3>]
+#! .rc:
+# (0) success
+# (*) error
+#! .rc.fn:
+# (assert) (255) bad input
+#! .desc.ext:
+# Multi-byte and multiple characters are not supported and error code `255`
+# (bad input) will be returned.
+#
+# For more information, refer to:
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Parameter Expansion".
+#.
+replchar_posix() {
+    assert -max "${#1}" 1 || return 255
+
+    # Traverse $3 (string), replacing the occurrences of $1 with $2.
+    _str=; _a="$3"; while [ "$1" ]; do case "$_a" in
+        *"$1"*)
+            # Example character, replacement character, and string:
+            # `a` `A` `ddaabcd`
+            # $_b: `dd`
+            # $_c: `aabcd`
+            # $_d: `aa`
+            # $_a: `bcd`
+            _b="${_a%%"$1"*}"
+            _c="${_a#"$_b"}"
+            _d="${_c%%[!"$1"]*}"
+            _a="${_a#"$_b$_d"}"
+
+            # ${#_d}: `2`
+            # $_chars: `AA`
+            _chars=; _i=0; until [ "$_i" = "${#_d}" ]; do
+                _chars="$_chars$2"; _i=$((_i + 1))
+            done
+
+            # $_str: `ddAA`
+            _str="$_str$_b$_chars"
+        ;;
+        *)
+            # $_str: `ddAAbcd`
+            _str="$_str$_a"; break
+        ;;
+    esac done
+}
+
+#! .desc:
+# Process each populated string line with a function
+#! .params:
+# <"$1"> - string
+# <$2> - function name
+# ["$3"]+ - function argument
+#! .uses:
+# <<<>
+#! .rc:
+# (0) success
+#! .rc.fn:
+# ($2) (*) error
+#! .desc.ext:
+# > "POSIX.1-2024, Volume: Shell & Utilities, Section: Shell Command Language,
+#   Subsection: Here-Document".
+#.
+sline_map() {
+    _str="$1"; shift; while IFS= read -r _line; do
+        [ "$_line" ] || continue
+        "$@" "$_line" || return "$?"
+    done \
+<<EOF
+$_str
+EOF
+
+    return 0
+}
+
+#! .desc:
+# Print POSIX shell-compatible octal escape sequence(s) of `od -b -An` string
+#! .params:
+# <["$1"]> - string
+#! .uses.fn:
+# <assert> ('-eq' '$#' '1');
+#          Assert a string
+#! .rc:
+# (0) success
+# (*) error
+#! .rc.fn:
+# (assert) (255) bad input
+#.
+to_octal() {
+    assert -eq "$#" 1 || return 255
+
+    for _octal in $1; do
+        printf "%s" "\\0$_octal"
+    done
+}
+
+#! .desc:
+# Print POSIX shell-compatible octal escape sequence(s) of `od -b` string
+#! .params:
+# <["$1"]> - string
+#! .uses:
+# <()>
+#! .uses.fn:
+# <assert> ('-eq' '$#' '1');
+#          Assert a string
+# <sline_map> ('$1' 'to_octal_offset_');
+#             Process each populated string line with a function
+# <to_octal> ("string");
+#            Print POSIX shell-compatible octal escape sequence(s) of
+#            `od -b -An` string
+#! .sets:
+# <to_octal_offset_> ();
+#! .rc.fn:
+# (assert) (255) bad input
+# (sline_map) (*) error
+# (to_octal) (0) success
+# (to_octal) (*) error
+#.
+to_octal_offset() {
+    to_octal_offset_() { printf "%s" "${1#"${1%%[!0123456789]*}"}"; }
+
+    assert -eq "$#" 1 || return 255
+
+    to_octal "$(sline_map "$1" to_octal_offset_)"
+}
+
+#! .desc:
+# Execute 'umount' on a directory
+#! .params:
+# <"$1"> - directory
+#! .rc:
+# (0) success
+# (255) bad input
+#.
+unmount() {
+    assert -eq "$#" 1 || return 255
+
+    cmd 'umount' && exist "$1" && dir "$1" || return 0
+
+    umount -Rf "$1" > /dev/null 2>&1 || :
+}
+
+# END utility_functions
+# START std_err_functions
+
+#! .desc:
+# EPERM: "Operation not permitted"
+#! .rc:
+# 1
+#.
+EPERM() { _err -red -- 'EPERM:'; }
+
+#! .desc:
+# ENOENT: "No such file or directory"
+#! .rc:
+# 2
+#.
+ENOENT() { _err -red - 'ENOENT:'; }
+
+#! .desc:
+# EERROR: "General operation error"
+#! .params:
+# <"$1"+> - error
+#! .rc:
+# (1)
+# (255) bad input
+#.
+EERROR() {
+    assert -eq "$#" 1 || return 255
+
+    _err -red - "EERROR: $1"; exit 1
+}
+
+#! .desc:
+# EEXIST: "Already exists"
+#! .params:
+# <"$1"+> - absolute path
+#! .rc:
+# (17)
+# (255) bad input
+#.
+EEXIST() {
+    assert -min "$#" 1 || return 255
+
+    _err -red - 'EEXIST:'
+
+    while [ "$1" ]; do
+        ftype "$1" -err || :
+        err - - " $1"
+
+        shift
+    done
+
+    exit 17
+}
+
+#! .desc:
+# ENOTDIR: "Not a directory"
+#! .params:
+# <"$1"+> - absolute path
+#! .rc:
+# (20)
+# (255) bad input
+#.
+ENOTDIR() {
+    assert -min "$#" 1 || return 255
+
+    _err -red - 'ENOTDIR:'
+
+    while [ "$1" ]; do
+        ftype "$1" -err || :
+        err - - " $1"
+
+        shift
+    done
+
+    exit 20
+}
+
+#! .desc:
+# EISDIR: "Is a directory"
+#! .params:
+# <"$1"+> - absolute path
+#! .rc:
+# (21)
+# (255) bad input
+#.
+EISDIR() {
+    assert -min "$#" 1 || return 255
+
+    _err -red - 'EISDIR:'
+
+    while [ "$1" ]; do
+        ftype "$1" -err || :
+        err - - " $1"
+
+        shift
+    done
+
+    exit 21
+}
+
+#! .desc:
+# EINVAL: "Invalid argument"
+#! .rc:
+# 22
+#.
+EINVAL() { _err -red - 'EINVAL:'; }
+
+# END std_err_functions
+
+#! .desc:
+# Read STDIN into $FILE
+#! .gives:
+# (0) <"$FILE"> - the content of STDIN
+#! .rc:
+# (0) success
+# (*) error
+#.
+FILE() {
+    { while IFS= read -r _line; do
+        FILE="$FILE$_line
+"
+    done; FILE="$FILE$_line"; } 2> /dev/null
+}
+
+#! .desc:
+# Read octal STDIN into $FILE
+#! .gives:
+# (0) <"$FILE"> - the content of STDIN
+#! .rc:
+# (0) success
+# (*) error
+#.
+FILE_octal() {
+    { while IFS= read -r _line; do
+        FILE="$FILE$_line
+"
+    done; } 2> /dev/null
+
+    case "$FILE" in
+        *'
+')
+            FILE="${FILE%%'
+'*}"
+        ;;
+    esac
+}
+
+#! .desc:
+# Read a file into $FILE
+#! .params:
+# <"$1"> - absolute path
+#! .gives:
+# (0) <"$FILE"> - the content of the file
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input
+#.
+FILE_preload() {
+    assert -eq "$#" 1 || return 255
+
+    file "$1" || return 255
+    readable "$1" || return 255
+
+    FILE=$(
+        while IFS= read -r _line; do
+            printf "%s\n" "$_line"
+        done < "$1"; printf "%s" "$_line"
+
+        printf "%s" ' '
+    ) 2> /dev/null; FILE="${FILE%?}"
+}
+
+#! .desc:
+# Read STDIN into $FILE_PATH
+#! .gives:
+# (0) <"$FILE_PATH"> - the content of STDIN
+#! .rc:
+# (0) success
+# (*) error
+#.
+FILE_PATH() {
+    FILE=; FILE_PATH=; FILE_PATH_TARGET=
+
+    { while IFS= read -r _line; do
+        FILE_PATH="$FILE_PATH$_line
+"
+    done; FILE_PATH="${FILE_PATH%?}$_line"; } 2> /dev/null
+}
+
+#! .desc:
+# Read STDIN into $FILE_PATH_TARGET
+#! .gives:
+# (0) <"$FILE_PATH_TARGET"> - the content of STDIN
+#! .rc:
+# (0) success
+# (*) error
+#.
+FILE_PATH_TARGET() {
+    FILE_PATH_TARGET=
+
+    { while IFS= read -r _line; do
+        FILE_PATH_TARGET="$FILE_PATH_TARGET$_line
+"
+    done; FILE_PATH_TARGET="${FILE_PATH_TARGET%?}$_line"; } 2> /dev/null
+}
+
+#! .desc:
+# Assert a file matches a given string of POSIX shell-compatible octal escape
+# sequence(s)
+#! .params:
+# <"$1"> - file path
+# <["$2"]> - string
+#! .uses:
+# <()>
+#! .uses.fn:
+# <assert> ('-eq' '$#' '2');
+#          Assert a string
+# <file> ('$1');
+#        Assert a given path is a regular file
+# <readable> ('$1');
+#            Assert a given path is readable
+#! .uses.util:
+# <awk> ("program" '$(od -b -An -- "$1")' '$2');
+#       pattern scanning and processing language
+# <od>;
+# dump files in various formats
+#! .rc.fn:
+# (assert) (255) bad input
+# (file) (255) bad usage
+# (readable) (255) bad usage
+#! .rc.util:
+# (awk) (0) true
+# (awk) (1) false / error
+# (awk) (*) error
+# (od) (*) error
+#! .desc.ext:
+# Broken symbolic links are not valid files and error code `255` (bad usage)
+# will be returned.
+#.
+bin_equiv() {
+    assert -eq "$#" 2 || return 255
+    { file "$1" && readable "$1"; } || return 255
+
+    awk '
+function mod_string(input) {
+	result = ""
+
+	gsub(/[ \n]+/, "", input)
+	for (i = 1; i <= length(input); i += 3) {
+		octal = substr(input, i, 3)
+		result = result "\\0" octal
+	}
+
+	return result
+}
+
+BEGIN {
+	file_string=ARGV[1]
+	string=ARGV[2]
+	delete ARGV
+
+	exit (mod_string(file_string) == string) ? 0 : 1;
+}
+    ' "$(od -b -An -- "$1")" "$2"
+}
+
+#! .desc:
+# Copy a given directory at a path
+#! .params:
+# <"$1"> - absolute path of the directory
+# <"$2"> - absolute path to copy the directory at
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input
+#.
+dir_write() {
+    assert -eq "$#" 2 || return 255
+
+    dir "$1" || return 255
+
+    if exist "$2"; then
+        chattr_remove "$2"
+        unmount "$2"
+
+        rm -rf "$2" 2> /dev/null
+    fi
+
+    mkdir_parents "$2"
+
+    cp -R "$1" "$2" 2> /dev/null
+}
+
+#! .desc:
+# Copy a given file at a path
+#! .params:
+# <"$1"> - absolute path of the file
+# <"$2"> - absolute path to copy the file at
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input
+#.
+file_copy() {
+    assert -eq "$#" 2 || return 255
+
+    file "$1" || return 255
+
+    if exist "$2"; then
+        chattr_remove "$2"
+        unmount "$2"
+
+        rm -rf "$2" 2> /dev/null
+    fi
+
+    mkdir_parents "$2"
+
+    cp "$1" "$2" 2> /dev/null
+}
+
+#! .desc:
+# Check if a file matches a given string
+#! .params:
+# <"$1"> - absolute path
+# <"$2"> - string
+#! .rc:
+# (0) yes
+# (1) no
+# (*) error
+# (255) bad input
+#.
+file_equiv() {
+    assert -eq "$#" 2 || return 255
+
+    file "$1" || return 255
+
+    {
+        _file= && while IFS= read -r _line; do
+            _file="$_file$_line
+"
+        done < "$1"; _file="$_file$_line"
+    } 2> /dev/null
+
+    [ "$_file" = "$2" ]
+}
+
+#! .desc:
+# Write a given string at a path
+#! .params:
+# <"$1"> - absolute path
+# <"$2"> - string
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input
+#.
+file_write() {
+    assert -eq "$#" 2 || return 255
+
+    if exist "$1"; then
+        chattr_remove "$1"
+        unmount "$1"
+
+        rm -rf "$1" 2> /dev/null
+    fi
+
+    mkdir_parents "$1"
+
+    { printf "%s" "$2" > "$1"; } 2> /dev/null
+}
+
+#! .desc:
+# Forcefully write a given string at a path
+#! .params:
+# <"$1"> - absolute path
+# <"$2"> - string
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input
+#.
+file_writeF() {
+    assert -eq "$#" 2 || return 255
+
+    if exist "$1"; then
+        chattr_remove "$1" 2> /dev/null || :
+        unmount "$1" 2> /dev/null || :
+
+        rm -rf "$1" 2> /dev/null || :
+    fi
+
+    mkdir_parents "$1"
+
+    { printf "%s" "$2" > "$1"; } 2> /dev/null
+}
+
+#! .desc:
+# Write a given octal sequence at a path
+#! .params:
+# <"$1"> - absolute path
+# <"$2"> - octal sequence
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input
+#.
+file_write_octal() {
+    assert -eq "$#" 2 || return 255
+
+    if exist "$1"; then
+        chattr_remove "$1"
+        unmount "$1"
+
+        rm -rf "$1" 2> /dev/null
+    fi
+
+    mkdir_parents "$1"
+    { printf "%b" "$2" > "$1"; } || { rm -f "$1"; return 1; }
+}
+
+#! .desc:
+# Check if a file matches a given file
+#! .params:
+# <"$1"> - absolute path
+# <"$2"> - absolute path
+#! .rc:
+# (0) yes
+# (1) no
+# (*) error
+# (255) bad input
+#.
+files_equiv() {
+    assert -eq "$#" 2 || return 255
+
+    file "$1" || return 255
+    file "$2" || return 255
+    readable "$1" || return 255
+    readable "$2" || return 255
+
+    cmp -s "$1" "$2" 2> /dev/null
+}
+
+#! .desc:
+# Permanently delete a file/directory
+#! .params:
+# <"$1"> - absolute path
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad $1
+#.
+loc_delete() {
+    assert -eq "$#" 1 || return 255
+
+    exist "$1" || return 0
+
+    chattr_remove "$1"
+    unmount "$1"
+
+    rm -rf "$1" 2> /dev/null
+}
+
+#! .desc:
+# Create a symbolic link of an object
+#! .params:
+# <"$1"> - absolute path of the object
+# <"$2"> - absolute path to create the link at
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input
+#.
+loc_link() {
+    assert -eq "$#" 2 || return 255
+
+    { [ -e "$1" ] || [ -h "$1" ]; } || return 255
+
+    if exist "$2"; then
+        chattr_remove "$2"
+        unmount "$2"
+    fi
+
+    mkdir_parents "$2"
+
+    ln -sf "$1" "$2" 2> /dev/null
+}
+
+#! .desc:
+# Create a hard link of a file
+#! .params:
+# <"$1"> - absolute path of the file
+# <"$2"> - absolute path to create the link at
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input
+#.
+loc_link_ptr() {
+    assert -eq "$#" 2 || return 255
+
+    if file "$1"; then
+        :
+    else
+        return 255
+    fi
+
+    if exist "$2"; then
+        chattr_remove "$2"
+        unmount "$2"
+    fi
+
+    mkdir_parents "$2"
+
+    ln -f "$1" "$2" 2> /dev/null
+}
+
+#! .desc:
+# Set $user as owner of an object and its parents in $home
+#! .params:
+# <"$1"> - absolute path
+#! .uses:
+# [gid] $ - the numerical user primary group ID
+# [home] $ - the user directory
+# [uid] $ - the numerical user ID
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input
+#.
+loc_own_user() {
+    assert -eq "$#" 1 || return 255
+
+    set -- "${1%"${1##*[!/]}"}"
+
+    exist "$1" && str_pfix "$home"/ "$1" || return 0
+
+    chattr_remove "$1"
+
+    if dir "$1"; then
+        chown -RP -- "$uid":"$gid" "$1"
+    else
+        chown -P -- "$uid":"$gid" "$1"
+    fi
+
+    set -- "${1%/*}"
+    set -- "${1%"${1##*[!/]}"}"
+    until [ "$1" = "$home" ]; do
+        chown -P -- "$uid":"$gid" "$1"
+
+        set -- "${1%/*}"
+        set -- "${1%"${1##*[!/]}"}"
+    done
+}
+
+#! .desc:
+# Write a binary file at the specified path
+#! .uses:
+# <FILE> $ - the octal sequence of the file
+# <FILE_PATH> $ - the path to write the file at
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__bin_write() {
+    if [ ! "$FILE_PATH" ]; then
+        _err -red - 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if [ ! "$FILE" ]; then
+        _info -white - 'Empty FILE. File write cancelled:'
+        ftype "$FILE_PATH" -info || :
+        info - - " $FILE_PATH"
+        return 0
+    fi
+
+    if ! is_octal "$FILE"; then
+        _err -red - 'Bad FILE; expected octal.'
+        return 255
+    fi
+
+    while :; do
+        if [ "$always_write" = 0 ]; then
+            if bin_equiv "$FILE_PATH" "$FILE"; then
+                _info -white - 'File write avoided:'
+                ftype "$FILE_PATH" -info || :
+                info - - " $FILE_PATH"
+                break
+            fi
+        fi
+
+        if [ "$force_write" = 1 ]; then
+            loc_delete "$FILE_PATH"
+        fi
+
+        if exist "$FILE_PATH"; then
+            EEXIST "$FILE_PATH"
+        fi
+
+        _info -white - 'Will write a file:'
+        ftype "$FILE_PATH" -info || :
+        info - - " $FILE_PATH"
+
+        (
+            IFS='\''
+'
+            CC=0; for _octal in $FILE; do CC=$((CC + 1)); done
+            info -white -- 'CC: '; info - - "$CC"
+            info -white -- 'SIZE: '; bytes_size "$CC"
+        )
+
+        if ! file_write_octal "$FILE_PATH" "$FILE"; then
+            _err -red - 'File write error:'
+            ftype "$FILE_PATH" -err || :
+            err - - " $FILE_PATH"
+            exit 1
+        fi
+    break; done
+
+    if ! loc_own_user "$FILE_PATH"; then
+        EERROR 'Failed to set user permissions.'
+    fi
+}
+
+#! .desc:
+# Write a binary file at the specified path (overwrite path)
+#.
+__bin_write_overwrite() {
+    __loc_delete && __bin_write;
+}
+
+#! .desc:
+# Run a command
+#! .params:
+# <"$1"> - command
+# <"$2">+ -  arguments
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__cmd() {
+    cmd "$1" || {
+        _err -red - 'Missing command:'
+
+        err -white -- '`'
+        err - -- "$1"
+        err -white - '`'
+
+        exit 127
+    }
+
+    _info -white - 'Running command:'
+
+    info -white -- '`'
+    info - -- "$@"
+    info -white - '`'
+
+    if [ "$silent_cmd" = 1 ]; then
+        command "$@" > /dev/null || return "$?"
+    else
+        command "$@" || return "$?"
+    fi
+}
+
+#! .desc:
+# Run a command and store output in $FILE
+#! .params:
+# <[$1]> - option_block(
+#     'e' - missing output is an error condition
+#     'n' - preserve final <newline> characters as given
+#     's' - (only with `n`) always strip one final <newline> character
+#     .
+# )
+# <"$2"> - command
+# <"$3">+ -  arguments
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__FILE_cmd() {
+    assert -min "$#" 2 || return 255
+
+    cmd "$2" || {
+        _err -red - 'Missing command:'
+
+        err -white -- '`'
+        err - -- "$2"
+        err -white - '`'
+
+        exit 127
+    }
+
+    _info -white - 'Running command:'
+
+    info -white -- '`'
+    info - -- "$2"; offset 2 "$#" "$@" info - ---
+    info -white - '`'
+
+    case "$1" in
+        *n*s*)
+            FILE=$(shift && command "$@" && printf "%s" x) && \
+            FILE="${FILE%?}" && \
+            FILE="${FILE%?}"
+        ;;
+        *n*)
+            FILE=$(shift && command "$@" && printf "%s" x) && \
+            FILE="${FILE%?}"
+        ;;
+        *)
+            FILE=$(shift && command "$@")
+        ;;
+    esac
+
+    case "$1" in
+        *e*)
+            [ "$FILE" ] || {
+                _err -red - 'No output has been received.'
+
+                exit 1
+            }
+        ;;
+    esac
+}
+
+#! .desc:
+# Copy a directory at the specified path
+#! .uses:
+# <FILE_PATH> $ - the directory
+# <FILE_PATH_TARGET> $ - the path to write the directory at
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__dir_target_write() {
+    if [ ! "$FILE_PATH" ]; then
+        _err -red - 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if [ ! "$FILE_PATH_TARGET" ]; then
+        _err -red - 'Missing FILE_PATH_TARGET.'
+        return 255
+    fi
+
+    if ! exist "$FILE_PATH"; then
+        ENOENT;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 2
+    fi
+
+    dir "$FILE_PATH" && readable "$FILE_PATH" || {
+        EINVAL;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 22
+    }
+
+    while :; do
+        if [ "$force_write" = 1 ]; then
+            loc_delete "$FILE_PATH_TARGET"
+        fi
+
+        if exist "$FILE_PATH_TARGET"; then
+            EEXIST "$FILE_PATH_TARGET"
+        fi
+
+        _info -white - 'Will copy from/to:'
+        ftype "$FILE_PATH" -info || :
+        info - - " $FILE_PATH"
+        ftype "$FILE_PATH_TARGET" -info || :
+        info - - " $FILE_PATH_TARGET"
+
+        info -white -- '> '
+        find "$FILE_PATH"//. ! -name . | grep -c // 2> /dev/null | \
+            while IFS= read -r _line0; do
+                printf "%s, " "$_line0"
+
+                info -white -- 'D '
+                find "$FILE_PATH"//. ! -name . -type d | \
+                    grep -c // 2> /dev/null | \
+                        while IFS= read -r _line1; do
+                            printf "%s, " "$_line1"
+
+                            info -white -- 'F '
+                            info - - "$((_line0 - _line1))"
+                        done
+            done
+
+        if ! dir_write "$FILE_PATH" "$FILE_PATH_TARGET"; then
+            _err -red - 'Directory write error:'
+            ftype "$FILE_PATH_TARGET" -err || :
+            err - - " $FILE_PATH_TARGET"
+            exit 1
+        fi
+    break; done
+
+    if ! loc_own_user "$FILE_PATH_TARGET"; then
+        EERROR 'Failed to set user permissions.'
+    fi
+}
+
+#! .desc:
+# Copy a directory at the specified path (overwrite path)
+#.
+__dir_target_write_overwrite() {
+    __loc_delete && __dir_target_write;
+}
+
+#! .desc:
+# Preload FILE_PATH into FILE
+#! .uses:
+# <FILE> $
+# <FILE_PATH> $ - the file to preload
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__FILE_PATH_preload() {
+    if [ ! "$FILE_PATH" ]; then
+        _err -red - 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if ! exist "$FILE_PATH"; then
+        ENOENT;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 2
+    fi
+
+    FILE_preload "$FILE_PATH" || {
+        _err -red - 'Error reading file:'
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 1
+    }
+}
+
+#! .desc:
+# Modify file data in-place according to format (see fed())
+#! .params:
+# <[$1]> - crc32 string to verify produced format against
+# <["$2"]> - log file path
+# <$3>+ - operation(
+#     '-' - EOF add $4
+#     '-m' - apply modifier for `-a`/`-r`/`-s`; see extended description
+#     '-a' - add $4
+#     '-r' - remove $4
+#     '-s' - substitute $4 with $5
+#     .
+# )
+# ["$4"] - string
+# ["$5"] - string
+#.
+__fed() {
+    assert -min "$#" 3 || return 255
+
+    [ "$FILE" ] || __FILE_PATH_preload || exit "$?"
+
+    set -- "$FILE" "$@"
+
+    _fmt=$(
+        _a="$1"; shift 3
+
+        fed "$_a" "$@" || {
+            set -- "$?"; case "$1" in
+                1) [ ! "$_fmt" ] || return "$1" ;;
+                *) return "$1" ;;
+            esac
+        }
+
+        printf "%s" "$_fmt"
+    ) || exit "$?"
+
+    [ "$_fmt" ] || return 0
+
+    set -- "$_fmt" "$@"
+
+    _cksum=$(printf "%s" "$1" | cksum) && \
+    _cksum="${_cksum%%' '*}" || exit "$?"
+
+    if [ "$3" ] && [ "$3" != "$_cksum" ]; then
+        _info -yellow - "CRC32 mismatch. (exp. $3; got $_cksum)"
+        _info -white - 'Format:'
+        info - - "$1"
+
+        if [ "$confirm_crc" = 1 ]; then
+            _info -white - 'Auto accepted the mismatch.'
+        elif [ "$interactive" = 1 ]; then
+            confirm_cont || return 0
+        else
+            return 0
+        fi
+    fi
+
+    FILE=$(
+        _a="$2"; _b="$4"; eval set -- "$1"
+
+        libfile "$_b" "$_a" "$@" || return "$?"
+
+        printf "%s" "${_file}x"
+    ) && FILE="${FILE%?}" || exit "$?"
+}
+
+#! .desc:
+# Set the executable bits on a file
+#! .uses:
+# <FILE_PATH> $ - the file
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__file_executable() {
+    if [ ! "$FILE_PATH" ]; then
+        _err -red - 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if ! exist "$FILE_PATH"; then
+        ENOENT;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 2
+    fi
+
+    file "$FILE_PATH" || {
+        EINVAL;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 22
+    }
+
+    __cmd chmod +x "$FILE_PATH"
+}
+
+#! .desc:
+# Write a file at the specified path
+#! .uses:
+# <FILE> $ - the file
+# <FILE_PATH> $ - the path to write the file at
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__file_write() {
+    if [ ! "$FILE_PATH" ]; then
+        _err -red - 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if [ ! "$FILE" ]; then
+        _info -white - 'Empty FILE. File write cancelled:'
+        ftype "$FILE_PATH" -info || :
+        info - - " $FILE_PATH"
+        return 0
+    fi
+
+    while :; do
+        if [ "$always_write" = 0 ]; then
+            if file_equiv "$FILE_PATH" "$FILE"; then
+                _info -white - 'File write avoided:'
+                ftype "$FILE_PATH" -info || :
+                info - - " $FILE_PATH"
+                break
+            fi
+        fi
+
+        if [ "$force_write" = 1 ]; then
+            loc_delete "$FILE_PATH"
+        fi
+
+        if exist "$FILE_PATH"; then
+            EEXIST "$FILE_PATH"
+        fi
+
+        if [ -s "$logf" ]; then  # log written
+            _info -white - 'Will write original file; diff:'
+            ftype "$FILE_PATH" -info || :
+            info - - " $FILE_PATH"
+            while IFS=" " read -r _n _line; do
+                case "$_n" in
+                    *'+') printf "%b%s%b " '\033[1;32m' "$_n" '\033[0m' ;;
+                    *'-') printf "%b%s%b " '\033[1;31m' "$_n" '\033[0m' ;;
+                esac; printf "%s\n" "$_line"
+            done < "$logf"
+        else
+            _info -white - 'Will write a file:'
+            ftype "$FILE_PATH" -info || :
+            info - - " $FILE_PATH"
+            if [ "$silent_write" = 0 ]; then
+                info -white - '0:'; info - - "${FILE%'
+'}"
+            fi
+        fi
+
+        if ! file_write "$FILE_PATH" "$FILE"; then
+            _err -red - 'File write error:'
+            ftype "$FILE_PATH" -err || :
+            err - - " $FILE_PATH"
+            exit 1
+        fi
+    break; done
+
+    if ! loc_own_user "$FILE_PATH"; then
+        EERROR 'Failed to set user permissions.'
+    fi
+
+    if ! { : > "$logf"; }; then
+        _err -r - 'Log clear error.'
+        exit 1
+    fi
+}
+
+#! .desc:
+# Write a file at the specified path (overwrite path)
+#.
+__file_write_overwrite() {
+    __loc_delete && __file_write;
+}
+
+#! .desc:
+# Overwrite a file at the specified path
+#! .uses:
+# <FILE> $ - the file
+# <FILE_PATH> $ - the path to write the file at
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__file_write_overwrite_soft() {
+    if [ ! "$FILE_PATH" ]; then
+        _err -red - 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if [ ! "$FILE" ]; then
+        _info -white - 'Empty FILE. File write cancelled:'
+        ftype "$FILE_PATH" -info || :
+        info - - " $FILE_PATH"
+        return 0
+    fi
+
+    while :; do
+        if [ "$always_write" = 0 ]; then
+            if file_equiv "$FILE_PATH" "$FILE"; then
+                _info -white - 'File write avoided:'
+                ftype "$FILE_PATH" -info || :
+                info - - " $FILE_PATH"
+                break
+            fi
+        fi
+
+        if [ -s "$logf" ]; then  # log written
+            _info -white - 'Will write original file; diff:'
+            ftype "$FILE_PATH" -info || :
+            info - - " $FILE_PATH"
+            while IFS=" " read -r _n _line; do
+                case "$_n" in
+                    *'+') printf "%b%s%b " '\033[1;32m' "$_n" '\033[0m' ;;
+                    *'-') printf "%b%s%b " '\033[1;31m' "$_n" '\033[0m' ;;
+                esac; printf "%s\n" "$_line"
+            done < "$logf"
+        else
+            _info -white - 'Will overwrite a file:'
+            ftype "$FILE_PATH" -info || :
+            info - - " $FILE_PATH"
+            if [ "$silent_write" = 0 ]; then
+                info -white - '0:'; info - - "${FILE%'
+'}"
+            fi
+        fi
+
+        if ! file_writeF "$FILE_PATH" "$FILE"; then
+            _err -red - 'File overwrite error:'
+            ftype "$FILE_PATH" -err || :
+            err - - " $FILE_PATH"
+            exit 1
+        fi
+    break; done
+
+    if ! loc_own_user "$FILE_PATH"; then
+        EERROR 'Failed to set user permissions.'
+    fi
+
+    if ! { : > "$logf"; }; then
+        _err -r - 'Log clear error.'
+        exit 1
+    fi
+}
+
+#! .desc:
+# Copy a file at the specified path
+#! .uses:
+# <FILE_PATH> $ - the file
+# <FILE_PATH_TARGET> $ - the path to write the file at
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__file_target_write() {
+    if [ ! "$FILE_PATH" ]; then
+        _err -red - 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if [ ! "$FILE_PATH_TARGET" ]; then
+        _err -red - 'Missing FILE_PATH_TARGET.'
+        return 255
+    fi
+
+    if ! exist "$FILE_PATH"; then
+        ENOENT;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 2
+    fi
+
+    file "$FILE_PATH" && readable "$FILE_PATH" || {
+        EINVAL;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 22
+    }
+
+    while :; do
+        if [ "$always_write" = 0 ]; then
+            if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
+                _info -white - 'File write avoided:'
+                ftype "$FILE_PATH_TARGET" -info || :
+                info - - " $FILE_PATH_TARGET"
+                break
+            fi
+        fi
+
+        if [ "$force_write" = 1 ]; then
+            loc_delete "$FILE_PATH_TARGET"
+        fi
+
+        if exist "$FILE_PATH_TARGET"; then
+            EEXIST "$FILE_PATH_TARGET"
+        fi
+
+        _info -white - 'Will copy from/to:'
+        ftype "$FILE_PATH" -info || :
+        info - - " $FILE_PATH"
+        ftype "$FILE_PATH_TARGET" -info || :
+        info - - " $FILE_PATH_TARGET"
+
+        if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
+            _err -red - 'File write error:'
+            ftype "$FILE_PATH_TARGET" -err || :
+            err - - " $FILE_PATH_TARGET"
+            exit 1
+        fi
+    break; done
+
+    if ! loc_own_user "$FILE_PATH_TARGET"; then
+        EERROR 'Failed to set user permissions.'
+    fi
+}
+
+#! .desc:
+# Copy a file at the specified path (overwrite path)
+#.
+__file_target_write_overwrite() {
+    __loc_delete && __file_target_write;
+}
+
+#! .desc:
+# Set filesystem flags on a file/directory
+#! .params:
+# <$1> - flag(s) to set
+#! .uses:
+# <FILE_PATH> $ - the file/directory
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input/usage
+#.
+__loc_chattr() {
+    assert -eq "$#" 1 || return 255
+
+    cmd 'chattr' || return 0
+
+    if [ ! "$FILE_PATH" ]; then
+        _err -red - 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if ! exist "$FILE_PATH"; then
+        ENOENT;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 2
+    fi
+
+    if dir "$FILE_PATH"; then
+        :
+    elif file "$FILE_PATH"; then
+        :
+    else
+        EINVAL;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 22
+    fi
+
+    __cmd chattr +"$1" "$FILE_PATH"
+}
+
+#! .desc:
+# Set permissions on a file/directory
+#! .params:
+# <$1> - octal mode
+#! .uses:
+# <FILE_PATH> $ - the file/directory
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input/usage
+#.
+__loc_chmod() {
+    assert -eq "$#" 1 || return 255
+
+    if [ ! "$FILE_PATH" ]; then
+        _err -red - 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if ! exist "$FILE_PATH"; then
+        ENOENT;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 2
+    fi
+
+    if dir "$FILE_PATH"; then
+        :
+    elif file "$FILE_PATH"; then
+        :
+    else
+        EINVAL;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 22
+    fi
+
+    chattr_remove "$FILE_PATH"
+
+    __cmd chmod "$1" "$FILE_PATH"
+}
+
+#! .desc:
+# Set owner of a file/directory
+#! .params:
+# <$1> - owner
+#! .uses:
+# <FILE_PATH> $ - the file/directory
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input/usage
+#.
+__loc_chown() {
+    assert -eq "$#" 1 || return 255
+
+    if [ ! "$FILE_PATH" ]; then
+        _err -red - 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if ! exist "$FILE_PATH"; then
+        ENOENT;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 2
+    fi
+
+    if dir "$FILE_PATH"; then
+        :
+    elif file "$FILE_PATH"; then
+        :
+    else
+        EINVAL;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 22
+    fi
+
+    chattr_remove "$FILE_PATH"
+
+    __cmd chown -R "$uid":"$gid" "$FILE_PATH"
+}
+
+#! .desc:
+# Delete a file/directory from the specified path
+#! .uses:
+# <FILE_PATH> $ - the file/directory
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__loc_delete() {
+    if [ ! "$FILE_PATH" ]; then
+        _err -red - 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if ! exist "$FILE_PATH"; then
+        _info -white - 'Already deleted:'
+        ftype "$FILE_PATH" -info || :
+        info - - " $FILE_PATH"
+        return 0
+    fi
+
+    _info -white - 'Will delete:'
+    ftype "$FILE_PATH" -info || :
+    info - - " $FILE_PATH"
+
+    if ! loc_delete "$FILE_PATH"; then
+        _err -red - 'Removal error:'
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 1
+    fi
+}
+
+#! .desc:
+# Truncate/empty a file/directory on the specified path
+#! .uses:
+# <FILE_PATH> $ - the file/directory
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__loc_empty() {
+    if [ ! "$FILE_PATH" ]; then
+        _err -red - 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if dir "$FILE_PATH"; then
+        :
+    elif file "$FILE_PATH"; then
+        :
+    elif exist "$FILE_PATH"; then
+        EINVAL;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 22
+    fi
+
+    if dir "$FILE_PATH"; then
+        _info -white - 'Will empty:'
+        ftype "$FILE_PATH" -info || :
+        info - - " $FILE_PATH"
+
+        __cmd rm -rf "$FILE_PATH"/*
+    else
+        if exist "$FILE_PATH"; then
+            _info -white - 'Will truncate:'
+        else
+            _info -white - 'Will create a file:'
+        fi
+        ftype "$FILE_PATH" -info || :
+        info - - " $FILE_PATH"
+
+        if ! { : > "$FILE_PATH"; }; then
+            if exist "$FILE_PATH"; then
+                _err -red - 'Truncation error:'
+            else
+                _err -red - 'File creation error:'
+            fi
+            ftype "$FILE_PATH" -err || :
+            err - - " $FILE_PATH"
+            exit 1
+        fi
+    fi
+}
+
+#! .desc:
+# Create a symbolic link of an object at the specified path (overwrite)
+#! .uses:
+# <FILE_PATH> $ - the object
+# <FILE_PATH_TARGET> $ - the path to write the symbolic link at
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad usage
+#.
+__loc_target_link_overwrite() {
+    if [ ! "$FILE_PATH" ]; then
+        _err -red - 'Missing FILE_PATH.'
+        return 255
+    fi
+
+    if [ ! "$FILE_PATH_TARGET" ]; then
+        _err -red - 'Missing FILE_PATH_TARGET.'
+        return 255
+    fi
+
+    if ! { exist "$FILE_PATH" || [ -h "$FILE_PATH" ]; }; then
+        ENOENT;
+        ftype "$FILE_PATH" -err || :
+        err - - " $FILE_PATH"
+        exit 2
+    fi
+
+    while :; do
+        _info -white - 'Will symbolic link source/target:'
+        ftype "$FILE_PATH" -info || :
+        info - - " $FILE_PATH"
+        ftype "$FILE_PATH_TARGET" -info || :
+        info - - " $FILE_PATH_TARGET"
+
+        if ! loc_link "$FILE_PATH" "$FILE_PATH_TARGET"; then
+            _err -red - 'Symbolic linking error:'
+            ftype "$FILE_PATH_TARGET" -err || :
+            err - - " $FILE_PATH_TARGET"
+            exit 1
+        fi
+    break; done
+
+    if ! loc_own_user "$FILE_PATH_TARGET"; then
+        EERROR 'Failed to set user permissions.'
+    fi
+}
+
+#! .desc:
+# Copy/clone a git repository to $tmpd
+#! .params:
+# <["$1"]> - directory path
+# ["$2"]+ - URL
+#! .rc:
+# (0) success
+# (*) error
+# (255) bad input
+#.
+__git_get() {
+    assert -min "$#" 1 || return 255
+
+    while [ "$1" ]; do
+        dir "$1" && exist "$1"/.git || break
+
+        dir_write "$1" "$tmpd/." || return "$?"
+
+        return 0
+    done
+
+    shift
+
+    set -- "$@" '--depth' '1'
+
+    if str '/' "$1"; then
+        set -- "$@" "$tmpd/${1#"${1%/*}"?}"
+    else
+        set -- "$@" "$tmpd/$1"
+    fi
+
+    __cmd git clone "$@"
+}
+
+err_handler() {
+    IFS=' 	''
+'
+
+    trap - INT TERM
+
+    # env cleanup
+    if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ]; then
+        chattr -R -ia "$tmpd" "$tmpf" "$logf" > /dev/null 2>&1 || :
+        rm -rf "$tmpd" "$tmpf" "$logf"
+    fi
+
+    if [ "$1" = 0 ]; then
+        exit 0
+    elif [ "$2" = INT ]; then
+        err -red - "${0##*/}: Received INT signal. ($1)"; kill -2 "$$"
+    else
+        err -red - "${0##*/}: Received $2 signal. ($1)"; exit "$1"
+    fi
+}
+
+main() {
+    LC_ALL=C; export LC_ALL
+    set -e
+    trap "err_handler \$? INT" INT
+    trap "err_handler \$? TERM" TERM
+
+    # Control switches
+    # Always write files, even if the remote/fs content matches ours.
+    always_write=0
+    # Automatically continue/confirm any CRC32 mismatch prompts.
+    confirm_crc=0
+    # Force file writes by remote/fs object overwrite/removal:
+    force_write=0
+    # Interactive mode; prompt for input on dual actions.
+    interactive=0
+    # Disable command output:
+    silent_cmd=0
+    # Disable content output of file writes:
+    silent_write=0
+
+    # Utility internal locations
+    # Temporary per-function dir (cleared on func exit):
+    tmpd="${TMPDIR:-/tmp}/syscfg_tmpd"
+    # Temporary per-function file (cleared on func exit):
+    tmpf="${TMPDIR:-/tmp}/syscfg_tmpf"
+    # Temporary per-function log file (cleared on func exit):
+    logf="${TMPDIR:-/tmp}/syscfg_logf"
+
+    # Enable always_write from cmdline:    ^AW as $1
+    # Enable audio_hq_resamp from cmdline: ^AQ as $1
+    # Enable confirm_crc from cmdline:     ^CC as $1
+    # Enable force_write from cmdline:     ^FW as $1
+    # Enable interactive from cmdline:     ^IE as $1
+    # Enable ipv6 from cmdline:            ^I6 as $1
+    # Enable silent_cmd from cmdline:      ^SC as $1
+    # Enable silent_write from cmdline:    ^SW as $1
+    while :; do case "$1" in
+        '^AW') always_write=1; shift && continue ;;
+        '^AQ') audio_hq_resamp=1; shift && continue ;;
+        '^CC') confirm_crc=1; shift && continue ;;
+        '^FW') force_write=1; shift && continue ;;
+        '^IE') interactive=1; shift && continue ;;
+        '^I6') ipv6=1; shift && continue ;;
+        '^SC') silent_cmd=1; shift && continue ;;
+        '^SW') silent_write=1; shift && continue ;;
+        *) break ;;
+    esac done
+
+    # `^AW` implies `^AW ^FW`.
+    if [ "$always_write" = 1 ] && [ "$force_write" = 0 ]; then
+        info -white -- "${0##*/}: "
+        info -yellow - 'Assuming `^AW ^FW`.'
+
+        force_write=1
+
+        if [ "$interactive" = 1 ]; then
+            confirm_cont -y || {
+                info -white -- "${0##*/}: "
+                info -white - 'Interactive correction: `^AW`.'
+
+                force_write=0
+            }
+        fi
+    fi
+
+    readonly always_write confirm_crc force_write interactive logf silent_cmd \
+             silent_write tmpd tmpf
+
+    assert -min "$#" 1 || {
+        err -red - 'No client has been specified.'
+        err - -
+
+        info -white - 'SWITCH: always_write ^AW'
+        info -white - 'SWITCH: audio_hq_resamp ^AQ'
+        info -white - 'SWITCH: confirm_crc ^CC'
+        info -white - 'SWITCH: force_write ^FW'
+        info -white - 'SWITCH: interactive ^IE'
+        info -white - 'SWITCH: ipv6 ^I6'
+        info -white - 'SWITCH: silent_cmd ^SC'
+        info -white - 'SWITCH: silent_write ^SW'
+
+        exit 2
+    }
+
+    # end arg parsing; main()
+
+    [ "$(id -u)" = 0 ] || {
+        err -red - 'Missing root rights.'; exit 1
+    }
+
+    # past env cleanup from SIGKILL or something else
+    if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ]; then
+        chattr -R -ia "$tmpd" "$tmpf" "$logf" > /dev/null 2>&1 || :
+        rm -rf "$tmpd" "$tmpf" "$logf"
+    fi
+
+    while [ "$1" ]; do
+        # env setup
+        ( umask 077; mkdir "$tmpd"; : > "$tmpf" > "$logf"; ) || return "$?"
+
+        # In the future, clients will be launched as an external command,
+        # lexed and parsed by syscfg.
+        ( . "$1" "$1"; ) || return "$?"
+
+        # env reset
+        if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ]; then
+            chattr -R -ia "$tmpd" "$tmpf" "$logf" > /dev/null 2>&1 || :
+            rm -rf "$tmpd" "$tmpf" "$logf"
+        fi
+
+        info -green - "$1:" 'Done!'
+
+        shift
+    done
+
+    return 0
+}
+
+assertive_functions;
+helper_functions;
+utility_functions;
+utility_functions_err;
+utility_functions_out;
+main "$@" || { err_handler "$?" 'ERR'; }
