@@ -10,7 +10,7 @@
 # STANDARD:
 # (1): EPERM: "Operation not permitted".
 # (2): ENOENT: "No such file or directory".
-# (17): EEXIST: "Already exists".
+# (17): EEXIST: "File exists".
 # (20): ENOTDIR: "Not a directory".
 # (21): EISDIR: "Is a directory".
 # (22): EINVAL: "Invalid argument".
@@ -505,7 +505,7 @@ EERROR() {
 }
 
 #! .desc:
-# EEXIST: "Already exists"
+# EEXIST: "File exists"
 #! .params:
 # <"$1"+> - absolute path
 #! .rc:
