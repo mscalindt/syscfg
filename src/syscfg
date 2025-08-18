@@ -334,7 +334,7 @@ bytes_size() {
 		printf " / "
 		print hsize(bytes, 1000)
 	}
-    ' 2> /dev/null
+    '
 }
 
 #! .desc:
@@ -353,7 +353,7 @@ chattr_remove() {
 
     { [ -f "$1" ] && [ ! -h "$1" ]; } || return 0
 
-    chattr -ia "$1" 2> /dev/null || :
+    chattr -ia "$1" > /dev/null 2>&1 || :
 }
 
 #! .desc:
@@ -380,7 +380,7 @@ mkdir_parents() {
     # traversing the function argument and passing separate consequental
     # arguments to mkdir. Important to note that in such situation, error
     # handling would be on us, including the handling of race conditions.
-    mkdir -p "${1%/*}" 2> /dev/null
+    mkdir -p "${1%/*}"
 }
 
 #! .desc:
@@ -591,10 +591,10 @@ EINVAL() { _err -red - 'EINVAL:'; }
 # (*) error
 #.
 FILE() {
-    { while IFS= read -r _line; do
+    while IFS= read -r _line; do
         FILE="$FILE$_line
 "
-    done; FILE="$FILE$_line"; } 2> /dev/null
+    done; FILE="$FILE$_line"
 }
 
 #! .desc:
@@ -606,10 +606,10 @@ FILE() {
 # (*) error
 #.
 FILE_octal() {
-    { while IFS= read -r _line; do
+    while IFS= read -r _line; do
         FILE="$FILE$_line
 "
-    done; } 2> /dev/null
+    done
 
     case "$FILE" in
         *'
@@ -643,7 +643,7 @@ FILE_preload() {
         done < "$1"; printf "%s" "$_line"
 
         printf "%s" ' '
-    ) 2> /dev/null; FILE="${FILE%?}"
+    ); FILE="${FILE%?}"
 }
 
 #! .desc:
@@ -657,10 +657,10 @@ FILE_preload() {
 FILE_PATH() {
     FILE=; FILE_PATH=; FILE_PATH_TARGET=
 
-    { while IFS= read -r _line; do
+    while IFS= read -r _line; do
         FILE_PATH="$FILE_PATH$_line
 "
-    done; FILE_PATH="${FILE_PATH%?}$_line"; } 2> /dev/null
+    done; FILE_PATH="${FILE_PATH%?}$_line"
 }
 
 #! .desc:
@@ -674,10 +674,10 @@ FILE_PATH() {
 FILE_PATH_TARGET() {
     FILE_PATH_TARGET=
 
-    { while IFS= read -r _line; do
+    while IFS= read -r _line; do
         FILE_PATH_TARGET="$FILE_PATH_TARGET$_line
 "
-    done; FILE_PATH_TARGET="${FILE_PATH_TARGET%?}$_line"; } 2> /dev/null
+    done; FILE_PATH_TARGET="${FILE_PATH_TARGET%?}$_line"
 }
 
 #! .desc:
@@ -759,12 +759,12 @@ dir_write() {
         chattr_remove "$2"
         unmount "$2"
 
-        rm -rf "$2" 2> /dev/null
+        rm -rf "$2"
     fi
 
     mkdir_parents "$2"
 
-    cp -R "$1" "$2" 2> /dev/null
+    cp -R "$1" "$2"
 }
 
 #! .desc:
@@ -786,12 +786,12 @@ file_copy() {
         chattr_remove "$2"
         unmount "$2"
 
-        rm -rf "$2" 2> /dev/null
+        rm -rf "$2"
     fi
 
     mkdir_parents "$2"
 
-    cp "$1" "$2" 2> /dev/null
+    cp "$1" "$2"
 }
 
 #! .desc:
@@ -810,12 +810,10 @@ file_equiv() {
 
     file "$1" || return 255
 
-    {
-        _file= && while IFS= read -r _line; do
-            _file="$_file$_line
+    _file= && while IFS= read -r _line; do
+        _file="$_file$_line
 "
-        done < "$1"; _file="$_file$_line"
-    } 2> /dev/null
+    done < "$1"; _file="$_file$_line"
 
     [ "$_file" = "$2" ]
 }
@@ -837,37 +835,12 @@ file_write() {
         chattr_remove "$1"
         unmount "$1"
 
-        rm -rf "$1" 2> /dev/null
+        rm -rf "$1"
     fi
 
     mkdir_parents "$1"
 
-    { printf "%s" "$2" > "$1"; } 2> /dev/null
-}
-
-#! .desc:
-# Forcefully write a given string at a path
-#! .params:
-# <"$1"> - absolute path
-# <"$2"> - string
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input
-#.
-file_writeF() {
-    assert -eq "$#" 2 || return 255
-
-    if exist "$1"; then
-        chattr_remove "$1" 2> /dev/null || :
-        unmount "$1" 2> /dev/null || :
-
-        rm -rf "$1" 2> /dev/null || :
-    fi
-
-    mkdir_parents "$1"
-
-    { printf "%s" "$2" > "$1"; } 2> /dev/null
+    printf "%s" "$2" > "$1"
 }
 
 #! .desc:
@@ -887,11 +860,11 @@ file_write_octal() {
         chattr_remove "$1"
         unmount "$1"
 
-        rm -rf "$1" 2> /dev/null
+        rm -rf "$1"
     fi
 
     mkdir_parents "$1"
-    { printf "%b" "$2" > "$1"; } || { rm -f "$1"; return 1; }
+    printf "%b" "$2" > "$1"
 }
 
 #! .desc:
@@ -913,7 +886,7 @@ files_equiv() {
     readable "$1" || return 255
     readable "$2" || return 255
 
-    cmp -s "$1" "$2" 2> /dev/null
+    cmp -s "$1" "$2"
 }
 
 #! .desc:
@@ -933,7 +906,7 @@ loc_delete() {
     chattr_remove "$1"
     unmount "$1"
 
-    rm -rf "$1" 2> /dev/null
+    rm -rf "$1"
 }
 
 #! .desc:
@@ -958,7 +931,7 @@ loc_link() {
 
     mkdir_parents "$2"
 
-    ln -sf "$1" "$2" 2> /dev/null
+    ln -sf "$1" "$2"
 }
 
 #! .desc:
@@ -987,7 +960,7 @@ loc_link_ptr() {
 
     mkdir_parents "$2"
 
-    ln -f "$1" "$2" 2> /dev/null
+    ln -f "$1" "$2"
 }
 
 #! .desc:
@@ -1555,7 +1528,7 @@ __file_write_overwrite_soft() {
             fi
         fi
 
-        if ! file_writeF "$FILE_PATH" "$FILE"; then
+        if ! file_write "$FILE_PATH" "$FILE"; then
             _err -red - 'File overwrite error:'
             ftype "$FILE_PATH" -err || :
             err - - " $FILE_PATH"
