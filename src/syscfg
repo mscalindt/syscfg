@@ -353,7 +353,7 @@ chattr_remove() {
 
     { [ -f "$1" ] && [ ! -h "$1" ]; } || return 0
 
-    chattr -ia "$1" > /dev/null 2>&1 || :
+    chattr -ia -- "$1" > /dev/null 2>&1 || :
 }
 
 #! .desc:
@@ -380,7 +380,7 @@ mkdir_parents() {
     # traversing the function argument and passing separate consequental
     # arguments to mkdir. Important to note that in such situation, error
     # handling would be on us, including the handling of race conditions.
-    mkdir -p "${1%/*}"
+    mkdir -p -- "${1%/*}"
 }
 
 #! .desc:
@@ -470,7 +470,7 @@ unmount() {
 
     cmd 'umount' && exist "$1" && dir "$1" || return 0
 
-    umount -Rf "$1" > /dev/null 2>&1 || :
+    umount -Rf -- "$1" > /dev/null 2>&1 || :
 }
 
 # END utility_functions
@@ -759,12 +759,12 @@ dir_write() {
         chattr_remove "$2"
         unmount "$2"
 
-        rm -rf "$2"
+        rm -rf -- "$2"
     fi
 
     mkdir_parents "$2"
 
-    cp -R "$1" "$2"
+    cp -R -- "$1" "$2"
 }
 
 #! .desc:
@@ -786,12 +786,12 @@ file_copy() {
         chattr_remove "$2"
         unmount "$2"
 
-        rm -rf "$2"
+        rm -rf -- "$2"
     fi
 
     mkdir_parents "$2"
 
-    cp "$1" "$2"
+    cp -- "$1" "$2"
 }
 
 #! .desc:
@@ -835,7 +835,7 @@ file_write() {
         chattr_remove "$1"
         unmount "$1"
 
-        rm -rf "$1"
+        rm -rf -- "$1"
     fi
 
     mkdir_parents "$1"
@@ -860,7 +860,7 @@ file_write_octal() {
         chattr_remove "$1"
         unmount "$1"
 
-        rm -rf "$1"
+        rm -rf -- "$1"
     fi
 
     mkdir_parents "$1"
@@ -886,7 +886,7 @@ files_equiv() {
     readable "$1" || return 255
     readable "$2" || return 255
 
-    cmp -s "$1" "$2"
+    cmp -s -- "$1" "$2"
 }
 
 #! .desc:
@@ -906,7 +906,7 @@ loc_delete() {
     chattr_remove "$1"
     unmount "$1"
 
-    rm -rf "$1"
+    rm -rf -- "$1"
 }
 
 #! .desc:
@@ -931,7 +931,7 @@ loc_link() {
 
     mkdir_parents "$2"
 
-    ln -sf "$1" "$2"
+    ln -sf -- "$1" "$2"
 }
 
 #! .desc:
@@ -960,7 +960,7 @@ loc_link_ptr() {
 
     mkdir_parents "$2"
 
-    ln -f "$1" "$2"
+    ln -f -- "$1" "$2"
 }
 
 #! .desc:
@@ -1386,7 +1386,7 @@ __file_executable() {
         exit 22
     }
 
-    __cmd chmod +x "$FILE_PATH"
+    __cmd chmod +x -- "$FILE_PATH"
 }
 
 #! .desc:
@@ -1664,7 +1664,7 @@ __loc_chattr() {
         exit 22
     fi
 
-    __cmd chattr +"$1" "$FILE_PATH"
+    __cmd chattr +"$1" -- "$FILE_PATH"
 }
 
 #! .desc:
@@ -1706,7 +1706,7 @@ __loc_chmod() {
 
     chattr_remove "$FILE_PATH"
 
-    __cmd chmod "$1" "$FILE_PATH"
+    __cmd chmod "$1" -- "$FILE_PATH"
 }
 
 #! .desc:
@@ -1748,7 +1748,7 @@ __loc_chown() {
 
     chattr_remove "$FILE_PATH"
 
-    __cmd chown -R "$uid":"$gid" "$FILE_PATH"
+    __cmd chown -R "$uid":"$gid" -- "$FILE_PATH"
 }
 
 #! .desc:
@@ -1816,7 +1816,7 @@ __loc_empty() {
         ftype "$FILE_PATH" -info || :
         info - - " $FILE_PATH"
 
-        __cmd rm -rf "$FILE_PATH"/*
+        __cmd rm -rf -- "$FILE_PATH"/*
     else
         if exist "$FILE_PATH"; then
             _info -white - 'Will truncate:'
