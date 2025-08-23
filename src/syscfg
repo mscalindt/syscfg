@@ -2002,20 +2002,16 @@ main() {
     logf="${TMPDIR:-/tmp}/syscfg_logf"
 
     # Enable always_write from cmdline:    ^AW as $1
-    # Enable audio_hq_resamp from cmdline: ^AQ as $1
     # Enable confirm_crc from cmdline:     ^CC as $1
     # Enable force_write from cmdline:     ^FW as $1
     # Enable interactive from cmdline:     ^IE as $1
-    # Enable ipv6 from cmdline:            ^I6 as $1
     # Enable silent_cmd from cmdline:      ^SC as $1
     # Enable silent_write from cmdline:    ^SW as $1
     while :; do case "$1" in
         '^AW') always_write=1; shift && continue ;;
-        '^AQ') audio_hq_resamp=1; shift && continue ;;
         '^CC') confirm_crc=1; shift && continue ;;
         '^FW') force_write=1; shift && continue ;;
         '^IE') interactive=1; shift && continue ;;
-        '^I6') ipv6=1; shift && continue ;;
         '^SC') silent_cmd=1; shift && continue ;;
         '^SW') silent_write=1; shift && continue ;;
         *) break ;;
@@ -2046,11 +2042,9 @@ main() {
         err - -
 
         info -white - 'SWITCH: always_write ^AW'
-        info -white - 'SWITCH: audio_hq_resamp ^AQ'
         info -white - 'SWITCH: confirm_crc ^CC'
         info -white - 'SWITCH: force_write ^FW'
         info -white - 'SWITCH: interactive ^IE'
-        info -white - 'SWITCH: ipv6 ^I6'
         info -white - 'SWITCH: silent_cmd ^SC'
         info -white - 'SWITCH: silent_write ^SW'
 
