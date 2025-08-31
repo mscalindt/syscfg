@@ -1,16 +1,19 @@
 syscfg NEWS
 
 
+2025-08-18 - 2025-08-18
+=======================
+* `shell-glossary`[1] is now a submodule and its functions are being sourced.
+
+[1] https://github.com/mscalindt/shell-glossary
+
+
 2025-08-17 - 2025-08-17
 =======================
 * Created tag `pre-split`.
 
 * History starts anew, as syscfg is now general-purpose software not locked
   to a certain configuration.
-
-* `shell-glossary`[1] is now a submodule and its functions are being sourced.
-
-[1] https://github.com/mscalindt/shell-glossary
 
 
 2025-07-16 - 2025-08-08
