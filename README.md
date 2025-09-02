@@ -1,7 +1,16 @@
 ## Table of Contents
 
-1. [License](#license)
-2. [Notice](#notice)
+1. [Releases](#releases)
+2. [License](#license)
+3. [Notice](#notice)
+
+## Releases
+
+Source code releases follow the `YYYYMMDD` format.
+
+To list the available releases, check out the available tags or use `git tag`.
+
+For updates on recent changes, see the [NEWS](NEWS) file.
 
 ## License
 
