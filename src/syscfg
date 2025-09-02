@@ -621,32 +621,6 @@ FILE_octal() {
 }
 
 #! .desc:
-# Read a file into $FILE
-#! .params:
-# <"$1"> - absolute path
-#! .gives:
-# (0) <"$FILE"> - the content of the file
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input
-#.
-FILE_preload() {
-    assert -eq "$#" 1 || return 255
-
-    file "$1" || return 255
-    readable "$1" || return 255
-
-    FILE=$(
-        while IFS= read -r _line; do
-            printf "%s\n" "$_line"
-        done < "$1"; printf "%s" "$_line"
-
-        printf "%s" ' '
-    ); FILE="${FILE%?}"
-}
-
-#! .desc:
 # Read STDIN into $FILE_PATH
 #! .gives:
 # (0) <"$FILE_PATH"> - the content of STDIN
@@ -1261,37 +1235,6 @@ __dir_target_write_overwrite() {
 }
 
 #! .desc:
-# Preload FILE_PATH into FILE
-#! .uses:
-# <FILE> $
-# <FILE_PATH> $ - the file to preload
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
-#.
-__FILE_PATH_preload() {
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
-        return 255
-    fi
-
-    if ! exist "$FILE_PATH"; then
-        ENOENT;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
-        exit 2
-    fi
-
-    FILE_preload "$FILE_PATH" || {
-        _err -red - 'Error reading file:'
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
-        exit 1
-    }
-}
-
-#! .desc:
 # Modify file data in-place according to format (see fed())
 #! .params:
 # <[$1]> - crc32 string to verify produced format against
@@ -1310,7 +1253,11 @@ __FILE_PATH_preload() {
 __fed() {
     assert -min "$#" 3 || return 255
 
-    [ "$FILE" ] || __FILE_PATH_preload || exit "$?"
+    [ "$FILE" ] || {
+        file_preload -cat "$FILE_PATH" || exit "$?"
+
+        FILE="$_file"
+    }
 
     set -- "$FILE" "$@"
 

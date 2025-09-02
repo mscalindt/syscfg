@@ -1,9 +1,11 @@
 syscfg NEWS
 
 
-2025-08-18 - 2025-08-18
+2025-08-18 - 2025-09-02
 =======================
 * `shell-glossary`[1] is now a submodule and its functions are being sourced.
+
+* FILE_preload() and __FILE_PATH_preload() have been removed.
 
 [1] https://github.com/mscalindt/shell-glossary
 
