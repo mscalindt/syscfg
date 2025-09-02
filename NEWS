@@ -7,6 +7,11 @@ syscfg NEWS
 
 * FILE_preload() and __FILE_PATH_preload() have been removed.
 
+* FILE(), FILE_PATH(), FILE_PATH_TARGET(), and FILE_octal() have been removed,
+  __FILE_cmd() renamed, and the core file-related variables' names changed.
+  For more information, refer to the commit data.
+  Breaking change; existing code requires adjustment.
+
 [1] https://github.com/mscalindt/shell-glossary
 
 

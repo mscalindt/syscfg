@@ -583,78 +583,6 @@ EINVAL() { _err -red - 'EINVAL:'; }
 # END std_err_functions
 
 #! .desc:
-# Read STDIN into $FILE
-#! .gives:
-# (0) <"$FILE"> - the content of STDIN
-#! .rc:
-# (0) success
-# (*) error
-#.
-FILE() {
-    while IFS= read -r _line; do
-        FILE="$FILE$_line
-"
-    done; FILE="$FILE$_line"
-}
-
-#! .desc:
-# Read octal STDIN into $FILE
-#! .gives:
-# (0) <"$FILE"> - the content of STDIN
-#! .rc:
-# (0) success
-# (*) error
-#.
-FILE_octal() {
-    while IFS= read -r _line; do
-        FILE="$FILE$_line
-"
-    done
-
-    case "$FILE" in
-        *'
-')
-            FILE="${FILE%%'
-'*}"
-        ;;
-    esac
-}
-
-#! .desc:
-# Read STDIN into $FILE_PATH
-#! .gives:
-# (0) <"$FILE_PATH"> - the content of STDIN
-#! .rc:
-# (0) success
-# (*) error
-#.
-FILE_PATH() {
-    FILE=; FILE_PATH=; FILE_PATH_TARGET=
-
-    while IFS= read -r _line; do
-        FILE_PATH="$FILE_PATH$_line
-"
-    done; FILE_PATH="${FILE_PATH%?}$_line"
-}
-
-#! .desc:
-# Read STDIN into $FILE_PATH_TARGET
-#! .gives:
-# (0) <"$FILE_PATH_TARGET"> - the content of STDIN
-#! .rc:
-# (0) success
-# (*) error
-#.
-FILE_PATH_TARGET() {
-    FILE_PATH_TARGET=
-
-    while IFS= read -r _line; do
-        FILE_PATH_TARGET="$FILE_PATH_TARGET$_line
-"
-    done; FILE_PATH_TARGET="${FILE_PATH_TARGET%?}$_line"
-}
-
-#! .desc:
 # Assert a file matches a given string of POSIX shell-compatible octal escape
 # sequence(s)
 #! .params:
@@ -978,72 +906,74 @@ loc_own_user() {
 #! .desc:
 # Write a binary file at the specified path
 #! .uses:
-# <FILE> $ - the octal sequence of the file
-# <FILE_PATH> $ - the path to write the file at
+# <OBJ> $ - the octal sequence of the file
+# <OBJ_PATH> $ - the path to write the file at
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad usage
 #.
 __bin_write() {
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
+    if [ ! "$OBJ_PATH" ]; then
+        _err -red - 'Missing OBJ_PATH.'
         return 255
     fi
 
-    if [ ! "$FILE" ]; then
-        _info -white - 'Empty FILE. File write cancelled:'
-        ftype "$FILE_PATH" -info || :
-        info - - " $FILE_PATH"
+    if [ ! "$OBJ" ]; then
+        _info -white - 'Empty OBJ. File write cancelled:'
+        ftype "$OBJ_PATH" -info || :
+        info - - " $OBJ_PATH"
         return 0
     fi
 
-    if ! is_octal "$FILE"; then
-        _err -red - 'Bad FILE; expected octal.'
+    if ! is_octal "$OBJ"; then
+        _err -red - 'Bad OBJ; expected octal.'
         return 255
     fi
 
     while :; do
         if [ "$always_write" = 0 ]; then
-            if bin_equiv "$FILE_PATH" "$FILE"; then
+            if bin_equiv "$OBJ_PATH" "$OBJ"; then
                 _info -white - 'File write avoided:'
-                ftype "$FILE_PATH" -info || :
-                info - - " $FILE_PATH"
+                ftype "$OBJ_PATH" -info || :
+                info - - " $OBJ_PATH"
                 break
             fi
         fi
 
         if [ "$force_write" = 1 ]; then
-            loc_delete "$FILE_PATH"
+            loc_delete "$OBJ_PATH"
         fi
 
-        if exist "$FILE_PATH"; then
-            EEXIST "$FILE_PATH"
+        if exist "$OBJ_PATH"; then
+            EEXIST "$OBJ_PATH"
         fi
 
         _info -white - 'Will write a file:'
-        ftype "$FILE_PATH" -info || :
-        info - - " $FILE_PATH"
+        ftype "$OBJ_PATH" -info || :
+        info - - " $OBJ_PATH"
 
         (
             IFS='\''
 '
-            CC=0; for _octal in $FILE; do CC=$((CC + 1)); done
+            CC=0; for _octal in $OBJ; do CC=$((CC + 1)); done
             info -white -- 'CC: '; info - - "$CC"
             info -white -- 'SIZE: '; bytes_size "$CC"
         )
 
-        if ! file_write_octal "$FILE_PATH" "$FILE"; then
+        if ! file_write_octal "$OBJ_PATH" "$OBJ"; then
             _err -red - 'File write error:'
-            ftype "$FILE_PATH" -err || :
-            err - - " $FILE_PATH"
+            ftype "$OBJ_PATH" -err || :
+            err - - " $OBJ_PATH"
             exit 1
         fi
     break; done
 
-    if ! loc_own_user "$FILE_PATH"; then
+    if ! loc_own_user "$OBJ_PATH"; then
         EERROR 'Failed to set user permissions.'
     fi
+
+    OBJ= && OBJ_PATH=
 }
 
 #! .desc:
@@ -1088,7 +1018,7 @@ __cmd() {
 }
 
 #! .desc:
-# Run a command and store output in $FILE
+# Run a command and store output in $OBJ
 #! .params:
 # <[$1]> - option_block(
 #     'e' - missing output is an error condition
@@ -1103,7 +1033,7 @@ __cmd() {
 # (*) error
 # (255) bad usage
 #.
-__FILE_cmd() {
+__OBJ_cmd() {
     assert -min "$#" 2 || return 255
 
     cmd "$2" || {
@@ -1124,22 +1054,22 @@ __FILE_cmd() {
 
     case "$1" in
         *n*s*)
-            FILE=$(shift && command "$@" && printf "%s" x) && \
-            FILE="${FILE%?}" && \
-            FILE="${FILE%?}"
+            OBJ=$(shift && command "$@" && printf "%s" x) && \
+            OBJ="${OBJ%?}" && \
+            OBJ="${OBJ%?}"
         ;;
         *n*)
-            FILE=$(shift && command "$@" && printf "%s" x) && \
-            FILE="${FILE%?}"
+            OBJ=$(shift && command "$@" && printf "%s" x) && \
+            OBJ="${OBJ%?}"
         ;;
         *)
-            FILE=$(shift && command "$@")
+            OBJ=$(shift && command "$@")
         ;;
     esac
 
     case "$1" in
         *e*)
-            [ "$FILE" ] || {
+            [ "$OBJ" ] || {
                 _err -red - 'No output has been received.'
 
                 exit 1
@@ -1151,60 +1081,60 @@ __FILE_cmd() {
 #! .desc:
 # Copy a directory at the specified path
 #! .uses:
-# <FILE_PATH> $ - the directory
-# <FILE_PATH_TARGET> $ - the path to write the directory at
+# <OBJ> $ - the directory
+# <OBJ_PATH> $ - the path to write the directory at
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad usage
 #.
 __dir_target_write() {
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
+    if [ ! "$OBJ" ]; then
+        _err -red - 'Missing OBJ.'
         return 255
     fi
 
-    if [ ! "$FILE_PATH_TARGET" ]; then
-        _err -red - 'Missing FILE_PATH_TARGET.'
+    if [ ! "$OBJ_PATH" ]; then
+        _err -red - 'Missing OBJ_PATH.'
         return 255
     fi
 
-    if ! exist "$FILE_PATH"; then
+    if ! exist "$OBJ"; then
         ENOENT;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ" -err || :
+        err - - " $OBJ"
         exit 2
     fi
 
-    dir "$FILE_PATH" && readable "$FILE_PATH" || {
+    dir "$OBJ" && readable "$OBJ" || {
         EINVAL;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ" -err || :
+        err - - " $OBJ"
         exit 22
     }
 
     while :; do
         if [ "$force_write" = 1 ]; then
-            loc_delete "$FILE_PATH_TARGET"
+            loc_delete "$OBJ_PATH"
         fi
 
-        if exist "$FILE_PATH_TARGET"; then
-            EEXIST "$FILE_PATH_TARGET"
+        if exist "$OBJ_PATH"; then
+            EEXIST "$OBJ_PATH"
         fi
 
         _info -white - 'Will copy from/to:'
-        ftype "$FILE_PATH" -info || :
-        info - - " $FILE_PATH"
-        ftype "$FILE_PATH_TARGET" -info || :
-        info - - " $FILE_PATH_TARGET"
+        ftype "$OBJ" -info || :
+        info - - " $OBJ"
+        ftype "$OBJ_PATH" -info || :
+        info - - " $OBJ_PATH"
 
         info -white -- '> '
-        find "$FILE_PATH"//. ! -name . | grep -c // 2> /dev/null | \
+        find "$OBJ"//. ! -name . | grep -c // 2> /dev/null | \
             while IFS= read -r _line0; do
                 printf "%s, " "$_line0"
 
                 info -white -- 'D '
-                find "$FILE_PATH"//. ! -name . -type d | \
+                find "$OBJ"//. ! -name . -type d | \
                     grep -c // 2> /dev/null | \
                         while IFS= read -r _line1; do
                             printf "%s, " "$_line1"
@@ -1214,17 +1144,19 @@ __dir_target_write() {
                         done
             done
 
-        if ! dir_write "$FILE_PATH" "$FILE_PATH_TARGET"; then
+        if ! dir_write "$OBJ" "$OBJ_PATH"; then
             _err -red - 'Directory write error:'
-            ftype "$FILE_PATH_TARGET" -err || :
-            err - - " $FILE_PATH_TARGET"
+            ftype "$OBJ_PATH" -err || :
+            err - - " $OBJ_PATH"
             exit 1
         fi
     break; done
 
-    if ! loc_own_user "$FILE_PATH_TARGET"; then
+    if ! loc_own_user "$OBJ_PATH"; then
         EERROR 'Failed to set user permissions.'
     fi
+
+    OBJ= && OBJ_PATH=
 }
 
 #! .desc:
@@ -1253,13 +1185,13 @@ __dir_target_write_overwrite() {
 __fed() {
     assert -min "$#" 3 || return 255
 
-    [ "$FILE" ] || {
-        file_preload -cat "$FILE_PATH" || exit "$?"
+    [ "$OBJ" ] || {
+        file_preload -cat "$OBJ_PATH" || exit "$?"
 
-        FILE="$_file"
+        OBJ="$_file"
     }
 
-    set -- "$FILE" "$@"
+    set -- "$OBJ" "$@"
 
     _fmt=$(
         _a="$1"; shift 3
@@ -1295,92 +1227,92 @@ __fed() {
         fi
     fi
 
-    FILE=$(
+    OBJ=$(
         _a="$2"; _b="$4"; eval set -- "$1"
 
         libfile "$_b" "$_a" "$@" || return "$?"
 
         printf "%s" "${_file}x"
-    ) && FILE="${FILE%?}" || exit "$?"
+    ) && OBJ="${OBJ%?}" || exit "$?"
 }
 
 #! .desc:
 # Set the executable bits on a file
 #! .uses:
-# <FILE_PATH> $ - the file
+# <OBJ_PATH> $ - the file
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad usage
 #.
 __file_executable() {
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
+    if [ ! "$OBJ_PATH" ]; then
+        _err -red - 'Missing OBJ_PATH.'
         return 255
     fi
 
-    if ! exist "$FILE_PATH"; then
+    if ! exist "$OBJ_PATH"; then
         ENOENT;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ_PATH" -err || :
+        err - - " $OBJ_PATH"
         exit 2
     fi
 
-    file "$FILE_PATH" || {
+    file "$OBJ_PATH" || {
         EINVAL;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ_PATH" -err || :
+        err - - " $OBJ_PATH"
         exit 22
     }
 
-    __cmd chmod +x -- "$FILE_PATH"
+    __cmd chmod +x -- "$OBJ_PATH"
 }
 
 #! .desc:
 # Write a file at the specified path
 #! .uses:
-# <FILE> $ - the file
-# <FILE_PATH> $ - the path to write the file at
+# <OBJ> $ - the file
+# <OBJ_PATH> $ - the path to write the file at
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad usage
 #.
 __file_write() {
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
+    if [ ! "$OBJ_PATH" ]; then
+        _err -red - 'Missing OBJ_PATH.'
         return 255
     fi
 
-    if [ ! "$FILE" ]; then
-        _info -white - 'Empty FILE. File write cancelled:'
-        ftype "$FILE_PATH" -info || :
-        info - - " $FILE_PATH"
+    if [ ! "$OBJ" ]; then
+        _info -white - 'Empty OBJ. File write cancelled:'
+        ftype "$OBJ_PATH" -info || :
+        info - - " $OBJ_PATH"
         return 0
     fi
 
     while :; do
         if [ "$always_write" = 0 ]; then
-            if file_equiv "$FILE_PATH" "$FILE"; then
+            if file_equiv "$OBJ_PATH" "$OBJ"; then
                 _info -white - 'File write avoided:'
-                ftype "$FILE_PATH" -info || :
-                info - - " $FILE_PATH"
+                ftype "$OBJ_PATH" -info || :
+                info - - " $OBJ_PATH"
                 break
             fi
         fi
 
         if [ "$force_write" = 1 ]; then
-            loc_delete "$FILE_PATH"
+            loc_delete "$OBJ_PATH"
         fi
 
-        if exist "$FILE_PATH"; then
-            EEXIST "$FILE_PATH"
+        if exist "$OBJ_PATH"; then
+            EEXIST "$OBJ_PATH"
         fi
 
         if [ -s "$logf" ]; then  # log written
             _info -white - 'Will write original file; diff:'
-            ftype "$FILE_PATH" -info || :
-            info - - " $FILE_PATH"
+            ftype "$OBJ_PATH" -info || :
+            info - - " $OBJ_PATH"
             while IFS=" " read -r _n _line; do
                 case "$_n" in
                     *'+') printf "%b%s%b " '\033[1;32m' "$_n" '\033[0m' ;;
@@ -1389,23 +1321,23 @@ __file_write() {
             done < "$logf"
         else
             _info -white - 'Will write a file:'
-            ftype "$FILE_PATH" -info || :
-            info - - " $FILE_PATH"
+            ftype "$OBJ_PATH" -info || :
+            info - - " $OBJ_PATH"
             if [ "$silent_write" = 0 ]; then
-                info -white - '0:'; info - - "${FILE%'
+                info -white - '0:'; info - - "${OBJ%'
 '}"
             fi
         fi
 
-        if ! file_write "$FILE_PATH" "$FILE"; then
+        if ! file_write "$OBJ_PATH" "$OBJ"; then
             _err -red - 'File write error:'
-            ftype "$FILE_PATH" -err || :
-            err - - " $FILE_PATH"
+            ftype "$OBJ_PATH" -err || :
+            err - - " $OBJ_PATH"
             exit 1
         fi
     break; done
 
-    if ! loc_own_user "$FILE_PATH"; then
+    if ! loc_own_user "$OBJ_PATH"; then
         EERROR 'Failed to set user permissions.'
     fi
 
@@ -1413,6 +1345,8 @@ __file_write() {
         _err -r - 'Log clear error.'
         exit 1
     fi
+
+    OBJ= && OBJ_PATH=
 }
 
 #! .desc:
@@ -1425,40 +1359,40 @@ __file_write_overwrite() {
 #! .desc:
 # Overwrite a file at the specified path
 #! .uses:
-# <FILE> $ - the file
-# <FILE_PATH> $ - the path to write the file at
+# <OBJ> $ - the file
+# <OBJ_PATH> $ - the path to write the file at
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad usage
 #.
 __file_write_overwrite_soft() {
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
+    if [ ! "$OBJ_PATH" ]; then
+        _err -red - 'Missing OBJ_PATH.'
         return 255
     fi
 
-    if [ ! "$FILE" ]; then
-        _info -white - 'Empty FILE. File write cancelled:'
-        ftype "$FILE_PATH" -info || :
-        info - - " $FILE_PATH"
+    if [ ! "$OBJ" ]; then
+        _info -white - 'Empty OBJ. File write cancelled:'
+        ftype "$OBJ_PATH" -info || :
+        info - - " $OBJ_PATH"
         return 0
     fi
 
     while :; do
         if [ "$always_write" = 0 ]; then
-            if file_equiv "$FILE_PATH" "$FILE"; then
+            if file_equiv "$OBJ_PATH" "$OBJ"; then
                 _info -white - 'File write avoided:'
-                ftype "$FILE_PATH" -info || :
-                info - - " $FILE_PATH"
+                ftype "$OBJ_PATH" -info || :
+                info - - " $OBJ_PATH"
                 break
             fi
         fi
 
         if [ -s "$logf" ]; then  # log written
             _info -white - 'Will write original file; diff:'
-            ftype "$FILE_PATH" -info || :
-            info - - " $FILE_PATH"
+            ftype "$OBJ_PATH" -info || :
+            info - - " $OBJ_PATH"
             while IFS=" " read -r _n _line; do
                 case "$_n" in
                     *'+') printf "%b%s%b " '\033[1;32m' "$_n" '\033[0m' ;;
@@ -1467,23 +1401,23 @@ __file_write_overwrite_soft() {
             done < "$logf"
         else
             _info -white - 'Will overwrite a file:'
-            ftype "$FILE_PATH" -info || :
-            info - - " $FILE_PATH"
+            ftype "$OBJ_PATH" -info || :
+            info - - " $OBJ_PATH"
             if [ "$silent_write" = 0 ]; then
-                info -white - '0:'; info - - "${FILE%'
+                info -white - '0:'; info - - "${OBJ%'
 '}"
             fi
         fi
 
-        if ! file_write "$FILE_PATH" "$FILE"; then
+        if ! file_write "$OBJ_PATH" "$OBJ"; then
             _err -red - 'File overwrite error:'
-            ftype "$FILE_PATH" -err || :
-            err - - " $FILE_PATH"
+            ftype "$OBJ_PATH" -err || :
+            err - - " $OBJ_PATH"
             exit 1
         fi
     break; done
 
-    if ! loc_own_user "$FILE_PATH"; then
+    if ! loc_own_user "$OBJ_PATH"; then
         EERROR 'Failed to set user permissions.'
     fi
 
@@ -1491,78 +1425,82 @@ __file_write_overwrite_soft() {
         _err -r - 'Log clear error.'
         exit 1
     fi
+
+    OBJ= && OBJ_PATH=
 }
 
 #! .desc:
 # Copy a file at the specified path
 #! .uses:
-# <FILE_PATH> $ - the file
-# <FILE_PATH_TARGET> $ - the path to write the file at
+# <OBJ> $ - the file
+# <OBJ_PATH> $ - the path to write the file at
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad usage
 #.
 __file_target_write() {
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
+    if [ ! "$OBJ" ]; then
+        _err -red - 'Missing OBJ.'
         return 255
     fi
 
-    if [ ! "$FILE_PATH_TARGET" ]; then
-        _err -red - 'Missing FILE_PATH_TARGET.'
+    if [ ! "$OBJ_PATH" ]; then
+        _err -red - 'Missing OBJ_PATH.'
         return 255
     fi
 
-    if ! exist "$FILE_PATH"; then
+    if ! exist "$OBJ"; then
         ENOENT;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ" -err || :
+        err - - " $OBJ"
         exit 2
     fi
 
-    file "$FILE_PATH" && readable "$FILE_PATH" || {
+    file "$OBJ" && readable "$OBJ" || {
         EINVAL;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ" -err || :
+        err - - " $OBJ"
         exit 22
     }
 
     while :; do
         if [ "$always_write" = 0 ]; then
-            if files_equiv "$FILE_PATH" "$FILE_PATH_TARGET"; then
+            if files_equiv "$OBJ" "$OBJ_PATH"; then
                 _info -white - 'File write avoided:'
-                ftype "$FILE_PATH_TARGET" -info || :
-                info - - " $FILE_PATH_TARGET"
+                ftype "$OBJ_PATH" -info || :
+                info - - " $OBJ_PATH"
                 break
             fi
         fi
 
         if [ "$force_write" = 1 ]; then
-            loc_delete "$FILE_PATH_TARGET"
+            loc_delete "$OBJ_PATH"
         fi
 
-        if exist "$FILE_PATH_TARGET"; then
-            EEXIST "$FILE_PATH_TARGET"
+        if exist "$OBJ_PATH"; then
+            EEXIST "$OBJ_PATH"
         fi
 
         _info -white - 'Will copy from/to:'
-        ftype "$FILE_PATH" -info || :
-        info - - " $FILE_PATH"
-        ftype "$FILE_PATH_TARGET" -info || :
-        info - - " $FILE_PATH_TARGET"
+        ftype "$OBJ" -info || :
+        info - - " $OBJ"
+        ftype "$OBJ_PATH" -info || :
+        info - - " $OBJ_PATH"
 
-        if ! file_copy "$FILE_PATH" "$FILE_PATH_TARGET"; then
+        if ! file_copy "$OBJ" "$OBJ_PATH"; then
             _err -red - 'File write error:'
-            ftype "$FILE_PATH_TARGET" -err || :
-            err - - " $FILE_PATH_TARGET"
+            ftype "$OBJ_PATH" -err || :
+            err - - " $OBJ_PATH"
             exit 1
         fi
     break; done
 
-    if ! loc_own_user "$FILE_PATH_TARGET"; then
+    if ! loc_own_user "$OBJ_PATH"; then
         EERROR 'Failed to set user permissions.'
     fi
+
+    OBJ= && OBJ_PATH=
 }
 
 #! .desc:
@@ -1577,7 +1515,7 @@ __file_target_write_overwrite() {
 #! .params:
 # <$1> - flag(s) to set
 #! .uses:
-# <FILE_PATH> $ - the file/directory
+# <OBJ_PATH> $ - the file/directory
 #! .rc:
 # (0) success
 # (*) error
@@ -1588,30 +1526,30 @@ __loc_chattr() {
 
     cmd 'chattr' || return 0
 
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
+    if [ ! "$OBJ_PATH" ]; then
+        _err -red - 'Missing OBJ_PATH.'
         return 255
     fi
 
-    if ! exist "$FILE_PATH"; then
+    if ! exist "$OBJ_PATH"; then
         ENOENT;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ_PATH" -err || :
+        err - - " $OBJ_PATH"
         exit 2
     fi
 
-    if dir "$FILE_PATH"; then
+    if dir "$OBJ_PATH"; then
         :
-    elif file "$FILE_PATH"; then
+    elif file "$OBJ_PATH"; then
         :
     else
         EINVAL;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ_PATH" -err || :
+        err - - " $OBJ_PATH"
         exit 22
     fi
 
-    __cmd chattr +"$1" -- "$FILE_PATH"
+    __cmd chattr +"$1" -- "$OBJ_PATH"
 }
 
 #! .desc:
@@ -1619,7 +1557,7 @@ __loc_chattr() {
 #! .params:
 # <$1> - octal mode
 #! .uses:
-# <FILE_PATH> $ - the file/directory
+# <OBJ_PATH> $ - the file/directory
 #! .rc:
 # (0) success
 # (*) error
@@ -1628,32 +1566,32 @@ __loc_chattr() {
 __loc_chmod() {
     assert -eq "$#" 1 || return 255
 
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
+    if [ ! "$OBJ_PATH" ]; then
+        _err -red - 'Missing OBJ_PATH.'
         return 255
     fi
 
-    if ! exist "$FILE_PATH"; then
+    if ! exist "$OBJ_PATH"; then
         ENOENT;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ_PATH" -err || :
+        err - - " $OBJ_PATH"
         exit 2
     fi
 
-    if dir "$FILE_PATH"; then
+    if dir "$OBJ_PATH"; then
         :
-    elif file "$FILE_PATH"; then
+    elif file "$OBJ_PATH"; then
         :
     else
         EINVAL;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ_PATH" -err || :
+        err - - " $OBJ_PATH"
         exit 22
     fi
 
-    chattr_remove "$FILE_PATH"
+    chattr_remove "$OBJ_PATH"
 
-    __cmd chmod "$1" -- "$FILE_PATH"
+    __cmd chmod "$1" -- "$OBJ_PATH"
 }
 
 #! .desc:
@@ -1661,7 +1599,7 @@ __loc_chmod() {
 #! .params:
 # <$1> - owner
 #! .uses:
-# <FILE_PATH> $ - the file/directory
+# <OBJ_PATH> $ - the file/directory
 #! .rc:
 # (0) success
 # (*) error
@@ -1670,64 +1608,64 @@ __loc_chmod() {
 __loc_chown() {
     assert -eq "$#" 1 || return 255
 
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
+    if [ ! "$OBJ_PATH" ]; then
+        _err -red - 'Missing OBJ_PATH.'
         return 255
     fi
 
-    if ! exist "$FILE_PATH"; then
+    if ! exist "$OBJ_PATH"; then
         ENOENT;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ_PATH" -err || :
+        err - - " $OBJ_PATH"
         exit 2
     fi
 
-    if dir "$FILE_PATH"; then
+    if dir "$OBJ_PATH"; then
         :
-    elif file "$FILE_PATH"; then
+    elif file "$OBJ_PATH"; then
         :
     else
         EINVAL;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ_PATH" -err || :
+        err - - " $OBJ_PATH"
         exit 22
     fi
 
-    chattr_remove "$FILE_PATH"
+    chattr_remove "$OBJ_PATH"
 
-    __cmd chown -R "$uid":"$gid" -- "$FILE_PATH"
+    __cmd chown -R "$uid":"$gid" -- "$OBJ_PATH"
 }
 
 #! .desc:
 # Delete a file/directory from the specified path
 #! .uses:
-# <FILE_PATH> $ - the file/directory
+# <OBJ_PATH> $ - the file/directory
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad usage
 #.
 __loc_delete() {
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
+    if [ ! "$OBJ_PATH" ]; then
+        _err -red - 'Missing OBJ_PATH.'
         return 255
     fi
 
-    if ! exist "$FILE_PATH"; then
+    if ! exist "$OBJ_PATH"; then
         _info -white - 'Already deleted:'
-        ftype "$FILE_PATH" -info || :
-        info - - " $FILE_PATH"
+        ftype "$OBJ_PATH" -info || :
+        info - - " $OBJ_PATH"
         return 0
     fi
 
     _info -white - 'Will delete:'
-    ftype "$FILE_PATH" -info || :
-    info - - " $FILE_PATH"
+    ftype "$OBJ_PATH" -info || :
+    info - - " $OBJ_PATH"
 
-    if ! loc_delete "$FILE_PATH"; then
+    if ! loc_delete "$OBJ_PATH"; then
         _err -red - 'Removal error:'
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ_PATH" -err || :
+        err - - " $OBJ_PATH"
         exit 1
     fi
 }
@@ -1735,52 +1673,52 @@ __loc_delete() {
 #! .desc:
 # Truncate/empty a file/directory on the specified path
 #! .uses:
-# <FILE_PATH> $ - the file/directory
+# <OBJ_PATH> $ - the file/directory
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad usage
 #.
 __loc_empty() {
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
+    if [ ! "$OBJ_PATH" ]; then
+        _err -red - 'Missing OBJ_PATH.'
         return 255
     fi
 
-    if dir "$FILE_PATH"; then
+    if dir "$OBJ_PATH"; then
         :
-    elif file "$FILE_PATH"; then
+    elif file "$OBJ_PATH"; then
         :
-    elif exist "$FILE_PATH"; then
+    elif exist "$OBJ_PATH"; then
         EINVAL;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ_PATH" -err || :
+        err - - " $OBJ_PATH"
         exit 22
     fi
 
-    if dir "$FILE_PATH"; then
+    if dir "$OBJ_PATH"; then
         _info -white - 'Will empty:'
-        ftype "$FILE_PATH" -info || :
-        info - - " $FILE_PATH"
+        ftype "$OBJ_PATH" -info || :
+        info - - " $OBJ_PATH"
 
-        __cmd rm -rf -- "$FILE_PATH"/*
+        __cmd rm -rf -- "$OBJ_PATH"/*
     else
-        if exist "$FILE_PATH"; then
+        if exist "$OBJ_PATH"; then
             _info -white - 'Will truncate:'
         else
             _info -white - 'Will create a file:'
         fi
-        ftype "$FILE_PATH" -info || :
-        info - - " $FILE_PATH"
+        ftype "$OBJ_PATH" -info || :
+        info - - " $OBJ_PATH"
 
-        if ! { : > "$FILE_PATH"; }; then
-            if exist "$FILE_PATH"; then
+        if ! { : > "$OBJ_PATH"; }; then
+            if exist "$OBJ_PATH"; then
                 _err -red - 'Truncation error:'
             else
                 _err -red - 'File creation error:'
             fi
-            ftype "$FILE_PATH" -err || :
-            err - - " $FILE_PATH"
+            ftype "$OBJ_PATH" -err || :
+            err - - " $OBJ_PATH"
             exit 1
         fi
     fi
@@ -1789,49 +1727,51 @@ __loc_empty() {
 #! .desc:
 # Create a symbolic link of an object at the specified path (overwrite)
 #! .uses:
-# <FILE_PATH> $ - the object
-# <FILE_PATH_TARGET> $ - the path to write the symbolic link at
+# <OBJ> $ - the object
+# <OBJ_PATH> $ - the path to write the symbolic link at
 #! .rc:
 # (0) success
 # (*) error
 # (255) bad usage
 #.
 __loc_target_link_overwrite() {
-    if [ ! "$FILE_PATH" ]; then
-        _err -red - 'Missing FILE_PATH.'
+    if [ ! "$OBJ" ]; then
+        _err -red - 'Missing OBJ.'
         return 255
     fi
 
-    if [ ! "$FILE_PATH_TARGET" ]; then
-        _err -red - 'Missing FILE_PATH_TARGET.'
+    if [ ! "$OBJ_PATH" ]; then
+        _err -red - 'Missing OBJ_PATH.'
         return 255
     fi
 
-    if ! { exist "$FILE_PATH" || [ -h "$FILE_PATH" ]; }; then
+    if ! { exist "$OBJ" || [ -h "$OBJ" ]; }; then
         ENOENT;
-        ftype "$FILE_PATH" -err || :
-        err - - " $FILE_PATH"
+        ftype "$OBJ" -err || :
+        err - - " $OBJ"
         exit 2
     fi
 
     while :; do
         _info -white - 'Will symbolic link source/target:'
-        ftype "$FILE_PATH" -info || :
-        info - - " $FILE_PATH"
-        ftype "$FILE_PATH_TARGET" -info || :
-        info - - " $FILE_PATH_TARGET"
+        ftype "$OBJ" -info || :
+        info - - " $OBJ"
+        ftype "$OBJ_PATH" -info || :
+        info - - " $OBJ_PATH"
 
-        if ! loc_link "$FILE_PATH" "$FILE_PATH_TARGET"; then
+        if ! loc_link "$OBJ" "$OBJ_PATH"; then
             _err -red - 'Symbolic linking error:'
-            ftype "$FILE_PATH_TARGET" -err || :
-            err - - " $FILE_PATH_TARGET"
+            ftype "$OBJ_PATH" -err || :
+            err - - " $OBJ_PATH"
             exit 1
         fi
     break; done
 
-    if ! loc_own_user "$FILE_PATH_TARGET"; then
+    if ! loc_own_user "$OBJ_PATH"; then
         EERROR 'Failed to set user permissions.'
     fi
+
+    OBJ= && OBJ_PATH=
 }
 
 #! .desc:
