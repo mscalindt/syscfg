@@ -35,7 +35,7 @@ SRC_LOG=$(
     }
 )
 
-if [ "$SRC_LOG" = "$LOG" ]; then
+if [ "$LOG" ] && [ "$SRC_LOG" = "$LOG" ]; then
     git tag -m \
 "syscfg $1
 
