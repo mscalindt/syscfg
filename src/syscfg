@@ -1786,7 +1786,8 @@ err_handler() {
     trap - INT TERM
 
     # env cleanup
-    if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ]; then
+    if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ] || \
+        [ -h "$tmpd" ] || [ -h "$tmpf" ] || [ -h "$logf" ]; then
         chattr -R -ia "$tmpd" "$tmpf" "$logf" > /dev/null 2>&1 || :
         rm -rf "$tmpd" "$tmpf" "$logf"
     fi
@@ -1916,7 +1917,8 @@ main() {
     }
 
     # past env cleanup from SIGKILL or something else
-    if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ]; then
+    if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ] || \
+        [ -h "$tmpd" ] || [ -h "$tmpf" ] || [ -h "$logf" ]; then
         chattr -R -ia "$tmpd" "$tmpf" "$logf" > /dev/null 2>&1 || :
         rm -rf "$tmpd" "$tmpf" "$logf"
     fi
@@ -1930,7 +1932,8 @@ main() {
         ( . "$1" "$1"; ) || return "$?"
 
         # env reset
-        if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ]; then
+        if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ] || \
+            [ -h "$tmpd" ] || [ -h "$tmpf" ] || [ -h "$logf" ]; then
             chattr -R -ia "$tmpd" "$tmpf" "$logf" > /dev/null 2>&1 || :
             rm -rf "$tmpd" "$tmpf" "$logf"
         fi
