@@ -1,6 +1,11 @@
 syscfg NEWS
 
 
+2025-09-05 - 2025-09-05
+=======================
+* Improved the handling in regards to dangling (broken) symbolic links.
+
+
 2025-08-18 - 2025-09-02
 =======================
 * `shell-glossary`[1] is now a submodule and its functions are being sourced.

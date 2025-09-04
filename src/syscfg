@@ -468,6 +468,8 @@ to_octal_offset() {
 unmount() {
     assert -eq "$#" 1 || return 255
 
+    # exist() does not match dangling symlinks, and does not need to; they
+    # cannot be in a state of being mounted.
     cmd 'umount' && exist "$1" && dir "$1" || return 0
 
     umount -Rf -- "$1" > /dev/null 2>&1 || :
@@ -657,7 +659,7 @@ dir_write() {
 
     dir "$1" || return 255
 
-    if exist "$2"; then
+    if ftype "$2"; then
         chattr_remove "$2"
         unmount "$2"
 
@@ -684,7 +686,7 @@ file_copy() {
 
     file "$1" || return 255
 
-    if exist "$2"; then
+    if ftype "$2"; then
         chattr_remove "$2"
         unmount "$2"
 
@@ -733,7 +735,7 @@ file_equiv() {
 file_write() {
     assert -eq "$#" 2 || return 255
 
-    if exist "$1"; then
+    if ftype "$1"; then
         chattr_remove "$1"
         unmount "$1"
 
@@ -758,7 +760,7 @@ file_write() {
 file_write_octal() {
     assert -eq "$#" 2 || return 255
 
-    if exist "$1"; then
+    if ftype "$1"; then
         chattr_remove "$1"
         unmount "$1"
 
@@ -803,7 +805,7 @@ files_equiv() {
 loc_delete() {
     assert -eq "$#" 1 || return 255
 
-    exist "$1" || return 0
+    ftype "$1" || return 0
 
     chattr_remove "$1"
     unmount "$1"
@@ -826,6 +828,8 @@ loc_link() {
 
     { [ -e "$1" ] || [ -h "$1" ]; } || return 255
 
+    # exist() does not match dangling symlinks, and does not need to; they
+    # cannot be in a state of being mounted or possess (extended) fs attrs.
     if exist "$2"; then
         chattr_remove "$2"
         unmount "$2"
@@ -854,7 +858,7 @@ loc_own_user() {
 
     set -- "${1%"${1##*[!/]}"}"
 
-    exist "$1" && str_pfix "$home"/ "$1" || return 0
+    ftype "$1" && str_pfix "$home"/ "$1" || return 0
 
     chattr_remove "$1"
 
@@ -916,7 +920,7 @@ __bin_write() {
             loc_delete "$OBJ_PATH"
         fi
 
-        if exist "$OBJ_PATH"; then
+        if ftype "$OBJ_PATH"; then
             EEXIST "$OBJ_PATH"
         fi
 
@@ -1089,7 +1093,7 @@ __dir_target_write() {
             loc_delete "$OBJ_PATH"
         fi
 
-        if exist "$OBJ_PATH"; then
+        if ftype "$OBJ_PATH"; then
             EEXIST "$OBJ_PATH"
         fi
 
@@ -1222,6 +1226,8 @@ __file_executable() {
         return 255
     fi
 
+    # exist() does not match dangling symlinks, and does not need to;
+    # symlinks cannot have their static mode (0777) changed.
     if ! exist "$OBJ_PATH"; then
         ENOENT;
         ftype "$OBJ_PATH" -err || :
@@ -1276,7 +1282,7 @@ __file_write() {
             loc_delete "$OBJ_PATH"
         fi
 
-        if exist "$OBJ_PATH"; then
+        if ftype "$OBJ_PATH"; then
             EEXIST "$OBJ_PATH"
         fi
 
@@ -1449,7 +1455,7 @@ __file_target_write() {
             loc_delete "$OBJ_PATH"
         fi
 
-        if exist "$OBJ_PATH"; then
+        if ftype "$OBJ_PATH"; then
             EEXIST "$OBJ_PATH"
         fi
 
@@ -1502,6 +1508,8 @@ __loc_chattr() {
         return 255
     fi
 
+    # exist() does not match dangling symlinks, and does not need to;
+    # symlinks cannot possess (extended) fs attrs.
     if ! exist "$OBJ_PATH"; then
         ENOENT;
         ftype "$OBJ_PATH" -err || :
@@ -1542,6 +1550,8 @@ __loc_chmod() {
         return 255
     fi
 
+    # exist() does not match dangling symlinks, and does not need to;
+    # symlinks cannot have their static mode (0777) changed.
     if ! exist "$OBJ_PATH"; then
         ENOENT;
         ftype "$OBJ_PATH" -err || :
@@ -1584,7 +1594,7 @@ __loc_chown() {
         return 255
     fi
 
-    if ! exist "$OBJ_PATH"; then
+    if ! ftype "$OBJ_PATH"; then
         ENOENT;
         ftype "$OBJ_PATH" -err || :
         err - - " $OBJ_PATH"
@@ -1622,7 +1632,7 @@ __loc_delete() {
         return 255
     fi
 
-    if ! exist "$OBJ_PATH"; then
+    if ! ftype "$OBJ_PATH"; then
         _info -white - 'Already deleted:'
         ftype "$OBJ_PATH" -info || :
         info - - " $OBJ_PATH"
@@ -1716,7 +1726,7 @@ __loc_target_link_overwrite() {
         return 255
     fi
 
-    if ! { exist "$OBJ" || [ -h "$OBJ" ]; }; then
+    if ! ftype "$OBJ"; then
         ENOENT;
         ftype "$OBJ" -err || :
         err - - " $OBJ"
