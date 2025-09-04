@@ -837,35 +837,6 @@ loc_link() {
 }
 
 #! .desc:
-# Create a hard link of a file
-#! .params:
-# <"$1"> - absolute path of the file
-# <"$2"> - absolute path to create the link at
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input
-#.
-loc_link_ptr() {
-    assert -eq "$#" 2 || return 255
-
-    if file "$1"; then
-        :
-    else
-        return 255
-    fi
-
-    if exist "$2"; then
-        chattr_remove "$2"
-        unmount "$2"
-    fi
-
-    mkdir_parents "$2"
-
-    ln -f -- "$1" "$2"
-}
-
-#! .desc:
 # Set $user as owner of an object and its parents in $home
 #! .params:
 # <"$1"> - absolute path
