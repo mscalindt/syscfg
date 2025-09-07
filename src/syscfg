@@ -1008,7 +1008,7 @@ __cmd() {
 # (*) error
 # (255) bad usage
 #.
-__OBJ_cmd() {
+__cmd_OBJ() {
     assert -min "$#" 2 || return 255
 
     cmd "$2" || {

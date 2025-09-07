@@ -1,9 +1,12 @@
 syscfg NEWS
 
 
-2025-09-05 - 2025-09-05
+2025-09-05 - 2025-09-08
 =======================
 * Improved the handling in regards to dangling (broken) symbolic links.
+
+* Renamed __OBJ_cmd() to __cmd_OBJ().
+  Breaking change; existing code requires adjustment.
 
 
 2025-08-18 - 2025-09-02
