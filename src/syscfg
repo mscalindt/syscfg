@@ -1905,13 +1905,6 @@ main() {
         err -red - 'No client has been specified.'
         err - -
 
-        info -white - 'SWITCH: always_write ^AW'
-        info -white - 'SWITCH: confirm_crc ^CC'
-        info -white - 'SWITCH: force_write ^FW'
-        info -white - 'SWITCH: interactive ^IE'
-        info -white - 'SWITCH: silent_cmd ^SC'
-        info -white - 'SWITCH: silent_write ^SW'
-
         exit 2
     }
 
