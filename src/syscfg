@@ -1897,8 +1897,9 @@ main() {
         fi
     fi
 
-    readonly always_write confirm_crc force_write interactive logf silent_cmd \
-             silent_write tmpd tmpf
+    readonly \
+        always_write confirm_crc force_write interactive logf silent_cmd \
+        silent_write tmpd tmpf
 
     assert -min "$#" 1 || {
         err -red - 'No client has been specified.'
