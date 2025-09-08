@@ -8,6 +8,8 @@ syscfg NEWS
 * Renamed __OBJ_cmd() to __cmd_OBJ().
   Breaking change; existing code requires adjustment.
 
+* Renamed interactive mode cmdline switch from `IE` to `I`.
+
 
 2025-08-18 - 2025-09-02
 =======================

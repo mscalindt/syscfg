@@ -1874,7 +1874,7 @@ main() {
         '^AW') always_write=1; shift && continue ;;
         '^CC') confirm_crc=1; shift && continue ;;
         '^FW') force_write=1; shift && continue ;;
-        '^IE') interactive=1; shift && continue ;;
+        '^I') interactive=1; shift && continue ;;
         '^SC') silent_cmd=1; shift && continue ;;
         '^SW') silent_write=1; shift && continue ;;
         *) break ;;
