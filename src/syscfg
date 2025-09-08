@@ -1870,12 +1870,6 @@ main() {
     # Temporary per-function log file (cleared on func exit):
     logf="${TMPDIR:-/tmp}/syscfg_logf"
 
-    # Enable always_write from cmdline:    ^AW as $1
-    # Enable confirm_crc from cmdline:     ^CC as $1
-    # Enable force_write from cmdline:     ^FW as $1
-    # Enable interactive from cmdline:     ^IE as $1
-    # Enable silent_cmd from cmdline:      ^SC as $1
-    # Enable silent_write from cmdline:    ^SW as $1
     while :; do case "$1" in
         '^AW') always_write=1; shift && continue ;;
         '^CC') confirm_crc=1; shift && continue ;;
