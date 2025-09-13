@@ -49,18 +49,18 @@ git checkout "$COMMIT"
 cd "$MAIN_DIR"
 git add .
 
-if [ "$LOG" ] && [ "$SRC_LOG" = "$LOG" ]; then
+if [ "$SRC_LOG" ] && [ ! "$SRC_LOG" = "$LOG" ]; then
     git commit -m \
 ".gitmodules: $MOD_ALIAS -> \`$2\`
+
+- Filtered log:
+$SRC_LOG
 
 - Complete log:
 $LOG" -Ss
 elif [ "$LOG" ]; then
     git commit -m \
 ".gitmodules: $MOD_ALIAS -> \`$2\`
-
-- Filtered log:
-$SRC_LOG
 
 - Complete log:
 $LOG" -Ss
