@@ -32,7 +32,7 @@ case "$MOD_ALIAS" in
                         *'(): [doc]'*)
                             continue
                         ;;
-                        *'(): '*)
+                        *'src: '* | *'(): '*)
                             printf "%s\n" "$LINE"
                         ;;
                         *)
