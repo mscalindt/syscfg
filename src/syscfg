@@ -384,29 +384,6 @@ mkdir_parents() {
 }
 
 #! .desc:
-# Print the return code of a command
-#! .params:
-# <"$1"> - command
-# ["$2"+] - arguments
-#! .rc:
-# (0) success
-# (127) command does not exist
-# (255) bad input
-#.
-rc() {
-    assert -min "$#" 1 || return 255
-
-    if cmd "$1"; then
-        "$@" > /dev/null 2>&1
-        printf "%d" "$?"
-    else
-        return 127
-    fi
-
-    return 0
-}
-
-#! .desc:
 # Print POSIX shell-compatible octal escape sequence(s) of `od -b -An` string
 #! .params:
 # <["$1"]> - string
