@@ -696,7 +696,7 @@ __bin_write_ow_soft() {
 }
 
 #! .desc:
-# Print formatted text to stderr (syscfg client string)
+# Print formatted text to stderr
 #! .params:
 # <"$@"> - err()
 #! .desc.ext:
