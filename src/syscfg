@@ -251,11 +251,10 @@ fs_equiv_type_attr() {
 #     '-user' - user name (argument)
 #     .
 # )
-# [$3]+ - hint
-# [$4] - hint argument
+# [$3] - $@
 #! .gives.var:
 # (0) <_hint> - [string];
-#               hint argument
+#               [hint argument]
 #! .rc:
 # (0) true
 # (1) false
