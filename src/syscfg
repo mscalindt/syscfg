@@ -235,7 +235,7 @@ fs_equiv_type_attr() {
 #! .desc:
 # Query the presence of an independent hint among arguments
 #! .params:
-# <[$1]> - N (arguments offset)
+# <$1> - N
 # <$2> - hint(
 #     '-clear-log' - log file path to clear after use (argument)
 #     '-del' - delete action/operation
@@ -261,19 +261,15 @@ fs_equiv_type_attr() {
 # (1) false
 #! .ec:
 # (255) input error
+#! .desc.ext:
+# $1 is a whole number that specifies the number of arguments to offset, to
+# skip any wrapper/external arguments accordingly.
 #.
 hint() {
     assert -min "$#" 2 || exit 255
+    assert -whole-n "$1" || exit 255
 
-    _hint="$2"
-
-    if [ ! "$1" ]; then
-        shift 2
-    else
-        assert -whole-n "$1" || exit 255
-
-        _hint="$2"; shift "$((2 + $1))"
-    fi
+    _hint="$2"; shift "$((2 + $1))"
 
     while [ "$#" -ge 1 ]; do
         [ "$1" = "$_hint" ] || { shift && continue; }
