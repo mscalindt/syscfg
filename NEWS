@@ -7,6 +7,9 @@ syscfg NEWS
   For more information, refer to the commit data.
   Breaking change; existing code requires adjustment.
 
+* Introduced a basic __action() implementation to act as a replacement for
+  __loc_delete() and __loc_empty().
+
 
 2025-09-05 - 2025-09-08
 =======================

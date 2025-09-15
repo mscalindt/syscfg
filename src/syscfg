@@ -238,6 +238,7 @@ fs_equiv_type_attr() {
 # <[$1]> - N (arguments offset)
 # <$2> - hint(
 #     '-clear-log' - log file path to clear after use (argument)
+#     '-del' - delete action/operation
 #     '-gid' - group ID (argument)
 #     '-group' - group name (argument)
 #     '-log' - log file path to use for write statistics (argument)
@@ -245,6 +246,7 @@ fs_equiv_type_attr() {
 #     '-mode' - object octal mode (argument)
 #     '-no-avoid' - disable write avoidance
 #     '-no-sanit' - disable environment sanitization
+#     '-trunc' - truncate action/operation
 #     '-uid' - user ID (argument)
 #     '-user' - user name (argument)
 #     .
@@ -277,7 +279,7 @@ hint() {
         [ "$1" = "$_hint" ] || { shift && continue; }
 
         case "$_hint" in
-            '-no-avoid' | '-no-sanit')
+            '-del' | '-no-avoid' | '-no-sanit' | '-trunc')
                 _hint= && return 0
             ;;
             '-mode')
@@ -590,6 +592,58 @@ write_info_stat() {
 #
 # Utility functions shall always begin with two underscore characters.
 utility_functions() { # START utility_functions
+#! .desc:
+# Execute an action on an object on the filesystem
+#! .params:
+# <$1> - path
+# [$2]+ - hint
+# [$3] - hint argument
+#! .rc:
+# (0) success
+# (*) error
+#! .ec:
+# (2) ENOENT
+# (255) input error
+#! .desc.ext:
+# For more information, refer to the documentation of hint().
+#.
+__action() {
+    assert -min "$#" 1 || exit 255
+
+    [ "$1" ] || {
+        err -red - 'Missing OBJ_PATH.'; exit 255
+    }
+
+    ftype "$1" || {
+        err -red - 'ENOENT:'
+
+        err -red -- '>'
+        err - - " $1"
+
+        exit 2
+    }
+
+    if hint 1 -trunc "$@"; then
+        if ftype "$1"/; then
+            rm -rf -- "$1"/* || return "$?"
+        else
+            { : > "$1"; } || return "$?"
+        fi
+    fi
+
+    if hint 1 -del "$@"; then
+        chattr_remove "$1" || return "$?"
+        unmount "$1" || return "$?"
+        rm -rf -- "$1" || return "$?"
+    fi
+
+    if hint 1 -no-sanit "$@"; then
+        OBJ_PATH="$1"
+    fi
+
+    return 0
+}
+
 #! .desc:
 # Write a binary (octal) file
 #! .params:
