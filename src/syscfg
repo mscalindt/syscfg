@@ -3,21 +3,6 @@
 #
 # syscfg - declarative OS configuration
 #
-# Table of syscfg-defined error codes:
-# ---
-# (1): EERROR: "General operation error".
-# ---
-# STANDARD:
-# (1): EPERM: "Operation not permitted".
-# (2): ENOENT: "No such file or directory".
-# (17): EEXIST: "File exists".
-# (20): ENOTDIR: "Not a directory".
-# (21): EISDIR: "Is a directory".
-# (22): EINVAL: "Invalid argument".
-# ---
-# SPECIAL CUSTOM:
-# (255): Bad function input/usage error.
-#
 # Use to_octal() or to_octal_offset() to obtain the POSIX shell-compatible
 # octal escape sequence(s) of octal byte streams produced by `od -b -An` or
 # `od -b`, respectively.
@@ -33,14 +18,905 @@ assertive_functions() { # START assertive_functions
 } # END assertive_functions
 
 helper_functions() { # START helper_functions
-    :
+#! .desc:
+# Assert the content and state of a write is equal on the filesystem
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) true
+# (1) false
+#! .desc.ext:
+# We do not yet have write avoidance support for types `-c` and `-l`.
+#
+# For more information, refer to the documentation of __write().
+#.
+fs_equiv() {
+    case "$1" in
+        '-c' | '-l') return 1 ;;
+    esac
+
+    { ! hint 4 -no-avoid "$@"; } || return 1
+
+    # Assert the state, i.e. the inode type and attributes.
+    fs_equiv_type "$@" || return 1
+    fs_equiv_type_attr "$@" || return 1
+    fs_equiv_owner "$@" || return 1
+    fs_equiv_group "$@" || return 1
+    fs_equiv_perm "$@" || return 1
+
+    # Assert the content.
+    case "$1" in
+        '-o')
+            awk '
+function mod_string(input) {
+	res = ""
+
+	gsub(/[ \n]+/, "", input)
+	for (i = 1; i <= length(input); i += 3) {
+		octal = substr(input, i, 3)
+		res = res "\\0" octal
+	}
+
+	return res
+}
+
+BEGIN {
+	str=ARGV[1]
+	file_str=ARGV[2]
+	delete ARGV
+
+	exit (mod_string(file_str) == str) ? 0 : 1;
+}
+            ' "$2" "$(od -b -An -- "$3")" || return 1
+        ;;
+        '-w')
+            file_preload -cat "$3"
+
+            [ "$_file" = "$2" ] || return 1
+        ;;
+    esac
+
+    return 0
+}
+
+#! .desc:
+# Assert the GID is equal on the filesystem
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) true
+# (1) false
+#! .desc.ext:
+# For more information, refer to the documentation of __write().
+#.
+fs_equiv_group() {
+    case "$1" in
+        '-o' | '-w')
+            # Get the fourth field (group) of `ls -ld` of $3 into $_a.
+            _a="$(ls -ld -- "$3")"
+            _a="${_a%%'
+'*}"
+            _a="${_a#*' '}"
+            _a="${_a#*' '}"
+            _a="${_a#*' '}"
+            _a="${_a%%' '*}"
+
+            set -- "$_a" "$@"
+
+            if hint 5 -group "$@"; then
+                [ ! "$1" = "$_hint" ] || return 0
+            else
+                [ ! "$1" = "$(id -ng)" ] || return 0
+            fi
+
+            if hint 5 -gid "$@"; then
+                [ ! "$1" = "$_hint" ] || return 0
+            else
+                [ ! "$1" = "$(id -g)" ] || return 0
+            fi
+        ;;
+    esac
+
+    return 1
+}
+
+#! .desc:
+# Assert the UID is equal on the filesystem
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) true
+# (1) false
+#! .desc.ext:
+# For more information, refer to the documentation of __write().
+#.
+fs_equiv_owner() {
+    case "$1" in
+        '-o' | '-w')
+            # Get the third field (owner) of `ls -ld` of $3 into $_a.
+            _a="$(ls -ld -- "$3")"
+            _a="${_a%%'
+'*}"
+            _a="${_a#*' '}"
+            _a="${_a#*' '}"
+            _a="${_a%%' '*}"
+
+            set -- "$_a" "$@"
+
+            if hint 5 -user "$@"; then
+                [ ! "$1" = "$_hint" ] || return 0
+            else
+                [ ! "$1" = "$(id -nu)" ] || return 0
+            fi
+
+            if hint 5 -uid "$@"; then
+                [ ! "$1" = "$_hint" ] || return 0
+            else
+                [ ! "$1" = "$(id -u)" ] || return 0
+            fi
+        ;;
+    esac
+
+    return 1
+}
+
+#! .desc:
+# Assert the file mode is equal on the filesystem
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) true
+# (1) false / error
+# (*) error
+#! .desc.ext:
+# For more information, refer to the documentation of __write().
+#.
+fs_equiv_perm() {
+    case "$1" in
+        '-o' | '-w')
+            # Get the first field (file mode; "%c%s%s%s%c") of `ls -ld` of $3
+            # into $_a.
+            _a="$(ls -ld -- "$3")"
+            _a="${_a%%' '*}"
+
+            # Strip the last "%c" if present.
+            [ "${#_a}" -eq 10 ] || _a="${_a%?}"
+
+            set -- "$_a" "$@"
+
+            if hint 5 -mode "$@"; then
+                fmode_octal "$_hint" || return "$?"
+
+                # `-` = "regular file"
+                [ ! "$1" = "-$_mode" ] || return 0
+            else
+                # `-`, `rw-r--r--` = "regular file", 0644"
+                [ ! "$1" = '-rw-r--r--' ] || return 0
+            fi
+        ;;
+    esac
+
+    return 0
+}
+
+#! .desc:
+# Assert the object type is equal on the filesystem
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) true
+# (1) false
+#! .desc.ext:
+# For more information, refer to the documentation of __write().
+#.
+fs_equiv_type() {
+    case "$1" in
+        '-o' | '-w')
+            ftype "$3" && [ "$_type" = 'F' ] || return 1
+        ;;
+    esac
+
+    return 0
+}
+
+#! .desc:
+# Assert the attributes of the object type are equal on the filesystem
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) true
+#! .desc.ext:
+# For more information, refer to the documentation of __write().
+#.
+fs_equiv_type_attr() {
+    return 0
+}
+
+#! .desc:
+# Query the presence of an independent hint among arguments
+#! .params:
+# <[$1]> - N (arguments offset)
+# <$2> - hint(
+#     '-clear-log' - log file path to clear after use (argument)
+#     '-gid' - group ID (argument)
+#     '-group' - group name (argument)
+#     '-log' - log file path to use for write statistics (argument)
+#     '-log-fed' - log file path to use for colored write statistics (argument)
+#     '-mode' - object octal mode (argument)
+#     '-no-avoid' - disable write avoidance
+#     '-no-sanit' - disable environment sanitization
+#     '-uid' - user ID (argument)
+#     '-user' - user name (argument)
+#     .
+# )
+# [$3]+ - hint
+# [$4] - hint argument
+#! .gives.var:
+# (0) <_hint> - [string];
+#               hint argument
+#! .rc:
+# (0) true
+# (1) false
+#! .ec:
+# (255) input error
+#.
+hint() {
+    assert -min "$#" 2 || exit 255
+
+    _hint="$2"
+
+    if [ ! "$1" ]; then
+        shift 2
+    else
+        assert -whole-n "$1" || exit 255
+
+        _hint="$2"; shift "$((2 + $1))"
+    fi
+
+    while [ "$#" -ge 1 ]; do
+        [ "$1" = "$_hint" ] || { shift && continue; }
+
+        case "$_hint" in
+            '-no-avoid' | '-no-sanit')
+                _hint= && return 0
+            ;;
+            '-mode')
+                [ "$#" -ge 2 ] || {
+                    err -red - 'hint(): Missing argument specification:' \
+                        "$_hint"
+                    err -red - 'hint(): Use empty quotes to define no value.'
+
+                    exit 255
+                }
+
+                _hint="$2" && return 0
+            ;;
+            '-clear-log' | '-gid' | '-group' | '-log' | '-log-fed' | '-uid' | \
+            '-user')
+                [ "$2" ] || {
+                    err -red - 'hint(): Missing argument specification:' \
+                        "$_hint"
+
+                    exit 255
+                }
+
+                _hint="$2" && return 0
+            ;;
+            *)
+                err -red - 'hint(): Invalid hint:' "$_hint"
+
+                exit 255
+            ;;
+        esac
+    done
+
+    return 1
+}
+
+#! .desc:
+# Validate a write is necessary
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) true
+# (1) false
+# (2) ENOENT
+# (17) EEXIST
+#! .ec:
+# (255) input error
+#! .desc.ext:
+# For more information, refer to the documentation of fs_equiv() and __write().
+#.
+validate_write() {
+    [ "$2" ] || {
+        err -red - 'Missing OBJ.'; exit 255
+    }
+
+    [ "$3" ] || {
+        err -red - 'Missing OBJ_PATH.'; exit 255
+    }
+
+    case "$1" in
+        '-c' | '-l')
+            ftype "$2" || return 2
+        ;;
+        '-o')
+            is_octal "$2" || {
+                err -red - 'Bad OBJ; expected octal string.'; exit 255
+            }
+        ;;
+    esac
+
+    case "$4" in
+        '-f')
+            return 0
+        ;;
+        '-o')
+            :
+        ;;
+        *)
+            { ! ftype "$3"; } || {
+                fs_equiv "$@" && return 1 || return 17
+            }
+        ;;
+    esac
+
+    fs_equiv "$@" || return 0
+
+    return 1
+}
+
+#! .desc:
+# Perform a write
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) success
+# (*) error
+#! .desc.ext:
+# We do not yet have an in-place overwrite mechanism for types `-c` and `-l`.
+# We do not yet have atomic overwrites.
+#
+# For more information, refer to the documentation of __write().
+#.
+write() {
+    # If write() is executed but the target exists, we here only care whether
+    # a soft (in-place) overwrite is specified and provide the subsequent
+    # in-place overwrite mechanism + atomicity.
+    { ! ftype "$3"; } || {
+        chattr_remove "$3" || return "$?"
+        unmount "$3" || return "$?"
+
+        case "$4" in
+            '-o')
+                case "$1" in
+                    '-c' | '-l') rm -rf -- "$3" || return "$?" ;;
+                esac
+            ;;
+            *)
+                rm -rf -- "$3" || return "$?"
+            ;;
+        esac
+    }
+
+    mkdir_parents "$3" || return "$?"
+
+    case "$1" in
+        '-c')
+            cp -R -- "$2" "$3" || return "$?"
+        ;;
+        '-l')
+            ln -sf -- "$2" "$3" || return "$?"
+        ;;
+        '-o')
+            printf "%b" "$2" > "$3" || return "$?"
+        ;;
+        '-w')
+            printf "%s" "$2" > "$3" || return "$?"
+        ;;
+    esac
+
+    if hint 4 -user "$@" || hint 4 -uid "$@"; then
+        set -- "$_hint" "$@"
+
+        if hint 5 -group "$@" || hint 5 -gid "$@"; then
+            chown -h "$1"":$_hint" -- "$4" || return "$?"
+        else
+            chown -h "$1" -- "$4" || return "$?"
+        fi
+
+        shift
+    elif hint 4 -group "$@" || hint 4 -gid "$@"; then
+        chgrp -h "$_hint" -- "$3" || return "$?"
+    fi
+
+    if hint 4 -mode "$@"; then
+        chmod "$_hint" -- "$3" || return "$?"
+    fi
+}
+
+#! .desc:
+# Output write information
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) success
+# (*) error
+#! .ec:
+# (2) ENOENT
+#! .desc.ext:
+# For more information, refer to the documentation of __write().
+#.
+write_info() {
+    case "$1$4" in
+        '-c-f') _info -white - 'Will write (copy) from/to (OW_HARD):' ;;
+        '-c-o') _info -white - 'Will write (copy) from/to (OW_SOFT):' ;;
+        '-c') _info -white - 'Will write (copy) from/to:' ;;
+        '-l-f') _info -white - 'Will symbolic link source/target (OW_HARD):' ;;
+        '-l-o') _info -white - 'Will symbolic link source/target (OW_SOFT):' ;;
+        '-l') _info -white - 'Will symbolic link source/target:' ;;
+        '-o-f') _info -white - 'Will write a binary file (OW_HARD):' ;;
+        '-o-o') _info -white - 'Will write a binary file (OW_SOFT):' ;;
+        '-o') _info -white - 'Will write a binary file:' ;;
+    esac
+
+    if hint 4 -log-fed "$@"; then
+        case "$1$4" in
+            '-w-f') _info -white - 'Will update a file (OW_HARD):' ;;
+            '-w-o') _info -white - 'Will update a file (OW_SOFT):' ;;
+            '-w') _info -white - 'Will update a file:' ;;
+        esac
+    else
+        case "$1$4" in
+            '-w-f') _info -white - 'Will write a file (OW_HARD):' ;;
+            '-w-o') _info -white - 'Will write a file (OW_SOFT):' ;;
+            '-w') _info -white - 'Will write a file:' ;;
+        esac
+    fi
+
+    case "$1" in
+        '-c' | '-l')
+            # Do not assume the path still exists.
+            ftype "$2" -info && {
+                info - - " $2"
+            } || {
+                err -red - 'ENOENT:'
+
+                err -red -- '>'
+                err - - " $2"
+
+                exit 2
+            }
+
+            info -white -- '>'
+            info - - " $3"
+        ;;
+        '-o' | '-w')
+            info -white -- F
+            info - - " $3"
+        ;;
+    esac
+}
+
+#! .desc:
+# Output write avoidance information
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) success
+# (*) error
+#! .ec:
+# (2) ENOENT
+#! .desc.ext:
+# For more information, refer to the documentation of __write().
+#.
+write_info_avoidance() {
+    case "$1$4" in
+        '-c-o') _info -white - 'Copy avoided (OW_SOFT):' ;;
+        '-c') _info -white - 'Copy avoided:' ;;
+        '-l-o') _info -white - 'Symbolic link avoided (OW_SOFT):' ;;
+        '-l') _info -white - 'Symbolic link avoided:' ;;
+        '-o-o') _info -white - 'Binary write avoided (OW_SOFT):' ;;
+        '-o') _info -white - 'Binary write avoided:' ;;
+        '-w-o') _info -white - 'File write avoided (OW_SOFT):' ;;
+        '-w') _info -white - 'File write avoided:' ;;
+    esac
+
+    # Do not assume the path still exists.
+    ftype "$3" -info && {
+        info - - " $3"
+    } || {
+        err -red - 'ENOENT:'
+
+        err -red -- '>'
+        err - - " $3"
+
+        exit 2
+    }
+}
+
+#! .desc:
+# Output write statistics
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) success
+#! .desc.ext:
+# For more information, refer to the documentation of __write().
+#.
+write_info_stat() {
+    if hint 4 -log "$@"; then
+        while IFS= read -r _line || [ "$_line" ]; do
+            info - - "$1"
+        done < "$_hint"
+    elif hint 4 -log-fed "$@"; then
+        while IFS=" " read -r _n _line || [ "$_line" ]; do
+            set -- "$_line"
+
+            case "$_n" in
+                *'+') info -green - "$_n " && info - - "$1" ;;
+                *'-') info -red - "$_n " && info - - "$1" ;;
+            esac
+        done < "$_hint"
+    else
+        case "$1" in
+            '-o')
+                info -white -- 'SIZE: '
+                ccount \\ "$2" && bytes_size "$_count"
+            ;;
+            '-w')
+                case "$2" in
+                    *'
+')
+                        info -white - '0:'
+
+                        info - -- "$2"
+                    ;;
+                    *)
+                        info -white - '0 (no final newline):'
+
+                        info - - "$2"
+                    ;;
+                esac
+            ;;
+        esac
+    fi
+
+    return 0
+}
 } # END helper_functions
 
 # Maintainer note for any functions in utility_functions():
 #
 # Utility functions shall always begin with two underscore characters.
 utility_functions() { # START utility_functions
-    :
+#! .desc:
+# Write a binary (octal) file
+#! .params:
+# [$1]+ - hint
+# [$2] - hint argument
+#! .uses.var:
+# <OBJ> - string;
+#         POSIX shell-compatible octal escape sequence(s) of the file
+# <OBJ_PATH> - string;
+#              path to write the file at
+#! .desc.ext:
+# For more information, refer to the documentation of hint() and __write().
+#.
+__bin_write() {
+    __write -o "$OBJ" "$OBJ_PATH" '' "$@"
+}
+
+#! .desc:
+# Write a binary (octal) file (overwrite by deletion)
+#! .params:
+# [$1]+ - hint
+# [$2] - hint argument
+#! .uses.var:
+# <OBJ> - string;
+#         POSIX shell-compatible octal escape sequence(s) of the file
+# <OBJ_PATH> - string;
+#              path to write the file at
+#! .desc.ext:
+# For more information, refer to the documentation of hint() and __write().
+#.
+__bin_write_ow_hard() {
+    __write -o "$OBJ" "$OBJ_PATH" -f "$@"
+}
+
+#! .desc:
+# Write a binary (octal) file (in-place + atomic overwrite)
+#! .params:
+# [$1]+ - hint
+# [$2] - hint argument
+#! .uses.var:
+# <OBJ> - string;
+#         POSIX shell-compatible octal escape sequence(s) of the file
+# <OBJ_PATH> - string;
+#              path to write the file at
+#! .desc.ext:
+# For more information, refer to the documentation of hint() and __write().
+#.
+__bin_write_ow_soft() {
+    __write -o "$OBJ" "$OBJ_PATH" -o "$@"
+}
+
+#! .desc:
+# Write a file
+#! .params:
+# [$1]+ - hint
+# [$2] - hint argument
+#! .uses.var:
+# <OBJ> - string;
+#         file
+# <OBJ_PATH> - string;
+#              path to write the file at
+#! .desc.ext:
+# For more information, refer to the documentation of hint() and __write().
+#.
+__file_write() {
+    __write -w "$OBJ" "$OBJ_PATH" '' "$@"
+}
+
+#! .desc:
+# Write a file (overwrite by deletion)
+#! .params:
+# [$1]+ - hint
+# [$2] - hint argument
+#! .uses.var:
+# <OBJ> - string;
+#         file
+# <OBJ_PATH> - string;
+#              path to write the file at
+#! .desc.ext:
+# For more information, refer to the documentation of hint() and __write().
+#.
+__file_write_ow_hard() {
+    __write -w "$OBJ" "$OBJ_PATH" -f "$@"
+}
+
+#! .desc:
+# Write a file (in-place + atomic overwrite)
+#! .params:
+# [$1]+ - hint
+# [$2] - hint argument
+#! .uses.var:
+# <OBJ> - string;
+#         file
+# <OBJ_PATH> - string;
+#              path to write the file at
+#! .desc.ext:
+# For more information, refer to the documentation of hint() and __write().
+#.
+__file_write_ow_soft() {
+    __write -w "$OBJ" "$OBJ_PATH" -o "$@"
+}
+
+#! .desc:
+# Symbolic link an object on the filesystem
+#! .params:
+# [$1]+ - hint
+# [$2] - hint argument
+#! .uses.var:
+# <OBJ> - string;
+#         path
+# <OBJ_PATH> - string;
+#              path to link the object at
+#! .desc.ext:
+# For more information, refer to the documentation of hint() and __write().
+#.
+__obj_link() {
+    __obj_link_ow_hard "$@"
+}
+
+#! .desc:
+# Symbolic link an object on the filesystem (overwrite by deletion)
+#! .params:
+# [$1]+ - hint
+# [$2] - hint argument
+#! .uses.var:
+# <OBJ> - string;
+#         path
+# <OBJ_PATH> - string;
+#              path to link the object at
+#! .desc.ext:
+# For more information, refer to the documentation of hint() and __write().
+#.
+__obj_link_ow_hard() {
+    __write -l "$OBJ" "$OBJ_PATH" -f "$@"
+}
+
+#! .desc:
+# Symbolic link an object on the filesystem (in-place + atomic overwrite)
+#! .params:
+# [$1]+ - hint
+# [$2] - hint argument
+#! .uses.var:
+# <OBJ> - string;
+#         path
+# <OBJ_PATH> - string;
+#              path to link the object at
+#! .desc.ext:
+# For more information, refer to the documentation of hint() and __write().
+#.
+__obj_link_ow_soft() {
+    __obj_link_ow_hard "$@"
+}
+
+#! .desc:
+# Write (copy) an object on the filesystem
+#! .params:
+# [$1]+ - hint
+# [$2] - hint argument
+#! .uses.var:
+# <OBJ> - string;
+#         path
+# <OBJ_PATH> - string;
+#              path to copy the object at
+#! .desc.ext:
+# For more information, refer to the documentation of hint() and __write().
+#.
+__obj_write() {
+    __obj_write_ow_hard "$@"
+}
+
+#! .desc:
+# Write (copy) an object on the filesystem (overwrite by deletion)
+#! .params:
+# [$1]+ - hint
+# [$2] - hint argument
+#! .uses.var:
+# <OBJ> - string;
+#         path
+# <OBJ_PATH> - string;
+#              path to copy the object at
+#! .desc.ext:
+# For more information, refer to the documentation of hint() and __write().
+#.
+__obj_write_ow_hard() {
+    __write -c "$OBJ" "$OBJ_PATH" -f "$@"
+}
+
+#! .desc:
+# Write (copy) an object on the filesystem (in-place + atomic overwrite)
+#! .params:
+# [$1]+ - hint
+# [$2] - hint argument
+#! .uses.var:
+# <OBJ> - string;
+#         path
+# <OBJ_PATH> - string;
+#              path to copy the object at
+#! .desc.ext:
+# For more information, refer to the documentation of hint() and __write().
+#.
+__obj_write_ow_soft() {
+    __obj_write_ow_hard "$@"
+}
+
+#! .desc:
+# Validate and perform a write
+#! .params:
+# <$1> - type(
+#     '-c' - filesystem copy
+#     '-l' - symbolic link
+#     '-o' - octal write
+#     '-w' - file write
+#     .
+# )
+# <$2> - string/object
+# <$3> - path to write/copy/link the object at
+# <[$4]> - state(
+#     '-f' - hard overwrite ($3 is to be deleted)
+#     '-o' - soft overwrite (in-place + atomic)
+#     .
+# )
+# [$5]+ - hint
+# [$6] - hint argument
+#! .rc:
+# (0) success
+# (1) error
+#! .ec:
+# (1) error
+# (2) ENOENT
+# (17) EEXIST
+# (255) input error
+#! .desc.ext:
+# For more information, refer to the documentation of hint(), validate_write(),
+# and write().
+#.
+__write() {
+    assert -min "$#" 4 || exit 255
+    case "$1" in '-c'|'-l'|'-o'|'-w') : ;; *) exit 255 ;; esac
+    case "$4" in '-f'|'-o') : ;; *) [ ! "$4" ] || exit 255 ;; esac
+
+    validate_write "$@" && _rc=0 || _rc="$?"
+
+    case "$_rc" in
+        0)
+            write_info "$@"
+            write_info_stat "$@"
+
+            write "$@" || {
+                case "$1" in
+                    '-c') _err -red - "Copy error ($?):" ;;
+                    '-l') _err -red - "Symbolic link error ($?):" ;;
+                    '-o') _err -red - "Binary write error ($?):" ;;
+                    '-w') _err -red - "File write error ($?):" ;;
+                esac
+
+                ftype "$3" -err && {
+                    err - - " $3"
+                } || {
+                    err -red -- '>'
+                    err - - " $3"
+                }
+
+                exit 1
+            }
+        ;;
+        1)
+            write_info_avoidance "$@"
+        ;;
+        2)
+            case "$1" in
+                '-c') _err -red - 'Copy error: ENOENT.' ;;
+                '-l') _err -red - 'Symbolic link error: ENOENT.' ;;
+                '-o') _err -red - 'Binary write error: ENOENT.' ;;
+                '-w') _err -red - 'File write error: ENOENT.' ;;
+            esac
+
+            err -red -- '>'
+            err - - " $2"
+
+            exit 2
+        ;;
+        17)
+            case "$1" in
+                '-c') _err -red - 'Copy error: EEXIST.' ;;
+                '-l') _err -red - 'Symbolic link error: EEXIST.' ;;
+                '-o') _err -red - 'Binary write error: EEXIST.' ;;
+                '-w') _err -red - 'File write error: EEXIST.' ;;
+            esac
+
+            # Do not assume the path still exists.
+            ftype "$3" -err && {
+                err - - " $3"
+            } || {
+                err -red - 'ENOENT:'
+
+                err -red -- '>'
+                err - - " $3"
+            }
+
+            exit 17
+        ;;
+        *)
+            case "$1" in
+                '-c') err -red - "Copy unhandled error: $_rc" ;;
+                '-l') err -red - "Symbolic link unhandled error: $_rc" ;;
+                '-o') err -red - "Binary write unhandled error: $_rc" ;;
+                '-w') err -red - "File write unhandled error: $_rc" ;;
+            esac
+
+            exit 1
+        ;;
+    esac
+
+    if hint 4 -clear-log "$@"; then
+        { : > "$_hint"; } || {
+            err -white - 'Failed to clear the log file.'
+
+            return 1
+        }
+    fi
+
+    if hint 4 -no-sanit "$@"; then
+        OBJ="$2"; OBJ_PATH="$3"
+    fi
+
+    return 0
+}
 } # END utility_functions
 
 # Maintainer note for any functions in utility_functions_err():
@@ -135,21 +1011,6 @@ exist() {
 }
 
 #! .desc:
-# Check if a given path is a regular file
-#! .params:
-# <"$1"> - path
-#! .rc:
-# (0) yes
-# (1) no
-# (255) bad input
-#.
-file() {
-    assert -eq "$#" 1 || return 255
-
-    [ -f "$1" ]
-}
-
-#! .desc:
 # Assert a given string is strict POSIX shell-compatible octal escape
 # sequence(s)
 #! .params:
@@ -195,31 +1056,6 @@ BEGIN {
 }
 
 #! .desc:
-# Check if the system is booted in UEFI mode
-#! .rc:
-# (0) yes
-# (1) no
-#.
-is_uefi() {
-    dir '/sys/firmware/efi/efivars'
-}
-
-#! .desc:
-# Check if a given path is readable
-#! .params:
-# <"$1"> - path
-#! .rc:
-# (0) yes
-# (1) no
-# (255) bad input
-#.
-readable() {
-    assert -eq "$#" 1 || return 255
-
-    [ -r "$1" ]
-}
-
-#! .desc:
 # Check if text appears anywhere in a given string
 #! .params:
 # <"$1"> - text
@@ -234,26 +1070,6 @@ str() {
 
     case "$2" in
         *"$1"*) return 0 ;;
-    esac
-
-    return 1
-}
-
-#! .desc:
-# Check if text appears at the left side of a given string
-#! .params:
-# <"$1"> - text
-# <"$2"> - string
-#! .rc:
-# (0) yes
-# (1) no
-# (255) bad input
-#.
-str_pfix() {
-    assert -eq "$#" 2 || return 255
-
-    case "$2" in
-        "$1"*) return 0 ;;
     esac
 
     return 1
@@ -279,25 +1095,7 @@ str_sfix() {
     return 1
 }
 
-#! .desc:
-# Check if a given path is writable
-#! .params:
-# <"$1"> - path
-#! .rc:
-# (0) yes
-# (1) no
-# (255) bad input
-#.
-writable() {
-    assert -eq "$#" 1 || return 255
-
-    [ -w "$1" ]
-}
-
 # END boilerplate_functions
-# START output_functions
-
-# END output_functions
 # START utility_functions
 
 #! .desc:
@@ -453,487 +1251,6 @@ unmount() {
 }
 
 # END utility_functions
-# START std_err_functions
-
-#! .desc:
-# EPERM: "Operation not permitted"
-#! .rc:
-# 1
-#.
-EPERM() { _err -red -- 'EPERM:'; }
-
-#! .desc:
-# ENOENT: "No such file or directory"
-#! .rc:
-# 2
-#.
-ENOENT() { _err -red - 'ENOENT:'; }
-
-#! .desc:
-# EERROR: "General operation error"
-#! .params:
-# <"$1"+> - error
-#! .rc:
-# (1)
-# (255) bad input
-#.
-EERROR() {
-    assert -eq "$#" 1 || return 255
-
-    _err -red - "EERROR: $1"; exit 1
-}
-
-#! .desc:
-# EEXIST: "File exists"
-#! .params:
-# <"$1"+> - absolute path
-#! .rc:
-# (17)
-# (255) bad input
-#.
-EEXIST() {
-    assert -min "$#" 1 || return 255
-
-    _err -red - 'EEXIST:'
-
-    while [ "$1" ]; do
-        ftype "$1" -err || :
-        err - - " $1"
-
-        shift
-    done
-
-    exit 17
-}
-
-#! .desc:
-# ENOTDIR: "Not a directory"
-#! .params:
-# <"$1"+> - absolute path
-#! .rc:
-# (20)
-# (255) bad input
-#.
-ENOTDIR() {
-    assert -min "$#" 1 || return 255
-
-    _err -red - 'ENOTDIR:'
-
-    while [ "$1" ]; do
-        ftype "$1" -err || :
-        err - - " $1"
-
-        shift
-    done
-
-    exit 20
-}
-
-#! .desc:
-# EISDIR: "Is a directory"
-#! .params:
-# <"$1"+> - absolute path
-#! .rc:
-# (21)
-# (255) bad input
-#.
-EISDIR() {
-    assert -min "$#" 1 || return 255
-
-    _err -red - 'EISDIR:'
-
-    while [ "$1" ]; do
-        ftype "$1" -err || :
-        err - - " $1"
-
-        shift
-    done
-
-    exit 21
-}
-
-#! .desc:
-# EINVAL: "Invalid argument"
-#! .rc:
-# 22
-#.
-EINVAL() { _err -red - 'EINVAL:'; }
-
-# END std_err_functions
-
-#! .desc:
-# Assert a file matches a given string of POSIX shell-compatible octal escape
-# sequence(s)
-#! .params:
-# <"$1"> - file path
-# <["$2"]> - string
-#! .uses:
-# <()>
-#! .uses.fn:
-# <assert> ('-eq' '$#' '2');
-#          Assert a string
-# <file> ('$1');
-#        Assert a given path is a regular file
-# <readable> ('$1');
-#            Assert a given path is readable
-#! .uses.util:
-# <awk> ("program" '$(od -b -An -- "$1")' '$2');
-#       pattern scanning and processing language
-# <od>;
-# dump files in various formats
-#! .rc.fn:
-# (assert) (255) bad input
-# (file) (255) bad usage
-# (readable) (255) bad usage
-#! .rc.util:
-# (awk) (0) true
-# (awk) (1) false / error
-# (awk) (*) error
-# (od) (*) error
-#! .desc.ext:
-# Broken symbolic links are not valid files and error code `255` (bad usage)
-# will be returned.
-#.
-bin_equiv() {
-    assert -eq "$#" 2 || return 255
-    { file "$1" && readable "$1"; } || return 255
-
-    awk '
-function mod_string(input) {
-	result = ""
-
-	gsub(/[ \n]+/, "", input)
-	for (i = 1; i <= length(input); i += 3) {
-		octal = substr(input, i, 3)
-		result = result "\\0" octal
-	}
-
-	return result
-}
-
-BEGIN {
-	file_string=ARGV[1]
-	string=ARGV[2]
-	delete ARGV
-
-	exit (mod_string(file_string) == string) ? 0 : 1;
-}
-    ' "$(od -b -An -- "$1")" "$2"
-}
-
-#! .desc:
-# Copy a given directory at a path
-#! .params:
-# <"$1"> - absolute path of the directory
-# <"$2"> - absolute path to copy the directory at
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input
-#.
-dir_write() {
-    assert -eq "$#" 2 || return 255
-
-    dir "$1" || return 255
-
-    if ftype "$2"; then
-        chattr_remove "$2"
-        unmount "$2"
-
-        rm -rf -- "$2"
-    fi
-
-    mkdir_parents "$2"
-
-    cp -R -- "$1" "$2"
-}
-
-#! .desc:
-# Copy a given file at a path
-#! .params:
-# <"$1"> - absolute path of the file
-# <"$2"> - absolute path to copy the file at
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input
-#.
-file_copy() {
-    assert -eq "$#" 2 || return 255
-
-    file "$1" || return 255
-
-    if ftype "$2"; then
-        chattr_remove "$2"
-        unmount "$2"
-
-        rm -rf -- "$2"
-    fi
-
-    mkdir_parents "$2"
-
-    cp -- "$1" "$2"
-}
-
-#! .desc:
-# Check if a file matches a given string
-#! .params:
-# <"$1"> - absolute path
-# <"$2"> - string
-#! .rc:
-# (0) yes
-# (1) no
-# (*) error
-# (255) bad input
-#.
-file_equiv() {
-    assert -eq "$#" 2 || return 255
-
-    file "$1" || return 255
-
-    _file= && while IFS= read -r _line; do
-        _file="$_file$_line
-"
-    done < "$1"; _file="$_file$_line"
-
-    [ "$_file" = "$2" ]
-}
-
-#! .desc:
-# Write a given string at a path
-#! .params:
-# <"$1"> - absolute path
-# <"$2"> - string
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input
-#.
-file_write() {
-    assert -eq "$#" 2 || return 255
-
-    if ftype "$1"; then
-        chattr_remove "$1"
-        unmount "$1"
-
-        rm -rf -- "$1"
-    fi
-
-    mkdir_parents "$1"
-
-    printf "%s" "$2" > "$1"
-}
-
-#! .desc:
-# Write a given octal sequence at a path
-#! .params:
-# <"$1"> - absolute path
-# <"$2"> - octal sequence
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input
-#.
-file_write_octal() {
-    assert -eq "$#" 2 || return 255
-
-    if ftype "$1"; then
-        chattr_remove "$1"
-        unmount "$1"
-
-        rm -rf -- "$1"
-    fi
-
-    mkdir_parents "$1"
-    printf "%b" "$2" > "$1"
-}
-
-#! .desc:
-# Check if a file matches a given file
-#! .params:
-# <"$1"> - absolute path
-# <"$2"> - absolute path
-#! .rc:
-# (0) yes
-# (1) no
-# (*) error
-# (255) bad input
-#.
-files_equiv() {
-    assert -eq "$#" 2 || return 255
-
-    file "$1" || return 255
-    file "$2" || return 255
-    readable "$1" || return 255
-    readable "$2" || return 255
-
-    cmp -s -- "$1" "$2"
-}
-
-#! .desc:
-# Permanently delete a file/directory
-#! .params:
-# <"$1"> - absolute path
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad $1
-#.
-loc_delete() {
-    assert -eq "$#" 1 || return 255
-
-    ftype "$1" || return 0
-
-    chattr_remove "$1"
-    unmount "$1"
-
-    rm -rf -- "$1"
-}
-
-#! .desc:
-# Create a symbolic link of an object
-#! .params:
-# <"$1"> - absolute path of the object
-# <"$2"> - absolute path to create the link at
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input
-#.
-loc_link() {
-    assert -eq "$#" 2 || return 255
-
-    { [ -e "$1" ] || [ -h "$1" ]; } || return 255
-
-    # exist() does not match dangling symlinks, and does not need to; they
-    # cannot be in a state of being mounted or possess (extended) fs attrs.
-    if exist "$2"; then
-        chattr_remove "$2"
-        unmount "$2"
-    fi
-
-    mkdir_parents "$2"
-
-    ln -sf -- "$1" "$2"
-}
-
-#! .desc:
-# Set $user as owner of an object and its parents in $home
-#! .params:
-# <"$1"> - absolute path
-#! .uses:
-# [gid] $ - the numerical user primary group ID
-# [home] $ - the user directory
-# [uid] $ - the numerical user ID
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input
-#.
-loc_own_user() {
-    assert -eq "$#" 1 || return 255
-
-    set -- "${1%"${1##*[!/]}"}"
-
-    ftype "$1" && str_pfix "$home"/ "$1" || return 0
-
-    chattr_remove "$1"
-
-    if dir "$1"; then
-        chown -RP -- "$uid":"$gid" "$1"
-    else
-        chown -P -- "$uid":"$gid" "$1"
-    fi
-
-    set -- "${1%/*}"
-    set -- "${1%"${1##*[!/]}"}"
-    until [ "$1" = "$home" ]; do
-        chown -P -- "$uid":"$gid" "$1"
-
-        set -- "${1%/*}"
-        set -- "${1%"${1##*[!/]}"}"
-    done
-}
-
-#! .desc:
-# Write a binary file at the specified path
-#! .uses:
-# <OBJ> $ - the octal sequence of the file
-# <OBJ_PATH> $ - the path to write the file at
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
-#.
-__bin_write() {
-    if [ ! "$OBJ_PATH" ]; then
-        _err -red - 'Missing OBJ_PATH.'
-        return 255
-    fi
-
-    if [ ! "$OBJ" ]; then
-        _info -white - 'Empty OBJ. File write cancelled:'
-        ftype "$OBJ_PATH" -info || :
-        info - - " $OBJ_PATH"
-        return 0
-    fi
-
-    if ! is_octal "$OBJ"; then
-        _err -red - 'Bad OBJ; expected octal.'
-        return 255
-    fi
-
-    while :; do
-        if [ "$always_write" = 0 ]; then
-            if bin_equiv "$OBJ_PATH" "$OBJ"; then
-                _info -white - 'File write avoided:'
-                ftype "$OBJ_PATH" -info || :
-                info - - " $OBJ_PATH"
-                break
-            fi
-        fi
-
-        if [ "$force_write" = 1 ]; then
-            loc_delete "$OBJ_PATH"
-        fi
-
-        if ftype "$OBJ_PATH"; then
-            EEXIST "$OBJ_PATH"
-        fi
-
-        _info -white - 'Will write a file:'
-        ftype "$OBJ_PATH" -info || :
-        info - - " $OBJ_PATH"
-
-        (
-            IFS='\''
-'
-            CC=0; for _octal in $OBJ; do CC=$((CC + 1)); done
-            info -white -- 'CC: '; info - - "$CC"
-            info -white -- 'SIZE: '; bytes_size "$CC"
-        )
-
-        if ! file_write_octal "$OBJ_PATH" "$OBJ"; then
-            _err -red - 'File write error:'
-            ftype "$OBJ_PATH" -err || :
-            err - - " $OBJ_PATH"
-            exit 1
-        fi
-    break; done
-
-    if ! loc_own_user "$OBJ_PATH"; then
-        EERROR 'Failed to set user permissions.'
-    fi
-
-    OBJ= && OBJ_PATH=
-}
-
-#! .desc:
-# Write a binary file at the specified path (overwrite path)
-#.
-__bin_write_overwrite() {
-    __loc_delete && __bin_write;
-}
 
 #! .desc:
 # Run a command
@@ -1031,94 +1348,6 @@ __cmd_OBJ() {
 }
 
 #! .desc:
-# Copy a directory at the specified path
-#! .uses:
-# <OBJ> $ - the directory
-# <OBJ_PATH> $ - the path to write the directory at
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
-#.
-__dir_target_write() {
-    if [ ! "$OBJ" ]; then
-        _err -red - 'Missing OBJ.'
-        return 255
-    fi
-
-    if [ ! "$OBJ_PATH" ]; then
-        _err -red - 'Missing OBJ_PATH.'
-        return 255
-    fi
-
-    if ! exist "$OBJ"; then
-        ENOENT;
-        ftype "$OBJ" -err || :
-        err - - " $OBJ"
-        exit 2
-    fi
-
-    dir "$OBJ" && readable "$OBJ" || {
-        EINVAL;
-        ftype "$OBJ" -err || :
-        err - - " $OBJ"
-        exit 22
-    }
-
-    while :; do
-        if [ "$force_write" = 1 ]; then
-            loc_delete "$OBJ_PATH"
-        fi
-
-        if ftype "$OBJ_PATH"; then
-            EEXIST "$OBJ_PATH"
-        fi
-
-        _info -white - 'Will copy from/to:'
-        ftype "$OBJ" -info || :
-        info - - " $OBJ"
-        ftype "$OBJ_PATH" -info || :
-        info - - " $OBJ_PATH"
-
-        info -white -- '> '
-        find "$OBJ"//. ! -name . | grep -c // 2> /dev/null | \
-            while IFS= read -r _line0; do
-                printf "%s, " "$_line0"
-
-                info -white -- 'D '
-                find "$OBJ"//. ! -name . -type d | \
-                    grep -c // 2> /dev/null | \
-                        while IFS= read -r _line1; do
-                            printf "%s, " "$_line1"
-
-                            info -white -- 'F '
-                            info - - "$((_line0 - _line1))"
-                        done
-            done
-
-        if ! dir_write "$OBJ" "$OBJ_PATH"; then
-            _err -red - 'Directory write error:'
-            ftype "$OBJ_PATH" -err || :
-            err - - " $OBJ_PATH"
-            exit 1
-        fi
-    break; done
-
-    if ! loc_own_user "$OBJ_PATH"; then
-        EERROR 'Failed to set user permissions.'
-    fi
-
-    OBJ= && OBJ_PATH=
-}
-
-#! .desc:
-# Copy a directory at the specified path (overwrite path)
-#.
-__dir_target_write_overwrite() {
-    __loc_delete && __dir_target_write;
-}
-
-#! .desc:
 # Modify file data in-place according to format (see fed())
 #! .params:
 # <[$1]> - crc32 string to verify produced format against
@@ -1189,550 +1418,6 @@ __fed() {
 }
 
 #! .desc:
-# Set the executable bits on a file
-#! .uses:
-# <OBJ_PATH> $ - the file
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
-#.
-__file_executable() {
-    if [ ! "$OBJ_PATH" ]; then
-        _err -red - 'Missing OBJ_PATH.'
-        return 255
-    fi
-
-    # exist() does not match dangling symlinks, and does not need to;
-    # symlinks cannot have their static mode (0777) changed.
-    if ! exist "$OBJ_PATH"; then
-        ENOENT;
-        ftype "$OBJ_PATH" -err || :
-        err - - " $OBJ_PATH"
-        exit 2
-    fi
-
-    file "$OBJ_PATH" || {
-        EINVAL;
-        ftype "$OBJ_PATH" -err || :
-        err - - " $OBJ_PATH"
-        exit 22
-    }
-
-    __cmd chmod +x -- "$OBJ_PATH"
-}
-
-#! .desc:
-# Write a file at the specified path
-#! .uses:
-# <OBJ> $ - the file
-# <OBJ_PATH> $ - the path to write the file at
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
-#.
-__file_write() {
-    if [ ! "$OBJ_PATH" ]; then
-        _err -red - 'Missing OBJ_PATH.'
-        return 255
-    fi
-
-    if [ ! "$OBJ" ]; then
-        _info -white - 'Empty OBJ. File write cancelled:'
-        ftype "$OBJ_PATH" -info || :
-        info - - " $OBJ_PATH"
-        return 0
-    fi
-
-    while :; do
-        if [ "$always_write" = 0 ]; then
-            if file_equiv "$OBJ_PATH" "$OBJ"; then
-                _info -white - 'File write avoided:'
-                ftype "$OBJ_PATH" -info || :
-                info - - " $OBJ_PATH"
-                break
-            fi
-        fi
-
-        if [ "$force_write" = 1 ]; then
-            loc_delete "$OBJ_PATH"
-        fi
-
-        if ftype "$OBJ_PATH"; then
-            EEXIST "$OBJ_PATH"
-        fi
-
-        if [ -s "$logf" ]; then  # log written
-            _info -white - 'Will write original file; diff:'
-            ftype "$OBJ_PATH" -info || :
-            info - - " $OBJ_PATH"
-            while IFS=" " read -r _n _line; do
-                case "$_n" in
-                    *'+') printf "%b%s%b " '\033[1;32m' "$_n" '\033[0m' ;;
-                    *'-') printf "%b%s%b " '\033[1;31m' "$_n" '\033[0m' ;;
-                esac; printf "%s\n" "$_line"
-            done < "$logf"
-        else
-            _info -white - 'Will write a file:'
-            ftype "$OBJ_PATH" -info || :
-            info - - " $OBJ_PATH"
-            if [ "$silent_write" = 0 ]; then
-                info -white - '0:'; info - - "${OBJ%'
-'}"
-            fi
-        fi
-
-        if ! file_write "$OBJ_PATH" "$OBJ"; then
-            _err -red - 'File write error:'
-            ftype "$OBJ_PATH" -err || :
-            err - - " $OBJ_PATH"
-            exit 1
-        fi
-    break; done
-
-    if ! loc_own_user "$OBJ_PATH"; then
-        EERROR 'Failed to set user permissions.'
-    fi
-
-    if ! { : > "$logf"; }; then
-        _err -r - 'Log clear error.'
-        exit 1
-    fi
-
-    OBJ= && OBJ_PATH=
-}
-
-#! .desc:
-# Write a file at the specified path (overwrite path)
-#.
-__file_write_overwrite() {
-    __loc_delete && __file_write;
-}
-
-#! .desc:
-# Overwrite a file at the specified path
-#! .uses:
-# <OBJ> $ - the file
-# <OBJ_PATH> $ - the path to write the file at
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
-#.
-__file_write_overwrite_soft() {
-    if [ ! "$OBJ_PATH" ]; then
-        _err -red - 'Missing OBJ_PATH.'
-        return 255
-    fi
-
-    if [ ! "$OBJ" ]; then
-        _info -white - 'Empty OBJ. File write cancelled:'
-        ftype "$OBJ_PATH" -info || :
-        info - - " $OBJ_PATH"
-        return 0
-    fi
-
-    while :; do
-        if [ "$always_write" = 0 ]; then
-            if file_equiv "$OBJ_PATH" "$OBJ"; then
-                _info -white - 'File write avoided:'
-                ftype "$OBJ_PATH" -info || :
-                info - - " $OBJ_PATH"
-                break
-            fi
-        fi
-
-        if [ -s "$logf" ]; then  # log written
-            _info -white - 'Will write original file; diff:'
-            ftype "$OBJ_PATH" -info || :
-            info - - " $OBJ_PATH"
-            while IFS=" " read -r _n _line; do
-                case "$_n" in
-                    *'+') printf "%b%s%b " '\033[1;32m' "$_n" '\033[0m' ;;
-                    *'-') printf "%b%s%b " '\033[1;31m' "$_n" '\033[0m' ;;
-                esac; printf "%s\n" "$_line"
-            done < "$logf"
-        else
-            _info -white - 'Will overwrite a file:'
-            ftype "$OBJ_PATH" -info || :
-            info - - " $OBJ_PATH"
-            if [ "$silent_write" = 0 ]; then
-                info -white - '0:'; info - - "${OBJ%'
-'}"
-            fi
-        fi
-
-        if ! file_write "$OBJ_PATH" "$OBJ"; then
-            _err -red - 'File overwrite error:'
-            ftype "$OBJ_PATH" -err || :
-            err - - " $OBJ_PATH"
-            exit 1
-        fi
-    break; done
-
-    if ! loc_own_user "$OBJ_PATH"; then
-        EERROR 'Failed to set user permissions.'
-    fi
-
-    if ! { : > "$logf"; }; then
-        _err -r - 'Log clear error.'
-        exit 1
-    fi
-
-    OBJ= && OBJ_PATH=
-}
-
-#! .desc:
-# Copy a file at the specified path
-#! .uses:
-# <OBJ> $ - the file
-# <OBJ_PATH> $ - the path to write the file at
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
-#.
-__file_target_write() {
-    if [ ! "$OBJ" ]; then
-        _err -red - 'Missing OBJ.'
-        return 255
-    fi
-
-    if [ ! "$OBJ_PATH" ]; then
-        _err -red - 'Missing OBJ_PATH.'
-        return 255
-    fi
-
-    if ! exist "$OBJ"; then
-        ENOENT;
-        ftype "$OBJ" -err || :
-        err - - " $OBJ"
-        exit 2
-    fi
-
-    file "$OBJ" && readable "$OBJ" || {
-        EINVAL;
-        ftype "$OBJ" -err || :
-        err - - " $OBJ"
-        exit 22
-    }
-
-    while :; do
-        if [ "$always_write" = 0 ]; then
-            if files_equiv "$OBJ" "$OBJ_PATH"; then
-                _info -white - 'File write avoided:'
-                ftype "$OBJ_PATH" -info || :
-                info - - " $OBJ_PATH"
-                break
-            fi
-        fi
-
-        if [ "$force_write" = 1 ]; then
-            loc_delete "$OBJ_PATH"
-        fi
-
-        if ftype "$OBJ_PATH"; then
-            EEXIST "$OBJ_PATH"
-        fi
-
-        _info -white - 'Will copy from/to:'
-        ftype "$OBJ" -info || :
-        info - - " $OBJ"
-        ftype "$OBJ_PATH" -info || :
-        info - - " $OBJ_PATH"
-
-        if ! file_copy "$OBJ" "$OBJ_PATH"; then
-            _err -red - 'File write error:'
-            ftype "$OBJ_PATH" -err || :
-            err - - " $OBJ_PATH"
-            exit 1
-        fi
-    break; done
-
-    if ! loc_own_user "$OBJ_PATH"; then
-        EERROR 'Failed to set user permissions.'
-    fi
-
-    OBJ= && OBJ_PATH=
-}
-
-#! .desc:
-# Copy a file at the specified path (overwrite path)
-#.
-__file_target_write_overwrite() {
-    __loc_delete && __file_target_write;
-}
-
-#! .desc:
-# Set filesystem flags on a file/directory
-#! .params:
-# <$1> - flag(s) to set
-#! .uses:
-# <OBJ_PATH> $ - the file/directory
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input/usage
-#.
-__loc_chattr() {
-    assert -eq "$#" 1 || return 255
-
-    cmd 'chattr' || return 0
-
-    if [ ! "$OBJ_PATH" ]; then
-        _err -red - 'Missing OBJ_PATH.'
-        return 255
-    fi
-
-    # exist() does not match dangling symlinks, and does not need to;
-    # symlinks cannot possess (extended) fs attrs.
-    if ! exist "$OBJ_PATH"; then
-        ENOENT;
-        ftype "$OBJ_PATH" -err || :
-        err - - " $OBJ_PATH"
-        exit 2
-    fi
-
-    if dir "$OBJ_PATH"; then
-        :
-    elif file "$OBJ_PATH"; then
-        :
-    else
-        EINVAL;
-        ftype "$OBJ_PATH" -err || :
-        err - - " $OBJ_PATH"
-        exit 22
-    fi
-
-    __cmd chattr +"$1" -- "$OBJ_PATH"
-}
-
-#! .desc:
-# Set permissions on a file/directory
-#! .params:
-# <$1> - octal mode
-#! .uses:
-# <OBJ_PATH> $ - the file/directory
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input/usage
-#.
-__loc_chmod() {
-    assert -eq "$#" 1 || return 255
-
-    if [ ! "$OBJ_PATH" ]; then
-        _err -red - 'Missing OBJ_PATH.'
-        return 255
-    fi
-
-    # exist() does not match dangling symlinks, and does not need to;
-    # symlinks cannot have their static mode (0777) changed.
-    if ! exist "$OBJ_PATH"; then
-        ENOENT;
-        ftype "$OBJ_PATH" -err || :
-        err - - " $OBJ_PATH"
-        exit 2
-    fi
-
-    if dir "$OBJ_PATH"; then
-        :
-    elif file "$OBJ_PATH"; then
-        :
-    else
-        EINVAL;
-        ftype "$OBJ_PATH" -err || :
-        err - - " $OBJ_PATH"
-        exit 22
-    fi
-
-    chattr_remove "$OBJ_PATH"
-
-    __cmd chmod "$1" -- "$OBJ_PATH"
-}
-
-#! .desc:
-# Set owner of a file/directory
-#! .params:
-# <$1> - owner
-#! .uses:
-# <OBJ_PATH> $ - the file/directory
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input/usage
-#.
-__loc_chown() {
-    assert -eq "$#" 1 || return 255
-
-    if [ ! "$OBJ_PATH" ]; then
-        _err -red - 'Missing OBJ_PATH.'
-        return 255
-    fi
-
-    if ! ftype "$OBJ_PATH"; then
-        ENOENT;
-        ftype "$OBJ_PATH" -err || :
-        err - - " $OBJ_PATH"
-        exit 2
-    fi
-
-    if dir "$OBJ_PATH"; then
-        :
-    elif file "$OBJ_PATH"; then
-        :
-    else
-        EINVAL;
-        ftype "$OBJ_PATH" -err || :
-        err - - " $OBJ_PATH"
-        exit 22
-    fi
-
-    chattr_remove "$OBJ_PATH"
-
-    __cmd chown -R "$uid":"$gid" -- "$OBJ_PATH"
-}
-
-#! .desc:
-# Delete a file/directory from the specified path
-#! .uses:
-# <OBJ_PATH> $ - the file/directory
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
-#.
-__loc_delete() {
-    if [ ! "$OBJ_PATH" ]; then
-        _err -red - 'Missing OBJ_PATH.'
-        return 255
-    fi
-
-    if ! ftype "$OBJ_PATH"; then
-        _info -white - 'Already deleted:'
-        ftype "$OBJ_PATH" -info || :
-        info - - " $OBJ_PATH"
-        return 0
-    fi
-
-    _info -white - 'Will delete:'
-    ftype "$OBJ_PATH" -info || :
-    info - - " $OBJ_PATH"
-
-    if ! loc_delete "$OBJ_PATH"; then
-        _err -red - 'Removal error:'
-        ftype "$OBJ_PATH" -err || :
-        err - - " $OBJ_PATH"
-        exit 1
-    fi
-}
-
-#! .desc:
-# Truncate/empty a file/directory on the specified path
-#! .uses:
-# <OBJ_PATH> $ - the file/directory
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
-#.
-__loc_empty() {
-    if [ ! "$OBJ_PATH" ]; then
-        _err -red - 'Missing OBJ_PATH.'
-        return 255
-    fi
-
-    if dir "$OBJ_PATH"; then
-        :
-    elif file "$OBJ_PATH"; then
-        :
-    elif exist "$OBJ_PATH"; then
-        EINVAL;
-        ftype "$OBJ_PATH" -err || :
-        err - - " $OBJ_PATH"
-        exit 22
-    fi
-
-    if dir "$OBJ_PATH"; then
-        _info -white - 'Will empty:'
-        ftype "$OBJ_PATH" -info || :
-        info - - " $OBJ_PATH"
-
-        __cmd rm -rf -- "$OBJ_PATH"/*
-    else
-        if exist "$OBJ_PATH"; then
-            _info -white - 'Will truncate:'
-        else
-            _info -white - 'Will create a file:'
-        fi
-        ftype "$OBJ_PATH" -info || :
-        info - - " $OBJ_PATH"
-
-        if ! { : > "$OBJ_PATH"; }; then
-            if exist "$OBJ_PATH"; then
-                _err -red - 'Truncation error:'
-            else
-                _err -red - 'File creation error:'
-            fi
-            ftype "$OBJ_PATH" -err || :
-            err - - " $OBJ_PATH"
-            exit 1
-        fi
-    fi
-}
-
-#! .desc:
-# Create a symbolic link of an object at the specified path (overwrite)
-#! .uses:
-# <OBJ> $ - the object
-# <OBJ_PATH> $ - the path to write the symbolic link at
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
-#.
-__loc_target_link_overwrite() {
-    if [ ! "$OBJ" ]; then
-        _err -red - 'Missing OBJ.'
-        return 255
-    fi
-
-    if [ ! "$OBJ_PATH" ]; then
-        _err -red - 'Missing OBJ_PATH.'
-        return 255
-    fi
-
-    if ! ftype "$OBJ"; then
-        ENOENT;
-        ftype "$OBJ" -err || :
-        err - - " $OBJ"
-        exit 2
-    fi
-
-    while :; do
-        _info -white - 'Will symbolic link source/target:'
-        ftype "$OBJ" -info || :
-        info - - " $OBJ"
-        ftype "$OBJ_PATH" -info || :
-        info - - " $OBJ_PATH"
-
-        if ! loc_link "$OBJ" "$OBJ_PATH"; then
-            _err -red - 'Symbolic linking error:'
-            ftype "$OBJ_PATH" -err || :
-            err - - " $OBJ_PATH"
-            exit 1
-        fi
-    break; done
-
-    if ! loc_own_user "$OBJ_PATH"; then
-        EERROR 'Failed to set user permissions.'
-    fi
-
-    OBJ= && OBJ_PATH=
-}
-
-#! .desc:
 # Copy/clone a git repository to $tmpd
 #! .params:
 # <["$1"]> - directory path
@@ -1748,7 +1433,7 @@ __git_get() {
     while [ "$1" ]; do
         dir "$1" && exist "$1"/.git || break
 
-        dir_write "$1" "$tmpd/." || return "$?"
+        __write -c "$1" "$tmpd"/. -f || return "$?"
 
         return 0
     done
@@ -1826,18 +1511,34 @@ main() {
     done
 
     # Control switches
-    # Always write files, even if the remote/fs content matches ours.
-    always_write=0
     # Automatically continue/confirm any CRC32 mismatch prompts.
     confirm_crc=0
-    # Force file writes by remote/fs object overwrite/removal:
-    force_write=0
+    # Disable write avoidance:
+    disable_write_avoid=
+    # Disable write avoidance assert on group ownership:
+    disable_write_avoid_group=
+    # Disable write avoidance assert on object mode:
+    disable_write_avoid_perm=
+    # Disable write avoidance assert on object type:
+    disable_write_avoid_type=
+    # Disable write avoidance assert on object type attributes:
+    disable_write_avoid_type_attr=
+    # Disable write avoidance assert on user ownership:
+    disable_write_avoid_user=
     # Interactive mode; prompt for input on dual actions.
     interactive=0
     # Disable command output:
     silent_cmd=0
-    # Disable content output of file writes:
-    silent_write=0
+    # Disable write information output:
+    silent_write=
+    # Disable write avoidance output:
+    silent_write_avoid=
+    # Disable write statistics output:
+    silent_write_stat=
+    # Specify default state "hard overwrite" for all overwrites:
+    write_always=
+    # Specify default state "soft overwrite" for all writes:
+    write_forced=
 
     # Utility internal locations
     # Temporary per-function dir (cleared on func exit):
@@ -1848,35 +1549,75 @@ main() {
     logf="${TMPDIR:-/tmp}/syscfg_logf"
 
     while :; do case "$1" in
-        '^AW') always_write=1; shift && continue ;;
         '^CC') confirm_crc=1; shift && continue ;;
-        '^FW') force_write=1; shift && continue ;;
+        '^DWA') disable_write_avoid=1; shift && continue ;;
+        '^DWAG') disable_write_avoid_group=1; shift && continue ;;
+        '^DWAP') disable_write_avoid_perm=1; shift && continue ;;
+        '^DWAT') disable_write_avoid_type=1; shift && continue ;;
+        '^DWATA') disable_write_avoid_type_attr=1; shift && continue ;;
+        '^DWAU') disable_write_avoid_user=1; shift && continue ;;
         '^I') interactive=1; shift && continue ;;
         '^SC') silent_cmd=1; shift && continue ;;
         '^SW') silent_write=1; shift && continue ;;
+        '^SWA') silent_write_avoid=1; shift && continue ;;
+        '^SWS') silent_write_stat=1; shift && continue ;;
+        '^WA') write_always=1; shift && continue ;;
+        '^WF') write_forced=1; shift && continue ;;
         *) break ;;
     esac done
 
-    # `^AW` implies `^AW ^FW`.
-    if [ "$always_write" = 1 ] && [ "$force_write" = 0 ]; then
-        info -white -- "${0##*/}: "
-        info -yellow - 'Assuming `^AW ^FW`.'
+    [ ! "$disable_write_avoid" ] || {
+        fs_equiv() { return 0; }
+    }
 
-        force_write=1
+    [ ! "$disable_write_avoid_group" ] || {
+        fs_equiv_group() { return 0; }
+    }
 
-        if [ "$interactive" = 1 ]; then
-            confirm_cont -y || {
-                info -white -- "${0##*/}: "
-                info -white - 'Interactive correction: `^AW`.'
+    [ ! "$disable_write_avoid_perm" ] || {
+        fs_equiv_perm() { return 0; }
+    }
 
-                force_write=0
-            }
-        fi
-    fi
+    [ ! "$disable_write_avoid_type" ] || {
+        fs_equiv_type() { return 0; }
+    }
+
+    [ ! "$disable_write_avoid_type_attr" ] || {
+        fs_equiv_type_attr() { return 0; }
+    }
+
+    [ ! "$disable_write_avoid_user" ] || {
+        fs_equiv_owner() { return 0; }
+    }
+
+    [ ! "$write_always" ] || {
+        __bin_write_ow_soft() { __bin_write_ow_hard "$@"; }
+        __file_write_ow_soft() { __file_write_ow_hard "$@"; }
+        __obj_link_ow_soft() { __obj_link_ow_hard "$@"; }
+        __obj_write_ow_soft() { __obj_write_ow_hard "$@"; }
+    }
+
+    [ ! "$write_forced" ] || {
+        __bin_write() { __bin_write_ow_soft "$@"; }
+        __file_write() { __file_write_ow_soft "$@"; }
+        __obj_link() { __obj_link_ow_soft "$@"; }
+        __obj_write() { __obj_write_ow_soft "$@"; }
+    }
+
+    [ ! "$silent_write" ] || {
+        write_info() { return 0; }
+    }
+
+    [ ! "$silent_write_avoid" ] || {
+        write_info_avoidance() { return 0; }
+    }
+
+    [ ! "$silent_write_stat" ] || {
+        write_info_stat() { return 0; }
+    }
 
     readonly \
-        always_write confirm_crc force_write interactive logf silent_cmd \
-        silent_write tmpd tmpf
+        confirm_crc interactive logf silent_cmd tmpd tmpf
 
     assert -min "$#" 1 || {
         err -red - 'No client has been specified.'
