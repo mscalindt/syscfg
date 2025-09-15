@@ -588,10 +588,10 @@ write_info_stat() {
 }
 } # END helper_functions
 
-# Maintainer note for any functions in utility_functions():
+# Maintainer note for any functions in client_lib():
 #
 # Utility functions shall always begin with two underscore characters.
-utility_functions() { # START utility_functions
+client_lib() { # START client_lib
 #! .desc:
 # Execute an action on an object on the filesystem
 #! .params:
@@ -1003,7 +1003,7 @@ __write() {
 
     return 0
 }
-} # END utility_functions
+} # END client_lib
 
 # START boilerplate_functions
 
@@ -1706,5 +1706,5 @@ main() {
 
 assertive_functions;
 helper_functions;
-utility_functions;
+client_lib;
 main "$@" || { err_handler "$?" 'ERR'; }
