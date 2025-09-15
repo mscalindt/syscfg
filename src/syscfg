@@ -696,6 +696,22 @@ __bin_write_ow_soft() {
 }
 
 #! .desc:
+# Print formatted text to stderr (syscfg client string)
+#! .params:
+# <"$@"> - err()
+#! .desc.ext:
+# For more information, refer to the documentation of err().
+#.
+__err() {
+    _clr="$1"
+    _fmt="$2"
+
+    shift 2 && set -- "$_clr" "$_fmt" "[E $$ $opd]" "$@"
+
+    err "$@"
+}
+
+#! .desc:
 # Write a file
 #! .params:
 # [$1]+ - hint
@@ -893,10 +909,10 @@ __write() {
 
             write "$@" || {
                 case "$1" in
-                    '-c') _err -red - "Copy error ($?):" ;;
-                    '-l') _err -red - "Symbolic link error ($?):" ;;
-                    '-o') _err -red - "Binary write error ($?):" ;;
-                    '-w') _err -red - "File write error ($?):" ;;
+                    '-c') __err -red - "Copy error ($?):" ;;
+                    '-l') __err -red - "Symbolic link error ($?):" ;;
+                    '-o') __err -red - "Binary write error ($?):" ;;
+                    '-w') __err -red - "File write error ($?):" ;;
                 esac
 
                 ftype "$3" -err && {
@@ -914,10 +930,10 @@ __write() {
         ;;
         2)
             case "$1" in
-                '-c') _err -red - 'Copy error: ENOENT.' ;;
-                '-l') _err -red - 'Symbolic link error: ENOENT.' ;;
-                '-o') _err -red - 'Binary write error: ENOENT.' ;;
-                '-w') _err -red - 'File write error: ENOENT.' ;;
+                '-c') __err -red - 'Copy error: ENOENT.' ;;
+                '-l') __err -red - 'Symbolic link error: ENOENT.' ;;
+                '-o') __err -red - 'Binary write error: ENOENT.' ;;
+                '-w') __err -red - 'File write error: ENOENT.' ;;
             esac
 
             err -red -- '>'
@@ -927,10 +943,10 @@ __write() {
         ;;
         17)
             case "$1" in
-                '-c') _err -red - 'Copy error: EEXIST.' ;;
-                '-l') _err -red - 'Symbolic link error: EEXIST.' ;;
-                '-o') _err -red - 'Binary write error: EEXIST.' ;;
-                '-w') _err -red - 'File write error: EEXIST.' ;;
+                '-c') __err -red - 'Copy error: EEXIST.' ;;
+                '-l') __err -red - 'Symbolic link error: EEXIST.' ;;
+                '-o') __err -red - 'Binary write error: EEXIST.' ;;
+                '-w') __err -red - 'File write error: EEXIST.' ;;
             esac
 
             # Do not assume the path still exists.
@@ -977,22 +993,6 @@ __write() {
 #
 # Utility output functions shall always begin with an underscore character.
 utility_functions_out() { # START utility_functions_out
-#! .desc:
-# Print formatted text to stderr (syscfg client string)
-#! .params:
-# <"$@"> - err()
-#! .desc.ext:
-# For more information, refer to the documentation of err().
-#.
-_err() {
-    _clr="$1"
-    _fmt="$2"
-
-    shift 2 && set -- "$_clr" "$_fmt" "[E $$ $opd]" "$@"
-
-    err "$@"
-}
-
 #! .desc:
 # Print formatted text to stdout (syscfg client string)
 #! .params:
@@ -1311,7 +1311,7 @@ unmount() {
 #.
 __cmd() {
     cmd "$1" || {
-        _err -red - 'Missing command:'
+        __err -red - 'Missing command:'
 
         err -white -- '`'
         err - -- "$1"
@@ -1353,7 +1353,7 @@ __cmd_OBJ() {
     assert -min "$#" 2 || return 255
 
     cmd "$2" || {
-        _err -red - 'Missing command:'
+        __err -red - 'Missing command:'
 
         err -white -- '`'
         err - -- "$2"
@@ -1386,7 +1386,7 @@ __cmd_OBJ() {
     case "$1" in
         *e*)
             [ "$OBJ" ] || {
-                _err -red - 'No output has been received.'
+                __err -red - 'No output has been received.'
 
                 exit 1
             }
