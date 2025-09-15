@@ -973,13 +973,6 @@ __write() {
 }
 } # END utility_functions
 
-# Maintainer note for any functions in utility_functions_err():
-#
-# Utility error functions shall always begin with an underscore character.
-utility_functions_err() { # START utility_functions_err
-    :
-} # END utility_functions_err
-
 # Maintainer note for any functions in utility_functions_out():
 #
 # Utility output functions shall always begin with an underscore character.
@@ -1719,6 +1712,5 @@ main() {
 assertive_functions;
 helper_functions;
 utility_functions;
-utility_functions_err;
 utility_functions_out;
 main "$@" || { err_handler "$?" 'ERR'; }
