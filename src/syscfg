@@ -451,28 +451,28 @@ write() {
 #.
 write_info() {
     case "$1$4" in
-        '-c-f') _info -white - 'Will write (copy) from/to (OW_HARD):' ;;
-        '-c-o') _info -white - 'Will write (copy) from/to (OW_SOFT):' ;;
-        '-c') _info -white - 'Will write (copy) from/to:' ;;
-        '-l-f') _info -white - 'Will symbolic link source/target (OW_HARD):' ;;
-        '-l-o') _info -white - 'Will symbolic link source/target (OW_SOFT):' ;;
-        '-l') _info -white - 'Will symbolic link source/target:' ;;
-        '-o-f') _info -white - 'Will write a binary file (OW_HARD):' ;;
-        '-o-o') _info -white - 'Will write a binary file (OW_SOFT):' ;;
-        '-o') _info -white - 'Will write a binary file:' ;;
+        '-c-f') __info -white - 'Will write (copy) from/to (OW_HARD):' ;;
+        '-c-o') __info -white - 'Will write (copy) from/to (OW_SOFT):' ;;
+        '-c') __info -white - 'Will write (copy) from/to:' ;;
+        '-l-f') __info -white - 'Will symbolic link source/target (OW_HARD):' ;;
+        '-l-o') __info -white - 'Will symbolic link source/target (OW_SOFT):' ;;
+        '-l') __info -white - 'Will symbolic link source/target:' ;;
+        '-o-f') __info -white - 'Will write a binary file (OW_HARD):' ;;
+        '-o-o') __info -white - 'Will write a binary file (OW_SOFT):' ;;
+        '-o') __info -white - 'Will write a binary file:' ;;
     esac
 
     if hint 4 -log-fed "$@"; then
         case "$1$4" in
-            '-w-f') _info -white - 'Will update a file (OW_HARD):' ;;
-            '-w-o') _info -white - 'Will update a file (OW_SOFT):' ;;
-            '-w') _info -white - 'Will update a file:' ;;
+            '-w-f') __info -white - 'Will update a file (OW_HARD):' ;;
+            '-w-o') __info -white - 'Will update a file (OW_SOFT):' ;;
+            '-w') __info -white - 'Will update a file:' ;;
         esac
     else
         case "$1$4" in
-            '-w-f') _info -white - 'Will write a file (OW_HARD):' ;;
-            '-w-o') _info -white - 'Will write a file (OW_SOFT):' ;;
-            '-w') _info -white - 'Will write a file:' ;;
+            '-w-f') __info -white - 'Will write a file (OW_HARD):' ;;
+            '-w-o') __info -white - 'Will write a file (OW_SOFT):' ;;
+            '-w') __info -white - 'Will write a file:' ;;
         esac
     fi
 
@@ -514,14 +514,14 @@ write_info() {
 #.
 write_info_avoidance() {
     case "$1$4" in
-        '-c-o') _info -white - 'Copy avoided (OW_SOFT):' ;;
-        '-c') _info -white - 'Copy avoided:' ;;
-        '-l-o') _info -white - 'Symbolic link avoided (OW_SOFT):' ;;
-        '-l') _info -white - 'Symbolic link avoided:' ;;
-        '-o-o') _info -white - 'Binary write avoided (OW_SOFT):' ;;
-        '-o') _info -white - 'Binary write avoided:' ;;
-        '-w-o') _info -white - 'File write avoided (OW_SOFT):' ;;
-        '-w') _info -white - 'File write avoided:' ;;
+        '-c-o') __info -white - 'Copy avoided (OW_SOFT):' ;;
+        '-c') __info -white - 'Copy avoided:' ;;
+        '-l-o') __info -white - 'Symbolic link avoided (OW_SOFT):' ;;
+        '-l') __info -white - 'Symbolic link avoided:' ;;
+        '-o-o') __info -white - 'Binary write avoided (OW_SOFT):' ;;
+        '-o') __info -white - 'Binary write avoided:' ;;
+        '-w-o') __info -white - 'File write avoided (OW_SOFT):' ;;
+        '-w') __info -white - 'File write avoided:' ;;
     esac
 
     # Do not assume the path still exists.
@@ -763,6 +763,22 @@ __file_write_ow_soft() {
 }
 
 #! .desc:
+# Print formatted text to stdout (syscfg client string)
+#! .params:
+# <"$@"> - info()
+#! .desc.ext:
+# For more information, refer to the documentation of info().
+#.
+__info() {
+    _clr="$1"
+    _fmt="$2"
+
+    shift 2 && set -- "$_clr" "$_fmt" "[I $$ $opd]" "$@"
+
+    info "$@"
+}
+
+#! .desc:
 # Symbolic link an object on the filesystem
 #! .params:
 # [$1]+ - hint
@@ -988,27 +1004,6 @@ __write() {
     return 0
 }
 } # END utility_functions
-
-# Maintainer note for any functions in utility_functions_out():
-#
-# Utility output functions shall always begin with an underscore character.
-utility_functions_out() { # START utility_functions_out
-#! .desc:
-# Print formatted text to stdout (syscfg client string)
-#! .params:
-# <"$@"> - info()
-#! .desc.ext:
-# For more information, refer to the documentation of info().
-#.
-_info() {
-    _clr="$1"
-    _fmt="$2"
-
-    shift 2 && set -- "$_clr" "$_fmt" "[I $$ $opd]" "$@"
-
-    info "$@"
-}
-} # END utility_functions_out
 
 # START boilerplate_functions
 
@@ -1320,7 +1315,7 @@ __cmd() {
         exit 127
     }
 
-    _info -white - 'Running command:'
+    __info -white - 'Running command:'
 
     info -white -- '`'
     info - -- "$@"
@@ -1362,7 +1357,7 @@ __cmd_OBJ() {
         exit 127
     }
 
-    _info -white - 'Running command:'
+    __info -white - 'Running command:'
 
     info -white -- '`'
     info - -- "$2"; offset 2 "$#" "$@" info - ---
@@ -1442,12 +1437,12 @@ __fed() {
     _cksum="${_cksum%%' '*}" || exit "$?"
 
     if [ "$3" ] && [ "$3" != "$_cksum" ]; then
-        _info -yellow - "CRC32 mismatch. (exp. $3; got $_cksum)"
-        _info -white - 'Format:'
+        __info -yellow - "CRC32 mismatch. (exp. $3; got $_cksum)"
+        __info -white - 'Format:'
         info - - "$1"
 
         if [ "$confirm_crc" = 1 ]; then
-            _info -white - 'Auto accepted the mismatch.'
+            __info -white - 'Auto accepted the mismatch.'
         elif [ "$interactive" = 1 ]; then
             confirm_cont || return 0
         else
@@ -1712,5 +1707,4 @@ main() {
 assertive_functions;
 helper_functions;
 utility_functions;
-utility_functions_out;
 main "$@" || { err_handler "$?" 'ERR'; }

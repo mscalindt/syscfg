@@ -13,6 +13,9 @@ syscfg NEWS
 * Renamed _err() to __err().
   Breaking change; existing code requires adjustment.
 
+* Renamed _info() to __info().
+  Breaking change; existing code requires adjustment.
+
 
 2025-09-05 - 2025-09-08
 =======================
