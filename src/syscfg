@@ -763,7 +763,7 @@ __file_write_ow_soft() {
 }
 
 #! .desc:
-# Print formatted text to stdout (syscfg client string)
+# Print formatted text
 #! .params:
 # <"$@"> - info()
 #! .desc.ext:
