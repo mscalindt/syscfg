@@ -590,9 +590,11 @@ client_lib() { # START client_lib
 #! .desc:
 # Execute an action on an object on the filesystem
 #! .params:
-# <$1> - path
-# [$2]+ - hint
-# [$3] - hint argument
+# [$1]+ - hint
+# [$2] - hint argument
+#! .uses.var:
+# <OBJ_PATH> - string;
+#              path
 #! .rc:
 # (0) success
 # (*) error
@@ -603,7 +605,7 @@ client_lib() { # START client_lib
 # For more information, refer to the documentation of hint().
 #.
 __action() {
-    assert -min "$#" 1 || exit 255
+    set -- "$OBJ_PATH" "$@"
 
     [ "$1" ] || {
         err -red - 'Missing OBJ_PATH.'; exit 255

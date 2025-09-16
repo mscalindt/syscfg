@@ -1,7 +1,7 @@
 syscfg NEWS
 
 
-2025-09-15 - 2025-09-15
+2025-09-15 - 2025-09-16
 =======================
 * Major rewrite of the writing API (i.e. most of syscfg).
   For more information, refer to the commit data.
@@ -14,6 +14,9 @@ syscfg NEWS
   Breaking change; existing code requires adjustment.
 
 * Renamed _info() to __info().
+  Breaking change; existing code requires adjustment.
+
+* __action() takes no parameters anymore and instead uses $OBJ_PATH.
   Breaking change; existing code requires adjustment.
 
 
