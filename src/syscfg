@@ -551,8 +551,8 @@ write_info_stat() {
             set -- "$_line"
 
             case "$_n" in
-                *'+') info -green - "$_n " && info - - "$1" ;;
-                *'-') info -red - "$_n " && info - - "$1" ;;
+                *'+') info -green -- "$_n " && info - - "$1" ;;
+                *'-') info -red -- "$_n " && info - - "$1" ;;
             esac
         done < "$_hint"
     else
