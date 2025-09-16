@@ -413,17 +413,17 @@ write() {
         ;;
     esac
 
-    if hint 4 -user "$@" || hint 4 -uid "$@"; then
+    if hint 4 -uid "$@" || hint 4 -user "$@"; then
         set -- "$_hint" "$@"
 
-        if hint 5 -group "$@" || hint 5 -gid "$@"; then
+        if hint 5 -gid "$@" || hint 5 -group "$@"; then
             chown -h "$1"":$_hint" -- "$4" || return "$?"
         else
             chown -h "$1" -- "$4" || return "$?"
         fi
 
         shift
-    elif hint 4 -group "$@" || hint 4 -gid "$@"; then
+    elif hint 4 -gid "$@" || hint 4 -group "$@"; then
         chgrp -h "$_hint" -- "$3" || return "$?"
     fi
 
