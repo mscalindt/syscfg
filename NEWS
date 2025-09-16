@@ -19,6 +19,9 @@ syscfg NEWS
 * __action() takes no parameters anymore and instead uses $OBJ_PATH.
   Breaking change; existing code requires adjustment.
 
+* __action() will now additionally preserve $OBJ alongside $OBJ_PATH, if
+  defined and `-no-sanit` hint is given.
+
 
 2025-09-05 - 2025-09-08
 =======================

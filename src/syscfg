@@ -593,6 +593,7 @@ client_lib() { # START client_lib
 # [$1]+ - hint
 # [$2] - hint argument
 #! .uses.var:
+# [OBJ] - [string]
 # <OBJ_PATH> - string;
 #              path
 #! .rc:
@@ -602,40 +603,43 @@ client_lib() { # START client_lib
 # (2) ENOENT
 # (255) input error
 #! .desc.ext:
+# When $OBJ is defined and `-no-sanit` hint is given, $OBJ will be preserved
+# along with $OBJ_PATH.
+#
 # For more information, refer to the documentation of hint().
 #.
 __action() {
-    set -- "$OBJ_PATH" "$@"
+    set -- "$OBJ" "$OBJ_PATH" "$@"
 
-    [ "$1" ] || {
+    [ "$2" ] || {
         err -red - 'Missing OBJ_PATH.'; exit 255
     }
 
-    ftype "$1" || {
+    ftype "$2" || {
         err -red - 'ENOENT:'
 
         err -red -- '>'
-        err - - " $1"
+        err - - " $2"
 
         exit 2
     }
 
-    if hint 1 -trunc "$@"; then
-        if ftype "$1"/; then
-            rm -rf -- "$1"/* || return "$?"
+    if hint 2 -trunc "$@"; then
+        if ftype "$2"/; then
+            rm -rf -- "$2"/* || return "$?"
         else
-            { : > "$1"; } || return "$?"
+            { : > "$2"; } || return "$?"
         fi
     fi
 
-    if hint 1 -del "$@"; then
-        chattr_remove "$1" || return "$?"
-        unmount "$1" || return "$?"
-        rm -rf -- "$1" || return "$?"
+    if hint 2 -del "$@"; then
+        chattr_remove "$2" || return "$?"
+        unmount "$2" || return "$?"
+        rm -rf -- "$2" || return "$?"
     fi
 
-    if hint 1 -no-sanit "$@"; then
-        OBJ_PATH="$1"
+    if hint 2 -no-sanit "$@"; then
+        OBJ="$1"; OBJ_PATH="$2"
     fi
 
     return 0
