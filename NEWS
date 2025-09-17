@@ -1,7 +1,7 @@
 syscfg NEWS
 
 
-2025-09-15 - 2025-09-16
+2025-09-15 - 2025-09-17
 =======================
 * Major rewrite of the writing API (i.e. most of syscfg).
   For more information, refer to the commit data.
@@ -21,6 +21,9 @@ syscfg NEWS
 
 * __action() will now additionally preserve $OBJ alongside $OBJ_PATH, if
   defined and `-no-sanit` hint is given.
+
+* Removed __git_get().
+  Breaking change; existing code requires adjustment.
 
 
 2025-09-05 - 2025-09-08

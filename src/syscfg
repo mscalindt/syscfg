@@ -1099,26 +1099,6 @@ BEGIN {
 }
 
 #! .desc:
-# Check if text appears anywhere in a given string
-#! .params:
-# <"$1"> - text
-# <"$2"> - string
-#! .rc:
-# (0) yes
-# (1) no
-# (255) bad input
-#.
-str() {
-    assert -eq "$#" 2 || return 255
-
-    case "$2" in
-        *"$1"*) return 0 ;;
-    esac
-
-    return 1
-}
-
-#! .desc:
 # Check if text appears at the right side of a given string
 #! .params:
 # <"$1"> - text
@@ -1458,40 +1438,6 @@ __fed() {
 
         printf "%s" "${_file}x"
     ) && OBJ="${OBJ%?}" || exit "$?"
-}
-
-#! .desc:
-# Copy/clone a git repository to $tmpd
-#! .params:
-# <["$1"]> - directory path
-# ["$2"]+ - URL
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad input
-#.
-__git_get() {
-    assert -min "$#" 1 || return 255
-
-    while [ "$1" ]; do
-        dir "$1" && exist "$1"/.git || break
-
-        __write -c "$1" "$tmpd"/. -f || return "$?"
-
-        return 0
-    done
-
-    shift
-
-    set -- "$@" '--depth' '1'
-
-    if str '/' "$1"; then
-        set -- "$@" "$tmpd/${1#"${1%/*}"?}"
-    else
-        set -- "$@" "$tmpd/$1"
-    fi
-
-    __cmd git clone "$@"
 }
 
 err_handler() {
