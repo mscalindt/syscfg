@@ -1009,21 +1009,6 @@ __write() {
 # START boilerplate_functions
 
 #! .desc:
-# Check if a command exists
-#! .params:
-# <"$1"> - command
-#! .rc:
-# (0) yes
-# (*) no
-# (255) bad input
-#.
-cmd() {
-    assert -eq "$#" 1 || return 255
-
-    command -v "$1" > /dev/null 2>&1
-}
-
-#! .desc:
 # Check if a given path is a directory
 #! .params:
 # <"$1"> - path
@@ -1170,7 +1155,7 @@ bytes_size() {
 chattr_remove() {
     assert -eq "$#" 1 || return 255
 
-    cmd 'chattr' || return 0
+    command -v chattr > /dev/null 2>&1 || return 0
 
     { [ -f "$1" ] && [ ! -h "$1" ]; } || return 0
 
@@ -1268,7 +1253,7 @@ unmount() {
 
     # exist() does not match dangling symlinks, and does not need to; they
     # cannot be in a state of being mounted.
-    cmd 'umount' && exist "$1" && dir "$1" || return 0
+    command -v umount > /dev/null 2>&1 && exist "$1" && dir "$1" || return 0
 
     umount -Rf -- "$1" > /dev/null 2>&1 || :
 }
@@ -1286,7 +1271,7 @@ unmount() {
 # (255) bad usage
 #.
 __cmd() {
-    cmd "$1" || {
+    command -v "$1" > /dev/null 2>&1 || {
         __err -red - 'Missing command:'
 
         err -white -- '`'
@@ -1328,7 +1313,7 @@ __cmd() {
 __cmd_OBJ() {
     assert -min "$#" 2 || return 255
 
-    cmd "$2" || {
+    command -v "$2" > /dev/null 2>&1 || {
         __err -red - 'Missing command:'
 
         err -white -- '`'
