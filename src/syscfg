@@ -9,8 +9,8 @@
 
 # Maintainer note for any functions in assertive_functions():
 #
-# Assertive functions shall not return `255` on empty input, and instead,
-# simply return true/false appropriately. `255` is only returned when input is
+# Assertive functions shall not `exit 255` on empty input, and instead, simply
+# return true/false appropriately. `exit 255` is only done when the input is
 # unspecified. If a function cannot adhere to the aforementioned, it does not
 # belong in assertive_functions().
 assertive_functions() { # START assertive_functions
