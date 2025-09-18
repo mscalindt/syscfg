@@ -1053,26 +1053,6 @@ BEGIN {
     ' "$1"
 }
 
-#! .desc:
-# Check if text appears at the right side of a given string
-#! .params:
-# <"$1"> - text
-# <"$2"> - string
-#! .rc:
-# (0) yes
-# (1) no
-# (255) bad input
-#.
-str_sfix() {
-    assert -eq "$#" 2 || return 255
-
-    case "$2" in
-        *"$1") return 0 ;;
-    esac
-
-    return 1
-}
-
 # END boilerplate_functions
 # START utility_functions
 
@@ -1144,9 +1124,7 @@ chattr_remove() {
 mkdir_parents() {
     assert -eq "$#" 1 || return 255
 
-    if str_sfix '/' "$1"; then
-        set -- "${1%?}"
-    fi
+    set -- "${1%"${1##*[!/]}"}"
 
     if [ -d "${1%/*}" ]; then
         return 0
