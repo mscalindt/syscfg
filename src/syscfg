@@ -1009,21 +1009,6 @@ __write() {
 # START boilerplate_functions
 
 #! .desc:
-# Check if a given path is a directory
-#! .params:
-# <"$1"> - path
-#! .rc:
-# (0) yes
-# (1) no
-# (255) bad input
-#.
-dir() {
-    assert -eq "$#" 1 || return 255
-
-    [ -d "$1" ]
-}
-
-#! .desc:
 # Check if a given path exists
 #! .params:
 # <"$1"> - path
@@ -1178,7 +1163,7 @@ mkdir_parents() {
         set -- "${1%?}"
     fi
 
-    if dir "${1%/*}"; then
+    if [ -d "${1%/*}" ]; then
         return 0
     fi
 
@@ -1253,7 +1238,7 @@ unmount() {
 
     # exist() does not match dangling symlinks, and does not need to; they
     # cannot be in a state of being mounted.
-    command -v umount > /dev/null 2>&1 && exist "$1" && dir "$1" || return 0
+    command -v umount > /dev/null 2>&1 && exist "$1" && [ -d "$1" ] || return 0
 
     umount -Rf -- "$1" > /dev/null 2>&1 || :
 }
