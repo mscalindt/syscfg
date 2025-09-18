@@ -1009,21 +1009,6 @@ __write() {
 # START boilerplate_functions
 
 #! .desc:
-# Check if a given path exists
-#! .params:
-# <"$1"> - path
-#! .rc:
-# (0) yes
-# (1) no
-# (255) bad input
-#.
-exist() {
-    assert -eq "$#" 1 || return 255
-
-    [ -e "$1" ]
-}
-
-#! .desc:
 # Assert a given string is strict POSIX shell-compatible octal escape
 # sequence(s)
 #! .params:
@@ -1238,7 +1223,7 @@ unmount() {
 
     # exist() does not match dangling symlinks, and does not need to; they
     # cannot be in a state of being mounted.
-    command -v umount > /dev/null 2>&1 && exist "$1" && [ -d "$1" ] || return 0
+    command -v umount > /dev/null 2>&1 && [ -e "$1" ] && [ -d "$1" ] || return 0
 
     umount -Rf -- "$1" > /dev/null 2>&1 || :
 }
