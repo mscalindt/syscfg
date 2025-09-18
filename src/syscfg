@@ -325,13 +325,8 @@ hint() {
 # For more information, refer to the documentation of fs_equiv() and __write().
 #.
 validate_write() {
-    [ "$2" ] || {
-        err -red - 'Missing OBJ.'; exit 255
-    }
-
-    [ "$3" ] || {
-        err -red - 'Missing OBJ_PATH.'; exit 255
-    }
+    [ "$2" ] || { err -red - 'Missing OBJ.'; exit 255; }
+    [ "$3" ] || { err -red - 'Missing OBJ_PATH.'; exit 255; }
 
     case "$1" in
         '-c' | '-l')
@@ -359,24 +354,14 @@ BEGIN {
 
 	exit 0
 }
-    ' "$2" || {
-                err -red - 'Bad OBJ; expected octal string.'; exit 255
-            }
+    ' "$2" || { err -red - 'Bad OBJ; expected octal string.'; exit 255; }
         ;;
     esac
 
     case "$4" in
-        '-f')
-            return 0
-        ;;
-        '-o')
-            :
-        ;;
-        *)
-            { ! ftype "$3"; } || {
-                fs_equiv "$@" && return 1 || return 17
-            }
-        ;;
+        '-f') return 0 ;;
+        '-o') : ;;
+        *) { ! ftype "$3"; } || { fs_equiv "$@" && return 1 || return 17; } ;;
     esac
 
     fs_equiv "$@" || return 0
