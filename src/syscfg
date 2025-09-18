@@ -338,7 +338,28 @@ validate_write() {
             ftype "$2" || return 2
         ;;
         '-o')
-            is_octal "$2" || {
+            awk '
+function is_valid_chunk(chunk) {
+	return chunk ~ /^\\0[0-7]{3}$/ ? 0 : 1
+}
+
+BEGIN {
+	string=ARGV[1]
+	delete ARGV
+
+	if (length(string) % 5 != 0)
+		exit 1
+
+	for (i = 1; i <= length(string); i += 5) {
+		chunk = substr(string, i, 5)
+
+		if (is_valid_chunk(chunk) == 1)
+			exit 1
+	}
+
+	exit 0
+}
+    ' "$2" || {
                 err -red - 'Bad OBJ; expected octal string.'; exit 255
             }
         ;;
@@ -1006,54 +1027,6 @@ __write() {
 }
 } # END client_lib
 
-# START boilerplate_functions
-
-#! .desc:
-# Assert a given string is strict POSIX shell-compatible octal escape
-# sequence(s)
-#! .params:
-# <["$1"]> - string
-#! .uses.fn:
-# <assert> ('-eq' '$#' '1');
-#          Assert a string
-#! .uses.util:
-# <awk> ("program" '$1');
-#       pattern scanning and processing language
-#! .rc.fn:
-# (assert) (255) bad input
-#! .rc.util:
-# (awk) (0) true
-# (awk) (1) false / error
-# (awk) (*) error
-#.
-is_octal() {
-    assert -eq "$#" 1 || return 255
-
-    awk '
-function is_valid_chunk(chunk) {
-	return chunk ~ /^\\0[0-7]{3}$/ ? 0 : 1
-}
-
-BEGIN {
-	string=ARGV[1]
-	delete ARGV
-
-	if (length(string) % 5 != 0)
-		exit 1
-
-	for (i = 1; i <= length(string); i += 5) {
-		chunk = substr(string, i, 5)
-
-		if (is_valid_chunk(chunk) == 1)
-			exit 1
-	}
-
-	exit 0
-}
-    ' "$1"
-}
-
-# END boilerplate_functions
 # START utility_functions
 
 #! .desc:
