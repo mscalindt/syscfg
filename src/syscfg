@@ -236,21 +236,7 @@ fs_equiv_type_attr() {
 # Query the presence of an independent hint among arguments
 #! .params:
 # <$1> - N
-# <$2> - hint(
-#     '-clear-log' - log file path to clear after use (argument)
-#     '-del' - delete action/operation
-#     '-gid' - group ID (argument)
-#     '-group' - group name (argument)
-#     '-log' - log file path to use for write statistics (argument)
-#     '-log-fed' - log file path to use for colored write statistics (argument)
-#     '-mode' - object octal mode (argument)
-#     '-no-avoid' - disable write avoidance
-#     '-no-sanit' - disable environment sanitization
-#     '-trunc' - truncate action/operation
-#     '-uid' - user ID (argument)
-#     '-user' - user name (argument)
-#     .
-# )
+# <$2> - hint
 # [$3] - $@
 #! .gives.var:
 # (0) <_hint> - [string];
@@ -263,6 +249,8 @@ fs_equiv_type_attr() {
 #! .desc.ext:
 # $1 is a whole number that specifies the number of arguments to offset, to
 # skip any wrapper/external arguments accordingly.
+#
+# For more information, refer to the documentation of hint_set().
 #.
 hint() {
     assert -min "$#" 2 || exit 255
@@ -273,38 +261,15 @@ hint() {
     while [ "$#" -ge 1 ]; do
         [ "$1" = "$_hint" ] || { shift && continue; }
 
-        case "$_hint" in
-            '-del' | '-no-avoid' | '-no-sanit' | '-trunc')
-                _hint= && return 0
-            ;;
-            '-mode')
-                [ "$#" -ge 2 ] || {
-                    err -red - 'hint(): Missing argument specification:' \
-                        "$_hint"
-                    err -red - 'hint(): Use empty quotes to define no value.'
+        hint_set "$@" || {
+            err -red - '${0##*/}: Invalid hint:' "$1"
 
-                    exit 255
-                }
+            exit 255
+        }
 
-                _hint="$2" && return 0
-            ;;
-            '-clear-log' | '-gid' | '-group' | '-log' | '-log-fed' | '-uid' | \
-            '-user')
-                [ "$2" ] || {
-                    err -red - 'hint(): Missing argument specification:' \
-                        "$_hint"
+        _hint="$_hint_arg"
 
-                    exit 255
-                }
-
-                _hint="$2" && return 0
-            ;;
-            *)
-                err -red - 'hint(): Invalid hint:' "$_hint"
-
-                exit 255
-            ;;
-        esac
+        return 0
     done
 
     return 1
