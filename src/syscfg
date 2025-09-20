@@ -311,6 +311,82 @@ hint() {
 }
 
 #! .desc:
+# Set the hint properties of the first argument
+#! .params:
+# [$1]+ - hint(
+#     '-clear-log' - log file path to clear after use (argument)
+#     '-del' - delete action/operation
+#     '-gid' - group ID (argument)
+#     '-group' - group name (argument)
+#     '-log' - log file path to use for write statistics (argument)
+#     '-log-fed' - log file path to use for colored write statistics (argument)
+#     '-mode' - object octal mode (argument)
+#     '-no-avoid' - disable write avoidance
+#     '-no-sanit' - disable environment sanitization
+#     '-trunc' - truncate action/operation
+#     '-uid' - user ID (argument)
+#     '-user' - user name (argument)
+#     .
+# )
+#! .gives.var:
+# (0) <_hint> - string;
+#               hint string
+# (0) <_hint_arg> - [string];
+#                   [hint argument]
+# (0) <_offset> - integer;
+#                 shift count to offset the hint and its argument(s)
+#! .rc:
+# (0) success
+# (1) error
+#! .ec:
+# (255) input error
+#! .desc.ext:
+# The function can only ever be successful when the first argument is
+# a recognized hint; otherwise error is returned.
+#.
+hint_set() {
+    case "$1" in
+        '-del' | '-no-avoid' | '-no-sanit' | '-trunc')
+            _hint="$1"
+            _hint_arg=
+            _offset=1
+
+            return 0
+        ;;
+        '-mode')
+            [ "$#" -ge 2 ] || {
+                err -red - '${0##*/}: Missing argument specification:' "$1"
+                err -red - '${0##*/}: Use empty quotes to define no value.'
+
+                exit 255
+            }
+
+            _hint="$1"
+            _hint_arg="$2"
+            _offset=2
+
+            return 0
+        ;;
+        '-clear-log' | '-gid' | '-group' | '-log' | '-log-fed' | '-uid' | \
+        '-user')
+            [ "$2" ] || {
+                err -red - '${0##*/}: Missing argument specification:' "$1"
+
+                exit 255
+            }
+
+            _hint="$1"
+            _hint_arg="$2"
+            _offset=2
+
+            return 0
+        ;;
+    esac
+
+    return 1
+}
+
+#! .desc:
 # Validate a write is necessary
 #! .params:
 # <$@> - __write()
