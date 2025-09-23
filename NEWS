@@ -1,6 +1,13 @@
 syscfg NEWS
 
 
+2025-09-23 - 2025-09-23
+=======================
+* Rework of the command execution API.
+  For more information, refer to the commit data.
+  Breaking change; existing code requires adjustment.
+
+
 2025-09-15 - 2025-09-17
 =======================
 * Major rewrite of the writing API (i.e. most of syscfg).

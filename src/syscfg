@@ -19,6 +19,78 @@ assertive_functions() { # START assertive_functions
 
 helper_functions() { # START helper_functions
 #! .desc:
+# Execute a command (wrapper)
+#! .params:
+# <$@> - __cmd()
+#! .rc:
+# (0) success
+# (*) error
+#! .ec:
+# (255) input error
+#! .desc.ext:
+# For more information, refer to the documentation of __cmd().
+#.
+cmd() {
+    while hint_set "$@"; do
+        case "$_hint" in
+            '--') shift "$_offset" && break ;;
+        esac
+
+        shift "$_offset"
+    done
+
+    [ "$1" ] || {
+        err -red - '${0##*/}: Missing command specification.'
+
+        exit 255
+    }
+
+    cmd_exec "$@"
+}
+
+#! .desc:
+# Execute a command
+#! .params:
+# <$1> - command
+# [$2]+ - command argument
+#! .rc:
+# (0) success
+# (*) error
+#.
+cmd_exec() {
+    command -- "$@"
+}
+
+#! .desc:
+# Output command information
+#! .params:
+# <$@> - __cmd()
+#! .rc:
+# (0) success
+#! .desc.ext:
+# For more information, refer to the documentation of __cmd().
+#.
+cmd_info() {
+    while hint_set "$@"; do
+        case "$_hint" in
+            '--') shift "$_offset" && break ;;
+        esac
+
+        shift "$_offset"
+    done
+
+    [ "$1" ] || return 0
+
+    __info -white - 'Running command:'
+
+    info -white -- '`'
+    info - -- "$@"
+    info -white - '`'
+
+    return 0
+}
+
+#! .desc:
 # Assert the content and state of a write is equal on the filesystem
 #! .params:
 # <$@> - __write()
@@ -259,7 +331,11 @@ hint() {
     _hint="$2"; shift "$((2 + $1))"
 
     while [ "$#" -ge 1 ]; do
-        [ "$1" = "$_hint" ] || { shift && continue; }
+        case "$1" in
+            "$_hint") : ;;
+            '--') break ;;
+            *) shift && continue ;;
+        esac
 
         hint_set "$@" || {
             err -red - '${0##*/}: Invalid hint:' "$1"
@@ -279,6 +355,7 @@ hint() {
 # Set the hint properties of the first argument
 #! .params:
 # [$1]+ - hint(
+#     '--' - specifies end of hints
 #     '-clear-log' - log file path to clear after use (argument)
 #     '-del' - delete action/operation
 #     '-gid' - group ID (argument)
@@ -288,6 +365,8 @@ hint() {
 #     '-mode' - object octal mode (argument)
 #     '-no-avoid' - disable write avoidance
 #     '-no-sanit' - disable environment sanitization
+#     '-out-req' - stdout content is a requirement
+#     '-out-save' - save stdout to a variable (argument)
 #     '-trunc' - truncate action/operation
 #     '-uid' - user ID (argument)
 #     '-user' - user name (argument)
@@ -312,7 +391,7 @@ hint() {
 #.
 hint_set() {
     case "$1" in
-        '-del' | '-no-avoid' | '-no-sanit' | '-trunc')
+        '--' | '-del' | '-no-avoid' | '-no-sanit' | '-out-req' | '-trunc')
             _hint="$1"
             _hint_arg=
             _offset=1
@@ -333,8 +412,8 @@ hint_set() {
 
             return 0
         ;;
-        '-clear-log' | '-gid' | '-group' | '-log' | '-log-fed' | '-uid' | \
-        '-user')
+        '-clear-log' | '-gid' | '-group' | '-log' | '-log-fed' | \
+        '-out-save' | '-uid' | '-user')
             [ "$2" ] || {
                 err -red - '${0##*/}: Missing argument specification:' "$1"
 
@@ -742,6 +821,47 @@ __bin_write_ow_hard() {
 #.
 __bin_write_ow_soft() {
     __write -o "$OBJ" "$OBJ_PATH" -o "$@"
+}
+
+#! .desc:
+# Perform a command
+#! .params:
+# [$1]+ - hint
+# [$2] - hint argument
+# <$3> - --
+# <$4> - command
+# [$5]+ - command argument
+#! .rc:
+# (0) success
+# (*) error
+#! .ec:
+# (1) hint assertion failed
+#! .desc.ext:
+# For more information, refer to the documentation of cmd() and hint().
+#.
+__cmd() {
+    cmd_info "$@" || return "$?"
+
+    if hint 0 -out-req "$@" || hint 0 -out-save "$@"; then
+        set -- "$(cmd "$@" && printf "%s" x)" "$@" || return "$?"
+        set -- "${1%?}" "$@"
+    else
+        cmd "$@" && return 0 || return "$?"
+    fi
+
+    if hint 1 -out-req "$@"; then
+        [ "$1" ] || {
+            __err -red - 'No output has been received.'
+
+            exit 1
+        }
+    fi
+
+    if hint 1 -out-save "$@"; then
+        arg_set "$_hint" "$1" || return "$?"
+    fi
+
+    return 0
 }
 
 #! .desc:
@@ -1209,101 +1329,6 @@ unmount() {
 # END utility_functions
 
 #! .desc:
-# Run a command
-#! .params:
-# <"$1"> - command
-# <"$2">+ -  arguments
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
-#.
-__cmd() {
-    command -v "$1" > /dev/null 2>&1 || {
-        __err -red - 'Missing command:'
-
-        err -white -- '`'
-        err - -- "$1"
-        err -white - '`'
-
-        exit 127
-    }
-
-    __info -white - 'Running command:'
-
-    info -white -- '`'
-    info - -- "$@"
-    info -white - '`'
-
-    if [ "$silent_cmd" = 1 ]; then
-        command "$@" > /dev/null || return "$?"
-    else
-        command "$@" || return "$?"
-    fi
-}
-
-#! .desc:
-# Run a command and store output in $OBJ
-#! .params:
-# <[$1]> - option_block(
-#     'e' - missing output is an error condition
-#     'n' - preserve final <newline> characters as given
-#     's' - (only with `n`) always strip one final <newline> character
-#     .
-# )
-# <"$2"> - command
-# <"$3">+ -  arguments
-#! .rc:
-# (0) success
-# (*) error
-# (255) bad usage
-#.
-__cmd_OBJ() {
-    assert -min "$#" 2 || return 255
-
-    command -v "$2" > /dev/null 2>&1 || {
-        __err -red - 'Missing command:'
-
-        err -white -- '`'
-        err - -- "$2"
-        err -white - '`'
-
-        exit 127
-    }
-
-    __info -white - 'Running command:'
-
-    info -white -- '`'
-    info - -- "$2"; offset 2 "$#" "$@" info - ---
-    info -white - '`'
-
-    case "$1" in
-        *n*s*)
-            OBJ=$(shift && command "$@" && printf "%s" x) && \
-            OBJ="${OBJ%?}" && \
-            OBJ="${OBJ%?}"
-        ;;
-        *n*)
-            OBJ=$(shift && command "$@" && printf "%s" x) && \
-            OBJ="${OBJ%?}"
-        ;;
-        *)
-            OBJ=$(shift && command "$@")
-        ;;
-    esac
-
-    case "$1" in
-        *e*)
-            [ "$OBJ" ] || {
-                __err -red - 'No output has been received.'
-
-                exit 1
-            }
-        ;;
-    esac
-}
-
-#! .desc:
 # Modify file data in-place according to format (see fed())
 #! .params:
 # <[$1]> - crc32 string to verify produced format against
@@ -1450,7 +1475,9 @@ main() {
     # Interactive mode; prompt for input on dual actions.
     interactive=0
     # Disable command output:
-    silent_cmd=0
+    silent_cmd=
+    # Disable command information output:
+    silent_cmd_info=
     # Disable write information output:
     silent_write=
     # Disable write avoidance output:
@@ -1480,6 +1507,7 @@ main() {
         '^DWAU') disable_write_avoid_user=1; shift && continue ;;
         '^I') interactive=1; shift && continue ;;
         '^SC') silent_cmd=1; shift && continue ;;
+        '^SCI') silent_cmd_info=1; shift && continue ;;
         '^SW') silent_write=1; shift && continue ;;
         '^SWA') silent_write_avoid=1; shift && continue ;;
         '^SWS') silent_write_stat=1; shift && continue ;;
@@ -1524,6 +1552,14 @@ main() {
         __file_write() { __file_write_ow_soft "$@"; }
         __obj_link() { __obj_link_ow_soft "$@"; }
         __obj_write() { __obj_write_ow_soft "$@"; }
+    }
+
+    [ ! "$silent_cmd" ] || {
+        cmd_exec() { command -- "$@" > /dev/null; }
+    }
+
+    [ ! "$silent_cmd_info" ] || {
+        cmd_info() { return 0; }
     }
 
     [ ! "$silent_write" ] || {
