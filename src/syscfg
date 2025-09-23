@@ -293,6 +293,7 @@ hint() {
 #     '-user' - user name (argument)
 #     .
 # )
+# [$2]+ - hint argument
 #! .gives.var:
 # (0) <_hint> - string;
 #               hint string
