@@ -1575,7 +1575,7 @@ main() {
     }
 
     readonly \
-        confirm_crc interactive logf silent_cmd tmpd tmpf
+        confirm_crc interactive logf tmpd tmpf
 
     assert -min "$#" 1 || {
         err -red - 'No client has been specified.'
