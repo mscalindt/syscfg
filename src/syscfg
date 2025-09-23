@@ -322,6 +322,8 @@ fs_equiv_type_attr() {
 # $1 is a whole number that specifies the number of arguments to offset, to
 # skip any wrapper/external arguments accordingly.
 #
+# Hint `--` will be respected at all times.
+#
 # For more information, refer to the documentation of hint_set().
 #.
 hint() {
@@ -730,6 +732,11 @@ client_lib() { # START client_lib
 # (2) ENOENT
 # (255) input error
 #! .desc.ext:
+# Supported hints:
+# `-del`: Delete $OBJ_PATH;
+# `-no-sanit`: Preserve $OBJ_PATH and optionally $OBJ;
+# `-trunc`: Truncate $OBJ_PATH.
+#
 # When $OBJ is defined and `-no-sanit` hint is given, $OBJ will be preserved
 # along with $OBJ_PATH.
 #
@@ -837,6 +844,10 @@ __bin_write_ow_soft() {
 #! .ec:
 # (1) hint assertion failed
 #! .desc.ext:
+# Supported hints:
+# `-out-req`: Empty stdout is an error condition;
+# `-out-save`: Save stdout to a specified variable name.
+#
 # For more information, refer to the documentation of cmd() and hint().
 #.
 __cmd() {
@@ -1077,6 +1088,18 @@ __obj_write_ow_soft() {
 # (17) EEXIST
 # (255) input error
 #! .desc.ext:
+# Supported hints:
+# `-clear-log`: Truncate a specified file path, supposedly after used;
+# `-gid`: Specify GID to assert/set;
+# `-group`: Specify group name to assert/set;
+# `-log`: Use a specified file path for write statistics;
+# `-log-fed`: Use a specified file path for colored write statistics;
+# `-mode`: File mode in octal to assert/set;
+# `-no-avoid`: Disable write avoidance;
+# `-no-sanit`: Preserve $OBJ and $OBJ_PATH;
+# `-uid`: Specify UID to assert/set;
+# `-user`: Specify user name to assert/set.
+#
 # For more information, refer to the documentation of hint(), validate_write(),
 # and write().
 #.
