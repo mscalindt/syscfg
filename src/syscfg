@@ -878,7 +878,7 @@ __cmd() {
 #! .desc:
 # Print formatted text to stderr
 #! .params:
-# <"$@"> - err()
+# <$@> - err()
 #! .desc.ext:
 # For more information, refer to the documentation of err().
 #.
@@ -945,7 +945,7 @@ __file_write_ow_soft() {
 #! .desc:
 # Print formatted text
 #! .params:
-# <"$@"> - info()
+# <$@> - info()
 #! .desc.ext:
 # For more information, refer to the documentation of info().
 #.
