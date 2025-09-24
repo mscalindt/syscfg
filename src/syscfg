@@ -851,6 +851,8 @@ __bin_write_ow_soft() {
 # For more information, refer to the documentation of cmd() and hint().
 #.
 __cmd() {
+    assert -min "$#" 2 || exit 255
+
     cmd_info "$@" || return "$?"
 
     if hint 0 -out-req "$@" || hint 0 -out-save "$@"; then
