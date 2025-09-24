@@ -309,7 +309,7 @@ fs_equiv_type_attr() {
 #! .params:
 # <$1> - N
 # <$2> - hint
-# [$3] - $@
+# [$3]+ - argument
 #! .gives.var:
 # (0) <_hint> - [string];
 #               [hint argument]
