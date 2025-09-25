@@ -31,7 +31,7 @@ helper_functions() { # START helper_functions
 # For more information, refer to the documentation of __cmd().
 #.
 cmd() {
-    while hint_set "$@"; do
+    while hint_set 0 "$@"; do
         case "$_hint" in
             '--') shift "$_offset" && break ;;
         esac
@@ -71,7 +71,7 @@ cmd_exec() {
 # For more information, refer to the documentation of __cmd().
 #.
 cmd_info() {
-    while hint_set "$@"; do
+    while hint_set 0 "$@"; do
         case "$_hint" in
             '--') shift "$_offset" && break ;;
         esac
@@ -339,7 +339,7 @@ hint() {
             *) shift && continue ;;
         esac
 
-        hint_set "$@" || {
+        hint_set 0 "$@" || {
             err -red - '${0##*/}: Invalid hint:' "$1"
 
             exit 255
@@ -354,9 +354,10 @@ hint() {
 }
 
 #! .desc:
-# Set the hint properties of the first argument
+# Set the hint properties of the first encountered argument
 #! .params:
-# [$1]+ - hint(
+# <$1> - N
+# [$2]+ - hint(
 #     '--' - specifies end of hints
 #     '-clear-log' - log file path to clear after use (argument)
 #     '-del' - delete action/operation
@@ -374,7 +375,7 @@ hint() {
 #     '-user' - user name (argument)
 #     .
 # )
-# [$2]+ - hint argument
+# [$3]+ - hint argument
 #! .gives.var:
 # (0) <_hint> - string;
 #               hint string
@@ -388,10 +389,16 @@ hint() {
 #! .ec:
 # (255) input error
 #! .desc.ext:
+# $1 is a whole number that specifies the number of arguments to offset.
+#
 # The function can only ever be successful when the first argument is
 # a recognized hint; otherwise error is returned.
 #.
 hint_set() {
+    assert -whole-n "$1" || exit 255
+
+    shift "$((1 + $1))"
+
     case "$1" in
         '--' | '-del' | '-no-avoid' | '-no-sanit' | '-out-req' | '-trunc')
             _hint="$1"
