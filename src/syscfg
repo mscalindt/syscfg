@@ -56,6 +56,8 @@ cmd() {
 #! .rc:
 # (0) success
 # (*) error
+#! .desc.ext:
+# This function exists to aid in modifying behavior modularly.
 #.
 cmd_exec() {
     command -- "$@"
