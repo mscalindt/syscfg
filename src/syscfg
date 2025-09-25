@@ -91,6 +91,65 @@ cmd_info() {
 }
 
 #! .desc:
+# Generate fed() format
+#! .params:
+# <$1> - N
+# <[$2]> - file content
+# <$@> - __ed()
+#! .gives.var:
+# (0) <_fmt> - [string]
+#! .rc:
+# (0) success
+# (*) error
+#! .desc.ext:
+# $1 is a whole number that specifies the number of arguments to offset, to
+# skip any __ed() arguments accordingly.
+#
+# For more information, refer to the documentation of __ed() and fed().
+#.
+ed_fmt() {
+    assert -whole-n "$1" || exit 255
+
+    _a="$2"; shift "$((2 + $1))"; set -- "$_a" "$@"
+
+    while hint_set 1 "$@"; do
+        _a="$1"
+        _offset="$((_offset + 1))"
+
+        case "$_hint" in
+            '--') shift "$_offset"; set -- "$_a" "$@"; break ;;
+        esac
+
+        shift "$_offset"; set -- "$_a" "$@"
+    done
+
+    fed "$@"
+}
+
+#! .desc:
+# Execute fed() format
+#! .params:
+# <[$1]> - log file path
+# <[$2]> - file content
+# <$3> - format
+#! .gives.var:
+# (0) <_file> - [string]
+#! .rc:
+# (0) success
+# (*) error
+#! .desc.ext:
+# The format must be an evaluable array of arguments.
+#
+# For more information, refer to the documentation of __ed(), fed(), and
+# libfile().
+#.
+ed_exec() {
+    _a="$1"; _b="$2"; eval set -- "$3"
+
+    libfile "$_a" "$_b" "$@"
+}
+
+#! .desc:
 # Assert the content and state of a write is equal on the filesystem
 #! .params:
 # <$@> - __write()
@@ -374,6 +433,7 @@ hint() {
 # Recognized hints:
 # `--`: End of hints;
 # `-clear-log`, <file path>: Log to truncate;
+# `-crc`, <string>: CRC32 string;
 # `-del`: 'Delete' action/operation;
 # `-gid`, <string>: Group ID;
 # `-group`, <string>: Group name;
@@ -420,7 +480,7 @@ hint_set() {
 
             return 0
         ;;
-        '-clear-log' | '-gid' | '-group' | '-log' | '-log-fed' | \
+        '-clear-log' | '-crc' | '-gid' | '-group' | '-log' | '-log-fed' | \
         '-out-save' | '-uid' | '-user')
             [ "$2" ] || {
                 err -red - '${0##*/}: Missing argument specification:' "$1"
@@ -878,6 +938,81 @@ __cmd() {
 
     if hint 1 -out-save "$@"; then
         arg_set "$_hint" "$1" || return "$?"
+    fi
+
+    return 0
+}
+
+#! .desc:
+# Modify file data in-place according to format
+#! .params:
+# [$1]+ - hint
+# [$2]+ - hint argument
+# <$3> - --
+# <$4>+ - operation
+#! .uses.var:
+# <OBJ> - string;
+#         file data
+# [OBJ_PATH] - string;
+#              file path to read if $OBJ empty
+#! .rc:
+# (0) success
+# (*) error
+#! .ec:
+# (1) hint assertion failed
+#! .desc.ext:
+# Supported hints:
+# `-crc`: Assert the format matches a given CRC32;
+# `-log`: Use a specified log file path for fed();
+# `-no-sanit`: Preserve $OBJ_PATH alongside $OBJ.
+#
+# For hint `-crc`, the format string will be asserted without any trailing
+# <newline> characters.
+#
+# For more information, refer to the documentation of fed(), hint() and
+# libfile().
+#.
+__ed() {
+    set -- "$OBJ" "$OBJ_PATH" "$@"
+
+    assert -min "$#" 4 || exit 255
+
+    [ "$1" ] || {
+        file_preload -cat "$2" || return "$?"
+
+        shift && set -- "$_file" "$@"
+    }
+
+    # `1` = N offset = Skip $OBJ_PATH.
+    ed_fmt 1 "$@" || return "$?"
+
+    if [ "$_fmt" ]; then
+        set -- "$_fmt" "$@"
+
+        if hint 3 -crc "$@"; then
+            _crc="$(printf "%s" "$1" | cksum)" || return "$?"
+            _crc="${_crc%%' '*}"
+
+            [ "$_crc" = "$_hint" ] || {
+                __err -red - "CRC32 mismatch. (hint = $_hint; crc = $_crc)"
+
+                exit 1
+            }
+        fi
+
+        if hint 3 -log "$@"; then
+            ed_exec "$_hint" "$2" "$1" || return "$?"
+        else
+            ed_exec '' "$2" "$1" || return "$?"
+        fi
+
+        shift 2 && set -- "$_file" "$@"
+    fi
+
+    if hint 2 -no-sanit "$@"; then
+        OBJ="$1"; OBJ_PATH="$2"
+    else
+        OBJ="$1"; OBJ_PATH=
     fi
 
     return 0
@@ -1359,76 +1494,6 @@ unmount() {
 
 # END utility_functions
 
-#! .desc:
-# Modify file data in-place according to format (see fed())
-#! .params:
-# <[$1]> - crc32 string to verify produced format against
-# <["$2"]> - log file path
-# <$3>+ - operation(
-#     '-' - EOF add $4
-#     '-m' - apply modifier for `-a`/`-r`/`-s`; see extended description
-#     '-a' - add $4
-#     '-r' - remove $4
-#     '-s' - substitute $4 with $5
-#     .
-# )
-# ["$4"] - string
-# ["$5"] - string
-#.
-__fed() {
-    assert -min "$#" 3 || return 255
-
-    [ "$OBJ" ] || {
-        file_preload -cat "$OBJ_PATH" || exit "$?"
-
-        OBJ="$_file"
-    }
-
-    set -- "$OBJ" "$@"
-
-    _fmt=$(
-        _a="$1"; shift 3
-
-        fed "$_a" "$@" || {
-            set -- "$?"; case "$1" in
-                1) [ ! "$_fmt" ] || return "$1" ;;
-                *) return "$1" ;;
-            esac
-        }
-
-        printf "%s" "$_fmt"
-    ) || exit "$?"
-
-    [ "$_fmt" ] || return 0
-
-    set -- "$_fmt" "$@"
-
-    _cksum=$(printf "%s" "$1" | cksum) && \
-    _cksum="${_cksum%%' '*}" || exit "$?"
-
-    if [ "$3" ] && [ "$3" != "$_cksum" ]; then
-        __info -yellow - "CRC32 mismatch. (exp. $3; got $_cksum)"
-        __info -white - 'Format:'
-        info - - "$1"
-
-        if [ "$confirm_crc" = 1 ]; then
-            __info -white - 'Auto accepted the mismatch.'
-        elif [ "$interactive" = 1 ]; then
-            confirm_cont || return 0
-        else
-            return 0
-        fi
-    fi
-
-    OBJ=$(
-        _a="$2"; _b="$4"; eval set -- "$1"
-
-        libfile "$_b" "$_a" "$@" || return "$?"
-
-        printf "%s" "${_file}x"
-    ) && OBJ="${OBJ%?}" || exit "$?"
-}
-
 err_handler() {
     IFS=' 	''
 '
@@ -1489,8 +1554,6 @@ main() {
     done
 
     # Control switches
-    # Automatically continue/confirm any CRC32 mismatch prompts.
-    confirm_crc=0
     # Disable write avoidance:
     disable_write_avoid=
     # Disable write avoidance assert on group ownership:
@@ -1503,8 +1566,6 @@ main() {
     disable_write_avoid_type_attr=
     # Disable write avoidance assert on user ownership:
     disable_write_avoid_user=
-    # Interactive mode; prompt for input on dual actions.
-    interactive=0
     # Disable command output:
     silent_cmd=
     # Disable command information output:
@@ -1529,14 +1590,12 @@ main() {
     logf="${TMPDIR:-/tmp}/syscfg_logf"
 
     while :; do case "$1" in
-        '^CC') confirm_crc=1; shift && continue ;;
         '^DWA') disable_write_avoid=1; shift && continue ;;
         '^DWAG') disable_write_avoid_group=1; shift && continue ;;
         '^DWAP') disable_write_avoid_perm=1; shift && continue ;;
         '^DWAT') disable_write_avoid_type=1; shift && continue ;;
         '^DWATA') disable_write_avoid_type_attr=1; shift && continue ;;
         '^DWAU') disable_write_avoid_user=1; shift && continue ;;
-        '^I') interactive=1; shift && continue ;;
         '^SC') silent_cmd=1; shift && continue ;;
         '^SCI') silent_cmd_info=1; shift && continue ;;
         '^SW') silent_write=1; shift && continue ;;
@@ -1606,7 +1665,7 @@ main() {
     }
 
     readonly \
-        confirm_crc interactive logf tmpd tmpf
+        logf tmpd tmpf
 
     assert -min "$#" 1 || {
         err -red - 'No client has been specified.'
