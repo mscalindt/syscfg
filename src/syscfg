@@ -357,25 +357,7 @@ hint() {
 # Set the hint properties of the first encountered argument
 #! .params:
 # <$1> - N
-# [$2]+ - hint(
-#     '--' - specifies end of hints
-#     '-clear-log' - log file path to clear after use (argument)
-#     '-del' - delete action/operation
-#     '-gid' - group ID (argument)
-#     '-group' - group name (argument)
-#     '-log' - log file path to use for write statistics (argument)
-#     '-log-fed' - log file path to use for colored write statistics (argument)
-#     '-mode' - object octal mode (argument)
-#     '-no-avoid' - disable write avoidance
-#     '-no-sanit' - disable environment sanitization
-#     '-out-req' - stdout content is a requirement
-#     '-out-save' - save stdout to a variable (argument)
-#     '-trunc' - truncate action/operation
-#     '-uid' - user ID (argument)
-#     '-user' - user name (argument)
-#     .
-# )
-# [$3]+ - hint argument
+# [$2]+ - argument
 #! .gives.var:
 # (0) <_hint> - string;
 #               hint string
@@ -389,6 +371,23 @@ hint() {
 #! .ec:
 # (255) input error
 #! .desc.ext:
+# Recognized hints:
+# `--`: End of hints;
+# `-clear-log`, <file path>: Log to truncate;
+# `-del`: 'Delete' action/operation;
+# `-gid`, <string>: Group ID;
+# `-group`, <string>: Group name;
+# `-log`, <file path>: Log file path;
+# `-log-fed`, <file path>: Log file path with fed() format;
+# `-mode`, <[string]>: Octal mode;
+# `-no-avoid`: No write avoidance;
+# `-no-sanit`: No environment sanitization;
+# `-out-req`: `stdout` content requirement;
+# `-out-save`, <variable name>: Save `stdout` content to a variable;
+# `-trunc`: 'Truncate' action/operation;
+# `-uid`, <string>: User ID;
+# `-user`, <string>: User name.
+#
 # $1 is a whole number that specifies the number of arguments to offset.
 #
 # The function can only ever be successful when the first argument is
