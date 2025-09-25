@@ -1487,8 +1487,6 @@ to_octal_offset() {
 unmount() {
     assert -eq "$#" 1 || return 255
 
-    # exist() does not match dangling symlinks, and does not need to; they
-    # cannot be in a state of being mounted.
     command -v umount > /dev/null 2>&1 && [ -e "$1" ] && [ -d "$1" ] || return 0
 
     umount -Rf -- "$1" > /dev/null 2>&1 || :
