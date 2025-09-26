@@ -1326,7 +1326,7 @@ __write() {
 
     if hint 4 -trunc "$@" && hint 4 -log "$@"; then
         { : > "$_hint"; } || {
-            err -white - 'Failed to truncate the log file.'
+            err -white - "Failed to truncate the log file. ($?)"
 
             return 1
         }
@@ -1335,7 +1335,7 @@ __write() {
     if hint 4 -sanit "$@"; then
         if hint 4 -log "$@"; then
             rm -rf "$_hint" || {
-                err -white - 'Failed to delete the log file.'
+                err -white - "Failed to delete the log file. ($?)"
 
                 return 1
             }
