@@ -17,6 +17,12 @@ syscfg NEWS
 * __write() (the write API of syscfg) now supports hint `-sanit`.
   For more information, refer to the commit data.
 
+* syscfg no longer provides $logf, $tmpd, and $tmpf. Clients are expected to
+  manage temporary files on their own. To aid in this task, __ed() is ready to
+  generate the file path specified by `-log` on its own, and the write API is
+  ready to perform cleanup on it, given the hint `-sanit`.
+  Breaking (backward-incompatible) change.
+
 
 2025-09-25 - 2025-09-25
 =======================

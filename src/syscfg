@@ -1508,13 +1508,6 @@ err_handler() {
 
     trap - INT TERM
 
-    # env cleanup
-    if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ] || \
-        [ -h "$tmpd" ] || [ -h "$tmpf" ] || [ -h "$logf" ]; then
-        chattr -R -ia "$tmpd" "$tmpf" "$logf" > /dev/null 2>&1 || :
-        rm -rf "$tmpd" "$tmpf" "$logf"
-    fi
-
     if [ "$1" = 0 ]; then
         exit 0
     elif [ "$2" = INT ]; then
@@ -1588,14 +1581,6 @@ main() {
     write_always=
     # Specify default state "soft overwrite" for all writes:
     write_forced=
-
-    # Utility internal locations
-    # Temporary per-function dir (cleared on func exit):
-    tmpd="${TMPDIR:-/tmp}/syscfg_tmpd"
-    # Temporary per-function file (cleared on func exit):
-    tmpf="${TMPDIR:-/tmp}/syscfg_tmpf"
-    # Temporary per-function log file (cleared on func exit):
-    logf="${TMPDIR:-/tmp}/syscfg_logf"
 
     while :; do case "$1" in
         '^DWA') disable_write_avoid=1; shift && continue ;;
@@ -1672,9 +1657,6 @@ main() {
         write_info_stat() { return 0; }
     }
 
-    readonly \
-        logf tmpd tmpf
-
     assert -min "$#" 1 || {
         err -red - 'No client has been specified.'
         err - -
@@ -1688,27 +1670,10 @@ main() {
         err -red - 'Missing root rights.'; exit 1
     }
 
-    # past env cleanup from SIGKILL or something else
-    if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ] || \
-        [ -h "$tmpd" ] || [ -h "$tmpf" ] || [ -h "$logf" ]; then
-        chattr -R -ia "$tmpd" "$tmpf" "$logf" > /dev/null 2>&1 || :
-        rm -rf "$tmpd" "$tmpf" "$logf"
-    fi
-
     while [ "$1" ]; do
-        # env setup
-        ( umask 077; mkdir "$tmpd"; : > "$tmpf" > "$logf"; ) || return "$?"
-
         # In the future, clients will be launched as an external command,
         # lexed and parsed by syscfg.
         ( . "$1" "$1"; ) || return "$?"
-
-        # env reset
-        if [ -e "$tmpd" ] || [ -e "$tmpf" ] || [ -e "$logf" ] || \
-            [ -h "$tmpd" ] || [ -h "$tmpf" ] || [ -h "$logf" ]; then
-            chattr -R -ia "$tmpd" "$tmpf" "$logf" > /dev/null 2>&1 || :
-            rm -rf "$tmpd" "$tmpf" "$logf"
-        fi
 
         info -green - "$1:" 'Done!'
 
