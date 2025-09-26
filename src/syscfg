@@ -964,7 +964,7 @@ __cmd() {
 #! .desc.ext:
 # Supported hints:
 # `-crc`: Assert the format matches a given CRC32;
-# `-log`: Use a specified log file path for fed();
+# `-log`: Use a specified log file path for libfile();
 # `-no-sanit`: Preserve $OBJ_PATH alongside $OBJ.
 #
 # For hint `-crc`, the format string will be asserted without any trailing
