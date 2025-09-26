@@ -443,8 +443,8 @@ hint() {
 # `-mode`, <[string]>: Octal mode;
 # `-no-avoid`: No write avoidance;
 # `-no-sanit`: No environment sanitization;
-# `-out-req`: Require &1 (stdout);
 # `-out-save`, <variable name>: Save &1 (stdout);
+# `-req-out`: Require &1 (stdout);
 # `-trunc`: 'Truncate' action/operation;
 # `-uid`, <string>: User ID;
 # `-user`, <string>: User name.
@@ -460,7 +460,7 @@ hint_set() {
     shift "$((1 + $1))"
 
     case "$1" in
-        '--' | '-color' | '-del' | '-no-avoid' | '-no-sanit' | '-out-req' | \
+        '--' | '-color' | '-del' | '-no-avoid' | '-no-sanit' | '-req-out' | \
         '-trunc')
             _hint="$1"
             _hint_arg=
@@ -909,8 +909,8 @@ __bin_write_ow_soft() {
 # (1) hint assertion failed
 #! .desc.ext:
 # Supported hints:
-# `-out-req`: Empty &1 is a fatal error condition;
-# `-out-save`: Specify variable name to save &1 to.
+# `-out-save`: Specify variable name to save &1 to;
+# `-req-out`: Empty &1 is a fatal error condition.
 #
 # For more information, refer to the documentation of cmd() and hint().
 #.
@@ -919,14 +919,14 @@ __cmd() {
 
     cmd_info "$@" || return "$?"
 
-    if hint 0 -out-req "$@" || hint 0 -out-save "$@"; then
+    if hint 0 -req-out "$@" || hint 0 -out-save "$@"; then
         set -- "$(cmd "$@" && printf "%s" x)" "$@" || return "$?"
         set -- "${1%?}" "$@"
     else
         cmd "$@" && return 0 || return "$?"
     fi
 
-    if hint 1 -out-req "$@"; then
+    if hint 1 -req-out "$@"; then
         [ "$1" ] || {
             __err -red - 'No output has been received.'
 

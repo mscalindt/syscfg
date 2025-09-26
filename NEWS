@@ -11,6 +11,9 @@ syscfg NEWS
   to imply the same logic.
   Breaking (backward-incompatible) change.
 
+* Hint `-out-req` has been renamed to `-req-out`.
+  Breaking (backward-incompatible) change.
+
 
 2025-09-25 - 2025-09-25
 =======================
