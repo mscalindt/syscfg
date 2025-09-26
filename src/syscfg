@@ -434,7 +434,6 @@ hint() {
 #! .desc.ext:
 # Recognized hints:
 # `--`: End of hints;
-# `-clear-log`, <file path>: Log to truncate;
 # `-crc`, <string>: CRC32 string;
 # `-del`: 'Delete' action/operation;
 # `-gid`, <string>: Group ID;
@@ -482,8 +481,8 @@ hint_set() {
 
             return 0
         ;;
-        '-clear-log' | '-crc' | '-gid' | '-group' | '-log' | '-log-fed' | \
-        '-out-save' | '-uid' | '-user')
+        '-crc' | '-gid' | '-group' | '-log' | '-log-fed' | '-out-save' | \
+        '-uid' | '-user')
             [ "$2" ] || {
                 err -red - '${0##*/}: Missing argument specification:' "$1"
 
@@ -1234,7 +1233,6 @@ __obj_write_ow_soft() {
 # (255) input error
 #! .desc.ext:
 # Supported hints:
-# `-clear-log`: Truncate a specified file path, supposedly after used;
 # `-gid`: Specify GID to assert/set;
 # `-group`: Specify group name to assert/set;
 # `-log`: Use a specified file path for write statistics;
@@ -1242,6 +1240,7 @@ __obj_write_ow_soft() {
 # `-mode`: File mode in octal to assert/set;
 # `-no-avoid`: Disable write avoidance;
 # `-no-sanit`: Preserve $OBJ and $OBJ_PATH;
+# '-trunc': Truncate `-log`/`-log-fed` specified paths;
 # `-uid`: Specify UID to assert/set;
 # `-user`: Specify user name to assert/set.
 #
@@ -1326,12 +1325,14 @@ __write() {
         ;;
     esac
 
-    if hint 4 -clear-log "$@"; then
-        { : > "$_hint"; } || {
-            err -white - 'Failed to clear the log file.'
+    if hint 4 -trunc "$@"; then
+        if hint 4 -log "$@" || hint 4 -log-fed "$@"; then
+            { : > "$_hint"; } || {
+                err -white - 'Failed to truncate the log file.'
 
-            return 1
-        }
+                return 1
+            }
+        fi
     fi
 
     if hint 4 -no-sanit "$@"; then

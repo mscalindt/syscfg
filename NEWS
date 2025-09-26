@@ -1,6 +1,13 @@
 syscfg NEWS
 
 
+2025-09-26 - 2025-09-26
+=======================
+* Hint `-clear-log` has been removed. The write API now supports `-trunc`
+  to mean the same thing.
+  Breaking (backward-incompatible) change.
+
+
 2025-09-25 - 2025-09-25
 =======================
 * Rework of __fed(); renamed to __ed().
