@@ -512,7 +512,7 @@ hint_set() {
 #! .ec:
 # (255) input error
 #! .desc.ext:
-# For more information, refer to the documentation of fs_equiv() and __write().
+# For more information, refer to the documentation of __write() and fs_equiv().
 #.
 validate_write() {
     [ "$2" ] || { err -red - 'Missing OBJ.'; exit 255; }
@@ -854,7 +854,7 @@ __action() {
 # <OBJ_PATH> - string;
 #              path to write the file at
 #! .desc.ext:
-# For more information, refer to the documentation of hint() and __write().
+# For more information, refer to the documentation of __write() and hint().
 #.
 __bin_write() {
     __write -o "$OBJ" "$OBJ_PATH" '' "$@"
@@ -871,7 +871,7 @@ __bin_write() {
 # <OBJ_PATH> - string;
 #              path to write the file at
 #! .desc.ext:
-# For more information, refer to the documentation of hint() and __write().
+# For more information, refer to the documentation of __write() and hint().
 #.
 __bin_write_ow_hard() {
     __write -o "$OBJ" "$OBJ_PATH" -f "$@"
@@ -888,7 +888,7 @@ __bin_write_ow_hard() {
 # <OBJ_PATH> - string;
 #              path to write the file at
 #! .desc.ext:
-# For more information, refer to the documentation of hint() and __write().
+# For more information, refer to the documentation of __write() and hint().
 #.
 __bin_write_ow_soft() {
     __write -o "$OBJ" "$OBJ_PATH" -o "$@"
@@ -1043,7 +1043,7 @@ __err() {
 # <OBJ_PATH> - string;
 #              path to write the file at
 #! .desc.ext:
-# For more information, refer to the documentation of hint() and __write().
+# For more information, refer to the documentation of __write() and hint().
 #.
 __file_write() {
     __write -w "$OBJ" "$OBJ_PATH" '' "$@"
@@ -1060,7 +1060,7 @@ __file_write() {
 # <OBJ_PATH> - string;
 #              path to write the file at
 #! .desc.ext:
-# For more information, refer to the documentation of hint() and __write().
+# For more information, refer to the documentation of __write() and hint().
 #.
 __file_write_ow_hard() {
     __write -w "$OBJ" "$OBJ_PATH" -f "$@"
@@ -1077,7 +1077,7 @@ __file_write_ow_hard() {
 # <OBJ_PATH> - string;
 #              path to write the file at
 #! .desc.ext:
-# For more information, refer to the documentation of hint() and __write().
+# For more information, refer to the documentation of __write() and hint().
 #.
 __file_write_ow_soft() {
     __write -w "$OBJ" "$OBJ_PATH" -o "$@"
@@ -1110,7 +1110,7 @@ __info() {
 # <OBJ_PATH> - string;
 #              path to link the object at
 #! .desc.ext:
-# For more information, refer to the documentation of hint() and __write().
+# For more information, refer to the documentation of __write() and hint().
 #.
 __obj_link() {
     __obj_link_ow_hard "$@"
@@ -1127,7 +1127,7 @@ __obj_link() {
 # <OBJ_PATH> - string;
 #              path to link the object at
 #! .desc.ext:
-# For more information, refer to the documentation of hint() and __write().
+# For more information, refer to the documentation of __write() and hint().
 #.
 __obj_link_ow_hard() {
     __write -l "$OBJ" "$OBJ_PATH" -f "$@"
@@ -1144,7 +1144,7 @@ __obj_link_ow_hard() {
 # <OBJ_PATH> - string;
 #              path to link the object at
 #! .desc.ext:
-# For more information, refer to the documentation of hint() and __write().
+# For more information, refer to the documentation of __write() and hint().
 #.
 __obj_link_ow_soft() {
     __obj_link_ow_hard "$@"
@@ -1161,7 +1161,7 @@ __obj_link_ow_soft() {
 # <OBJ_PATH> - string;
 #              path to copy the object at
 #! .desc.ext:
-# For more information, refer to the documentation of hint() and __write().
+# For more information, refer to the documentation of __write() and hint().
 #.
 __obj_write() {
     __obj_write_ow_hard "$@"
@@ -1178,7 +1178,7 @@ __obj_write() {
 # <OBJ_PATH> - string;
 #              path to copy the object at
 #! .desc.ext:
-# For more information, refer to the documentation of hint() and __write().
+# For more information, refer to the documentation of __write() and hint().
 #.
 __obj_write_ow_hard() {
     __write -c "$OBJ" "$OBJ_PATH" -f "$@"
@@ -1195,7 +1195,7 @@ __obj_write_ow_hard() {
 # <OBJ_PATH> - string;
 #              path to copy the object at
 #! .desc.ext:
-# For more information, refer to the documentation of hint() and __write().
+# For more information, refer to the documentation of __write() and hint().
 #.
 __obj_write_ow_soft() {
     __obj_write_ow_hard "$@"
