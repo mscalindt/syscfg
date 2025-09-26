@@ -1,6 +1,12 @@
 syscfg NEWS
 
 
+2025-09-27 - 2025-09-27
+=======================
+* Introduced hint_act(): A simple, pluggable hint outcome override mechanism.
+  By default, it is implementation-defined (up to syscfg to utilize it).
+
+
 2025-09-26 - 2025-09-26
 =======================
 * Hint `-clear-log` has been removed. The write API now supports `-trunc`
