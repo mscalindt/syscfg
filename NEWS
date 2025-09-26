@@ -14,6 +14,9 @@ syscfg NEWS
 * Hint `-out-req` has been renamed to `-req-out`.
   Breaking (backward-incompatible) change.
 
+* __write() (the write API of syscfg) now supports hint `-sanit`.
+  For more information, refer to the commit data.
+
 
 2025-09-25 - 2025-09-25
 =======================
