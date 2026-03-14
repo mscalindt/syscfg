@@ -329,7 +329,7 @@ fs_equiv_perm() {
         ;;
     esac
 
-    return 0
+    return 1
 }
 
 #! .desc:
