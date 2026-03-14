@@ -539,6 +539,198 @@ hint_set() {
 }
 
 #! .desc:
+# Synchronize equivalence (complete inode state) of a write
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) success
+# (*) error
+#! .desc.ext:
+# We do not yet have write equivalence synchronization support for types `-c`
+# and `-l`.
+#
+# For more information, refer to the documentation of __write().
+#.
+inode_align() {
+    case "$1" in
+        '-c' | '-l') return 1 ;;
+    esac
+
+    { ! hint 4 -no-sync "$@"; } || return 1
+
+    inode_align_type "$@" && \
+    inode_align_type_attr "$@" && \
+    inode_align_owner "$@" && \
+    inode_align_group "$@" && \
+    inode_align_perm "$@"
+}
+
+#! .desc:
+# Synchronize the group of a write
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) success
+# (*) error
+#! .desc.ext:
+# For more information, refer to the documentation of __write().
+#.
+inode_align_group() {
+    case "$1" in
+        '-o' | '-w')
+            # Get the fourth field (group) of `ls -ld` of $3 into $_a. It is
+            # ambiguous whether this value is the GID or the group name.
+            _a="$(ls -ld -- "$3")"
+            _a="${_a%%'
+'*}"
+            _a="${_a#*' '}"
+            _a="${_a#*' '}"
+            _a="${_a#*' '}"
+            _a="${_a%%' '*}"
+
+            set -- "$_a" "$@"
+
+            if hint 5 -group "$@" || hint 5 -gid "$@"; then
+                if hint 5 -group "$@"; then
+                    if [ "$1" != "$_hint" ] || [ "$1" != "$(id -ng)" ]; then
+                        chgrp -h "$_hint" -- "$4" && return 0 || return "$?"
+                    fi
+                fi
+
+                if hint 5 -gid "$@"; then
+                    if [ "$1" != "$_hint" ] || [ "$1" != "$(id -g)" ]; then
+                        chgrp -h "$_hint" -- "$4" || return "$?"
+                    fi
+                fi
+            else
+                if [ "$1" != "$(id -ng)" ] && [ "$1" != "$(id -g)" ]; then
+                    chgrp -h "$(id -g)" -- "$4" || return "$?"
+                fi
+            fi
+        ;;
+    esac
+
+    return 0
+}
+
+#! .desc:
+# Synchronize the user of a write
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) success
+# (*) error
+#! .desc.ext:
+# For more information, refer to the documentation of __write().
+#.
+inode_align_owner() {
+    case "$1" in
+        '-o' | '-w')
+            # Get the third field (owner) of `ls -ld` of $3 into $_a. It is
+            # ambiguous whether this value is the UID or the user name.
+            _a="$(ls -ld -- "$3")"
+            _a="${_a%%'
+'*}"
+            _a="${_a#*' '}"
+            _a="${_a#*' '}"
+            _a="${_a%%' '*}"
+
+            set -- "$_a" "$@"
+
+            if hint 5 -user "$@" || hint 5 -uid "$@"; then
+                if hint 5 -user "$@"; then
+                    if [ "$1" != "$_hint" ] || [ "$1" != "$(id -nu)" ]; then
+                        chown -h "$_hint" -- "$4" && return 0 || return "$?"
+                    fi
+                fi
+
+                if hint 5 -uid "$@"; then
+                    if [ "$1" != "$_hint" ] || [ "$1" != "$(id -u)" ]; then
+                        chown -h "$_hint" -- "$4" || return "$?"
+                    fi
+                fi
+            else
+                if [ "$1" != "$(id -nu)" ] && [ "$1" != "$(id -u)" ]; then
+                    chown -h "$(id -u)" -- "$4" || return "$?"
+                fi
+            fi
+        ;;
+    esac
+
+    return 0
+}
+
+#! .desc:
+# Synchronize the file mode of a write
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) success
+# (*) error
+#! .desc.ext:
+# For more information, refer to the documentation of __write().
+#.
+inode_align_perm() {
+    case "$1" in
+        '-o' | '-w')
+            # Get the first field (file mode; "%c%s%s%s%c") of `ls -ld` of $3
+            # into $_a.
+            _a="$(ls -ld -- "$3")"
+            _a="${_a%%' '*}"
+
+            # Strip the last "%c" if present.
+            [ "${#_a}" -eq 10 ] || _a="${_a%?}"
+
+            set -- "$_a" "$@"
+
+            if hint 5 -mode "$@"; then
+                fmode_octal "$_hint" || return "$?"
+
+                # `-` = "regular file"
+                if [ ! "$1" = "-$_mode" ]; then
+                    hint 5 -mode "$@"
+                    chmod "$_hint" -- "$4" || return "$?"
+                fi
+            else
+                # `-`, `rw-r--r--` = "regular file", 0644"
+                if [ ! "$1" = '-rw-r--r--' ]; then
+                    chmod 0644 -- "$4" || return "$?"
+                fi
+            fi
+        ;;
+    esac
+
+    return 0
+}
+
+#! .desc:
+# Synchronize object type of a write
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) success
+# (*) error
+#! .desc.ext:
+# For more information, refer to the documentation of __write().
+#.
+inode_align_type() {
+    fs_equiv_type "$@"
+}
+
+#! .desc:
+# Synchronize the attributes of the object type of a write
+#! .params:
+# <$@> - __write()
+#! .rc:
+# (0) success
+#! .desc.ext:
+# For more information, refer to the documentation of __write().
+#.
+inode_align_type_attr() {
+    fs_equiv_type_attr "$@"
+}
+
+#! .desc:
 # Validate a write is necessary
 #! .params:
 # <$@> - __write()
@@ -611,27 +803,22 @@ BEGIN {
 # For more information, refer to the documentation of __write().
 #.
 write() {
-    # If write() is executed but the target exists, we here only care whether
-    # a soft (in-place) overwrite is specified and provide the subsequent
-    # in-place overwrite mechanism + atomicity.
+    # When the target object exists, try to align or else remove it. Alignment
+    # is important for expected overwrite behavior when the inode state itself
+    # forced a write, otherwise a write would keep occurring in a circular
+    # chain of forced writes irrespective of the object content.
+    #
+    # Types `-c` and `-l` are currently not supported and always removed.
     { ! ftype "$3"; } || {
         chattr_remove "$3" || return "$?"
         unmount "$3" || return "$?"
 
-        case "$4" in
-            '-o')
-                case "$1" in
-                    '-c' | '-l') rm -rf -- "$3" || return "$?" ;;
-                esac
-            ;;
-            *)
-                rm -rf -- "$3" || return "$?"
-            ;;
-        esac
+        inode_align "$@" || rm -rf -- "$3" || return "$?"
     }
 
     mkdir_parents "$3" || return "$?"
 
+    # Atomic overwrites are currently not supported.
     case "$1" in
         '-c')
             cp -R -- "$2" "$3" || return "$?"
@@ -1287,6 +1474,7 @@ __obj_write_ow_soft() {
 # `-mode`: Specify file mode in octal to assert/set;
 # `-no-avoid`: Disable write avoidance;
 # `-no-sanit`: Preserve $OBJ and $OBJ_PATH;
+# `-no-sync`: Disable write equivalence synchronization;
 # `-sanit`: Delete hint paths, unset $OBJ and $OBJ_PATH;
 # '-trunc': Truncate the path specified by `-log`;
 # `-uid`: Specify UID to assert/set;
@@ -1620,6 +1808,18 @@ main() {
     disable_write_avoid_type_attr=
     # Disable write avoidance assert on user ownership:
     disable_write_avoid_user=
+    # Disable write equivalence synchronization:
+    disable_write_sync=
+    # Disable write equivalence synchronization for group ownership:
+    disable_write_sync_group=
+    # Disable write equivalence synchronization for object mode:
+    disable_write_sync_perm=
+    # Disable write equivalence synchronization for object type:
+    disable_write_sync_type=
+    # Disable write equivalence synchronization for object type attributes:
+    disable_write_sync_type_attr=
+    # Disable write equivalence synchronization for user ownership:
+    disable_write_sync_user=
     # Disable command output:
     silent_cmd=
     # Disable command information output:
@@ -1642,6 +1842,12 @@ main() {
         '^DWAT') disable_write_avoid_type=1; shift && continue ;;
         '^DWATA') disable_write_avoid_type_attr=1; shift && continue ;;
         '^DWAU') disable_write_avoid_user=1; shift && continue ;;
+        '^DWS') disable_write_sync=1; shift && continue ;;
+        '^DWSG') disable_write_sync_group=1; shift && continue ;;
+        '^DWSP') disable_write_sync_perm=1; shift && continue ;;
+        '^DWST') disable_write_sync_type=1; shift && continue ;;
+        '^DWSTA') disable_write_sync_type_attr=1; shift && continue ;;
+        '^DWSU') disable_write_sync_user=1; shift && continue ;;
         '^SC') silent_cmd=1; shift && continue ;;
         '^SCI') silent_cmd_info=1; shift && continue ;;
         '^SW') silent_write=1; shift && continue ;;
@@ -1674,6 +1880,30 @@ main() {
 
     [ ! "$disable_write_avoid_user" ] || {
         fs_equiv_owner() { return 0; }
+    }
+
+    [ ! "$disable_write_sync" ] || {
+        inode_align() { return 0; }
+    }
+
+    [ ! "$disable_write_sync_group" ] || {
+        inode_align_group() { return 0; }
+    }
+
+    [ ! "$disable_write_sync_perm" ] || {
+        inode_align_perm() { return 0; }
+    }
+
+    [ ! "$disable_write_sync_type" ] || {
+        inode_align_type() { return 0; }
+    }
+
+    [ ! "$disable_write_sync_type_attr" ] || {
+        inode_align_type_attr() { return 0; }
+    }
+
+    [ ! "$disable_write_sync_user" ] || {
+        inode_align_owner() { return 0; }
     }
 
     [ ! "$write_always" ] || {
