@@ -1,6 +1,17 @@
 syscfg NEWS
 
 
+2026-03-13 - 2026-03-14
+=======================
+* Fixed a fatal missing log error scenario. (d16537e)
+
+* Fixed file mode equivalence assert not working. (9da5d0a)
+
+* Implemented inode synchronization for writes to avoid certain scenarios where
+  a write is necessary (due to the state of the object on the filesystem) but
+  nothing is being performed. (959b348)
+
+
 2025-09-27 - 2025-09-27
 =======================
 * Introduced hint_act(): A simple, pluggable hint outcome override mechanism.
