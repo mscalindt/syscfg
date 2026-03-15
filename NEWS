@@ -13,6 +13,8 @@ syscfg NEWS
 
 * Logging (using the command API) for inode synchronization operations.
 
+* Synced shell-glossary to release 20251116. (a08e5a3)
+
 
 2025-09-27 - 2025-09-27
 =======================
