@@ -24,7 +24,7 @@ SRC_LOG=$(
                 *': [doc]'*)
                     continue
                 ;;
-                *'syscfg: '* | *'(): '*)
+                *'syscfg: '* | *'(): '* | *'.gitmodules: '*)
                     printf "%s\n" "$LINE"
                 ;;
                 *)
