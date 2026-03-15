@@ -42,13 +42,13 @@ if [ "$SRC_LOG" ] && [ ! "$SRC_LOG" = "$LOG" ]; then
 - Filtered log of core changes:
 $SRC_LOG
 
-- Complete log between $2 and $3:
+- Complete log between $2 and $1 (${3%"${3#???????}"}):
 $LOG" -as "$1" "$3"
 elif [ "$LOG" ]; then
     git tag -m \
 "syscfg $1
 
-- Complete log between $2 and $3:
+- Complete log between $2 and $1 (${3%"${3#???????}"}):
 $LOG" -as "$1" "$3"
 else
     git tag -m "syscfg $1" -as "$1" "$3"
