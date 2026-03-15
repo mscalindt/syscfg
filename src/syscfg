@@ -593,18 +593,19 @@ inode_align_group() {
             if hint 5 -group "$@" || hint 5 -gid "$@"; then
                 if hint 5 -group "$@"; then
                     if [ "$1" != "$_hint" ] || [ "$1" != "$(id -ng)" ]; then
+                        __cmd -- \
                         chgrp -h "$_hint" -- "$4" && return 0 || return "$?"
                     fi
                 fi
 
                 if hint 5 -gid "$@"; then
                     if [ "$1" != "$_hint" ] || [ "$1" != "$(id -g)" ]; then
-                        chgrp -h "$_hint" -- "$4" || return "$?"
+                        __cmd -- chgrp -h "$_hint" -- "$4" || return "$?"
                     fi
                 fi
             else
                 if [ "$1" != "$(id -ng)" ] && [ "$1" != "$(id -g)" ]; then
-                    chgrp -h "$(id -g)" -- "$4" || return "$?"
+                    __cmd -- chgrp -h "$(id -g)" -- "$4" || return "$?"
                 fi
             fi
         ;;
@@ -640,18 +641,19 @@ inode_align_owner() {
             if hint 5 -user "$@" || hint 5 -uid "$@"; then
                 if hint 5 -user "$@"; then
                     if [ "$1" != "$_hint" ] || [ "$1" != "$(id -nu)" ]; then
+                        __cmd -- \
                         chown -h "$_hint" -- "$4" && return 0 || return "$?"
                     fi
                 fi
 
                 if hint 5 -uid "$@"; then
                     if [ "$1" != "$_hint" ] || [ "$1" != "$(id -u)" ]; then
-                        chown -h "$_hint" -- "$4" || return "$?"
+                        __cmd -- chown -h "$_hint" -- "$4" || return "$?"
                     fi
                 fi
             else
                 if [ "$1" != "$(id -nu)" ] && [ "$1" != "$(id -u)" ]; then
-                    chown -h "$(id -u)" -- "$4" || return "$?"
+                    __cmd -- chown -h "$(id -u)" -- "$4" || return "$?"
                 fi
             fi
         ;;
@@ -689,12 +691,12 @@ inode_align_perm() {
                 # `-` = "regular file"
                 if [ ! "$1" = "-$_mode" ]; then
                     hint 5 -mode "$@"
-                    chmod "$_hint" -- "$4" || return "$?"
+                    __cmd -- chmod "$_hint" -- "$4" || return "$?"
                 fi
             else
                 # `-`, `rw-r--r--` = "regular file", 0644"
                 if [ ! "$1" = '-rw-r--r--' ]; then
-                    chmod 0644 -- "$4" || return "$?"
+                    __cmd -- chmod 0644 -- "$4" || return "$?"
                 fi
             fi
         ;;

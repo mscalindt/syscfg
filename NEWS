@@ -1,7 +1,7 @@
 syscfg NEWS
 
 
-2026-03-13 - 2026-03-14
+2026-03-13 - 2026-03-15
 =======================
 * Fixed a fatal missing log error scenario. (d16537e)
 
@@ -10,6 +10,8 @@ syscfg NEWS
 * Implemented inode synchronization for writes to avoid certain scenarios where
   a write is necessary (due to the state of the object on the filesystem) but
   nothing is being performed. (959b348)
+
+* Logging (using the command API) for inode synchronization operations.
 
 
 2025-09-27 - 2025-09-27
