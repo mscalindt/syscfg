@@ -1,3 +1,5 @@
+.PHONY: rel sbm_up
+
 rel:
 	@test -n "$(REL)" || { echo 'REL is empty'; exit 2; }
 	@test -n "$(PRE)" || { echo 'PRE is empty'; exit 2; }
