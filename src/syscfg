@@ -1943,10 +1943,7 @@ main() {
     }
 
     assert -min "$#" 1 || {
-        err -red - 'No client has been specified.'
-        err - -
-
-        exit 2
+        err -red - 'No client has been specified.'; exit 2
     }
 
     # end arg parsing; main()
