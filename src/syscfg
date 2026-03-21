@@ -1606,10 +1606,11 @@ __write() {
 #! .rc:
 # (0) success
 # (*) error
-# (255) bad input
+#! .ec:
+# (255) input error
 #.
 bytes_size() {
-    assert -eq "$#" 1 || return 255
+    assert -eq "$#" 1 || exit 255
 
     awk -v 'bytes'="$1" '
 	function hsize(x, base) {
@@ -1639,13 +1640,14 @@ bytes_size() {
 #! .desc:
 # Remove the filesystem flag protection of a physical file
 #! .params:
-# <"$1"> - absolute path
+# <$1> - path
 #! .rc:
 # (0) success
-# (255) bad input
+#! .ec:
+# (255) input error
 #.
 chattr_remove() {
-    assert -eq "$#" 1 || return 255
+    assert -eq "$#" 1 || exit 255
 
     command -v chattr > /dev/null 2>&1 && \
     [ -f "$1" ] && \
@@ -1656,14 +1658,15 @@ chattr_remove() {
 #! .desc:
 # Create the parents of a file/directory
 #! .params:
-# <"$1"> - absolute path
+# <$1> - path
 #! .rc:
 # (0) success
 # (*) error
-# (255) bad input
+#! .ec:
+# (255) input error
 #.
 mkdir_parents() {
-    assert -eq "$#" 1 || return 255
+    assert -eq "$#" 1 || exit 255
 
     set -- "${1%"${1##*[!/]}"}"
 
@@ -1681,50 +1684,36 @@ mkdir_parents() {
 #! .desc:
 # Print POSIX shell-compatible octal escape sequence(s) of `od -b -An` string
 #! .params:
-# <["$1"]> - string
-#! .uses.fn:
-# <assert> ('-eq' '$#' '1');
-#          Assert a string
+# <[$1]> - string
 #! .rc:
 # (0) success
-# (*) error
-#! .rc.fn:
-# (assert) (255) bad input
+#! .ec:
+# (255) input error
 #.
 to_octal() {
-    assert -eq "$#" 1 || return 255
+    assert -eq "$#" 1 || exit 255
 
     for _octal in $1; do
         printf "%s" "\\0$_octal"
     done
+
+    return 0
 }
 
 #! .desc:
 # Print POSIX shell-compatible octal escape sequence(s) of `od -b` string
 #! .params:
-# <["$1"]> - string
-#! .uses:
-# <()>
-#! .uses.fn:
-# <assert> ('-eq' '$#' '1');
-#          Assert a string
-# <sline_map> ('$1' 'to_octal_offset_');
-#             Process each populated string line with a function
-# <to_octal> ("string");
-#            Print POSIX shell-compatible octal escape sequence(s) of
-#            `od -b -An` string
-#! .sets:
-# <to_octal_offset_> ();
-#! .rc.fn:
-# (assert) (255) bad input
-# (sline_map) (*) error
-# (to_octal) (0) success
-# (to_octal) (*) error
+# <[$1]> - string
+#! .rc:
+# (0) success
+# (*) error
+#! .ec:
+# (255) input error
 #.
 to_octal_offset() {
     to_octal_offset_() { printf "%s" "${1#"${1%%[!0123456789]*}"}"; }
 
-    assert -eq "$#" 1 || return 255
+    assert -eq "$#" 1 || exit 255
 
     to_octal "$(sline_map "$1" to_octal_offset_)"
 }
@@ -1732,13 +1721,14 @@ to_octal_offset() {
 #! .desc:
 # Execute 'umount' on a directory
 #! .params:
-# <"$1"> - directory
+# <$1> - directory
 #! .rc:
 # (0) success
-# (255) bad input
+#! .ec:
+# (255) input error
 #.
 unmount() {
-    assert -eq "$#" 1 || return 255
+    assert -eq "$#" 1 || exit 255
 
     command -v umount > /dev/null 2>&1 && \
     [ -e "$1" ] && \
