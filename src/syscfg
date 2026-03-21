@@ -1642,17 +1642,15 @@ bytes_size() {
 # <"$1"> - absolute path
 #! .rc:
 # (0) success
-# (*) error
 # (255) bad input
 #.
 chattr_remove() {
     assert -eq "$#" 1 || return 255
 
-    command -v chattr > /dev/null 2>&1 || return 0
-
-    { [ -f "$1" ] && [ ! -h "$1" ]; } || return 0
-
-    chattr -ia -- "$1" > /dev/null 2>&1 || :
+    command -v chattr > /dev/null 2>&1 && \
+    [ -f "$1" ] && \
+    [ ! -h "$1" ] && \
+    chattr -ia -- "$1" > /dev/null 2>&1 || return 0
 }
 
 #! .desc:
