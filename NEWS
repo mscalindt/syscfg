@@ -1,6 +1,11 @@
 syscfg NEWS
 
 
+2026-03-21 - 2026-03-21
+=======================
+* syscfg will trap EXIT instead of continuing to emulate it. (670ec0b)
+
+
 2026-03-13 - 2026-03-15
 =======================
 * Fixed a fatal missing log error scenario. (d16537e)
