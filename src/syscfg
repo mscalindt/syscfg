@@ -7,16 +7,6 @@
 # octal escape sequence(s) of octal byte streams produced by `od -b -An` or
 # `od -b`, respectively.
 
-# Maintainer note for any functions in assertive_functions():
-#
-# Assertive functions shall not `exit 255` on empty input, and instead, simply
-# return true/false appropriately. `exit 255` is only done when the input is
-# unspecified. If a function cannot adhere to the aforementioned, it does not
-# belong in assertive_functions().
-assertive_functions() { # START assertive_functions
-    :
-} # END assertive_functions
-
 helper_functions() { # START helper_functions
 #! .desc:
 # Print bytes in human-readable fmt: "N" "X"iB / "N" "X"B
@@ -1972,7 +1962,6 @@ main() {
     return 0
 }
 
-assertive_functions;
 helper_functions;
 client_lib;
 main "$@"
