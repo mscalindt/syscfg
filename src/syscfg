@@ -19,6 +19,62 @@ assertive_functions() { # START assertive_functions
 
 helper_functions() { # START helper_functions
 #! .desc:
+# Print bytes in human-readable fmt: "N" "X"iB / "N" "X"B
+#! .params:
+# <$1> - bytes
+#! .rc:
+# (0) success
+# (*) error
+#! .ec:
+# (255) input error
+#.
+bytes_size() {
+    assert -eq "$#" 1 || exit 255
+
+    awk -v 'bytes'="$1" '
+	function hsize(x, base) {
+		basesuf = (base == "1024") ? "iB" : "B"
+
+		s = "BKMGTEPYZ"
+		while (x >= base && length(s) > 1)
+			{x /= base; s = substr(s, 2)}
+		s = substr(s, 1, 1)
+
+		xf = (s == "B") ? "%d" : "%.2f"
+
+		if (s != "B")
+			s = s basesuf
+
+		printf((xf " %s"), x, s)
+	}
+
+	BEGIN {
+		printf hsize(bytes, 1024)
+		printf " / "
+		print hsize(bytes, 1000)
+	}
+    '
+}
+
+#! .desc:
+# Remove the filesystem flag protection of a physical file
+#! .params:
+# <$1> - path
+#! .rc:
+# (0) success
+#! .ec:
+# (255) input error
+#.
+chattr_remove() {
+    assert -eq "$#" 1 || exit 255
+
+    command -v chattr > /dev/null 2>&1 && \
+    [ -f "$1" ] && \
+    [ ! -h "$1" ] && \
+    chattr -ia -- "$1" > /dev/null 2>&1 || return 0
+}
+
+#! .desc:
 # Execute a command (wrapper)
 #! .params:
 # <$@> - __cmd()
@@ -732,6 +788,87 @@ inode_align_type() {
 #.
 inode_align_type_attr() {
     fs_equiv_type_attr "$@"
+}
+
+#! .desc:
+# Create the parents of a file/directory
+#! .params:
+# <$1> - path
+#! .rc:
+# (0) success
+# (*) error
+#! .ec:
+# (255) input error
+#.
+mkdir_parents() {
+    assert -eq "$#" 1 || exit 255
+
+    set -- "${1%"${1##*[!/]}"}"
+
+    if [ -d "${1%/*}/" ]; then
+        return 0
+    fi
+
+    # Shall consider implementing 'mkdir -p' within the shell by path
+    # traversing the function argument and passing separate consequental
+    # arguments to mkdir. Important to note that in such situation, error
+    # handling would be on us, including the handling of race conditions.
+    mkdir -p -- "${1%/*}"
+}
+
+#! .desc:
+# Print POSIX shell-compatible octal escape sequence(s) of `od -b -An` string
+#! .params:
+# <[$1]> - string
+#! .rc:
+# (0) success
+#! .ec:
+# (255) input error
+#.
+to_octal() {
+    assert -eq "$#" 1 || exit 255
+
+    for _octal in $1; do
+        printf "%s" "\\0$_octal"
+    done
+
+    return 0
+}
+
+#! .desc:
+# Print POSIX shell-compatible octal escape sequence(s) of `od -b` string
+#! .params:
+# <[$1]> - string
+#! .rc:
+# (0) success
+# (*) error
+#! .ec:
+# (255) input error
+#.
+to_octal_offset() {
+    to_octal_offset_() { printf "%s" "${1#"${1%%[!0123456789]*}"}"; }
+
+    assert -eq "$#" 1 || exit 255
+
+    to_octal "$(sline_map "$1" to_octal_offset_)"
+}
+
+#! .desc:
+# Execute 'umount' on a directory
+#! .params:
+# <$1> - directory
+#! .rc:
+# (0) success
+#! .ec:
+# (255) input error
+#.
+unmount() {
+    assert -eq "$#" 1 || exit 255
+
+    command -v umount > /dev/null 2>&1 && \
+    [ -e "$1" ] && \
+    [ -d "$1" ] && \
+    umount -Rf -- "$1" > /dev/null 2>&1 || return 0
 }
 
 #! .desc:
@@ -1596,147 +1733,6 @@ __write() {
     return 0
 }
 } # END client_lib
-
-# START utility_functions
-
-#! .desc:
-# Print bytes in human-readable fmt: "N" "X"iB / "N" "X"B
-#! .params:
-# <$1> - bytes
-#! .rc:
-# (0) success
-# (*) error
-#! .ec:
-# (255) input error
-#.
-bytes_size() {
-    assert -eq "$#" 1 || exit 255
-
-    awk -v 'bytes'="$1" '
-	function hsize(x, base) {
-		basesuf = (base == "1024") ? "iB" : "B"
-
-		s = "BKMGTEPYZ"
-		while (x >= base && length(s) > 1)
-			{x /= base; s = substr(s, 2)}
-		s = substr(s, 1, 1)
-
-		xf = (s == "B") ? "%d" : "%.2f"
-
-		if (s != "B")
-			s = s basesuf
-
-		printf((xf " %s"), x, s)
-	}
-
-	BEGIN {
-		printf hsize(bytes, 1024)
-		printf " / "
-		print hsize(bytes, 1000)
-	}
-    '
-}
-
-#! .desc:
-# Remove the filesystem flag protection of a physical file
-#! .params:
-# <$1> - path
-#! .rc:
-# (0) success
-#! .ec:
-# (255) input error
-#.
-chattr_remove() {
-    assert -eq "$#" 1 || exit 255
-
-    command -v chattr > /dev/null 2>&1 && \
-    [ -f "$1" ] && \
-    [ ! -h "$1" ] && \
-    chattr -ia -- "$1" > /dev/null 2>&1 || return 0
-}
-
-#! .desc:
-# Create the parents of a file/directory
-#! .params:
-# <$1> - path
-#! .rc:
-# (0) success
-# (*) error
-#! .ec:
-# (255) input error
-#.
-mkdir_parents() {
-    assert -eq "$#" 1 || exit 255
-
-    set -- "${1%"${1##*[!/]}"}"
-
-    if [ -d "${1%/*}/" ]; then
-        return 0
-    fi
-
-    # Shall consider implementing 'mkdir -p' within the shell by path
-    # traversing the function argument and passing separate consequental
-    # arguments to mkdir. Important to note that in such situation, error
-    # handling would be on us, including the handling of race conditions.
-    mkdir -p -- "${1%/*}"
-}
-
-#! .desc:
-# Print POSIX shell-compatible octal escape sequence(s) of `od -b -An` string
-#! .params:
-# <[$1]> - string
-#! .rc:
-# (0) success
-#! .ec:
-# (255) input error
-#.
-to_octal() {
-    assert -eq "$#" 1 || exit 255
-
-    for _octal in $1; do
-        printf "%s" "\\0$_octal"
-    done
-
-    return 0
-}
-
-#! .desc:
-# Print POSIX shell-compatible octal escape sequence(s) of `od -b` string
-#! .params:
-# <[$1]> - string
-#! .rc:
-# (0) success
-# (*) error
-#! .ec:
-# (255) input error
-#.
-to_octal_offset() {
-    to_octal_offset_() { printf "%s" "${1#"${1%%[!0123456789]*}"}"; }
-
-    assert -eq "$#" 1 || exit 255
-
-    to_octal "$(sline_map "$1" to_octal_offset_)"
-}
-
-#! .desc:
-# Execute 'umount' on a directory
-#! .params:
-# <$1> - directory
-#! .rc:
-# (0) success
-#! .ec:
-# (255) input error
-#.
-unmount() {
-    assert -eq "$#" 1 || exit 255
-
-    command -v umount > /dev/null 2>&1 && \
-    [ -e "$1" ] && \
-    [ -d "$1" ] && \
-    umount -Rf -- "$1" > /dev/null 2>&1 || return 0
-}
-
-# END utility_functions
 
 err_handler() {
     IFS=' 	''
