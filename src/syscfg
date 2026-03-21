@@ -103,6 +103,8 @@ cmd_info() {
 #! .rc:
 # (0) success
 # (*) error
+#! .ec:
+# (255) input error
 #! .desc.ext:
 # $1 is a whole number that specifies the number of arguments to offset, to
 # skip any __ed() arguments accordingly.
@@ -1146,6 +1148,7 @@ __bin_write_ow_soft() {
 # (*) error
 #! .ec:
 # (1) hint assertion failed
+# (255) input error
 #! .desc.ext:
 # Supported hints:
 # `-out-save`: Specify variable name to save &1 to;
@@ -1197,6 +1200,7 @@ __cmd() {
 # (*) error
 #! .ec:
 # (1) hint assertion failed
+# (255) input error
 #! .desc.ext:
 # Supported hints:
 # `-crc`: Specify CRC32 string to assert the format against;
