@@ -357,8 +357,7 @@ fs_equiv_owner() {
 # <$@> - __write()
 #! .rc:
 # (0) true
-# (1) false / error
-# (*) error
+# (1) false
 #! .desc.ext:
 # For more information, refer to the documentation of __write().
 #.
@@ -376,7 +375,7 @@ fs_equiv_perm() {
             set -- "$_a" "$@"
 
             if hint 5 -mode "$@"; then
-                fmode_octal "$_hint" || return "$?"
+                fmode_octal "$_hint"
 
                 # `-` = "regular file"
                 [ ! "$1" = "-$_mode" ] || return 0
@@ -744,7 +743,7 @@ inode_align_perm() {
             set -- "$_a" "$@"
 
             if hint 5 -mode "$@"; then
-                fmode_octal "$_hint" || return "$?"
+                fmode_octal "$_hint"
 
                 # `-` = "regular file"
                 if [ ! "$1" = "-$_mode" ]; then
@@ -951,13 +950,13 @@ write() {
     #
     # Types `-c` and `-l` are currently not supported and always removed.
     { ! ftype "$3"; } || {
-        chattr_remove "$3" || return "$?"
-        unmount "$3" || return "$?"
+        chattr_remove "$3"
+        unmount "$3"
 
         inode_align "$@" || rm -rf -- "$3" || return "$?"
     }
 
-    mkdir_parents "$3" || return "$?"
+    mkdir_parents "$3"
 
     # Atomic overwrites are currently not supported.
     case "$1" in
@@ -992,6 +991,8 @@ write() {
     if hint 4 -mode "$@"; then
         chmod "$_hint" -- "$3" || return "$?"
     fi
+
+    return 0
 }
 
 #! .desc:
@@ -1000,7 +1001,6 @@ write() {
 # <$@> - __write()
 #! .rc:
 # (0) success
-# (*) error
 #! .ec:
 # (2) ENOENT
 #! .desc.ext:
@@ -1055,6 +1055,8 @@ write_info() {
             info - - " $3"
         ;;
     esac
+
+    return 0
 }
 
 #! .desc:
@@ -1063,7 +1065,6 @@ write_info() {
 # <$@> - __write()
 #! .rc:
 # (0) success
-# (*) error
 #! .ec:
 # (2) ENOENT
 #! .desc.ext:
@@ -1092,6 +1093,8 @@ write_info_avoidance() {
 
         exit 2
     }
+
+    return 0
 }
 
 #! .desc:
@@ -1209,8 +1212,8 @@ __action() {
     fi
 
     if hint 2 -del "$@"; then
-        chattr_remove "$2" || return "$?"
-        unmount "$2" || return "$?"
+        chattr_remove "$2"
+        unmount "$2"
         rm -rf -- "$2" || return "$?"
     fi
 
@@ -1296,7 +1299,7 @@ __bin_write_ow_soft() {
 __cmd() {
     assert -min "$#" 2 || exit 255
 
-    cmd_info "$@" || return "$?"
+    cmd_info "$@"
 
     if hint 0 -req-out "$@" || hint 0 -out-save "$@"; then
         set -- "$(cmd "$@" && printf "%s" x)" "$@" || return "$?"
@@ -1356,19 +1359,19 @@ __ed() {
     assert -min "$#" 4 || exit 255
 
     [ "$1" ] || {
-        file_preload -cat "$2" || return "$?"
+        file_preload -cat "$2"
 
         shift && set -- "$_file" "$@"
     }
 
     # `1` = N offset = Skip $OBJ_PATH.
-    ed_fmt 1 "$@" || return "$?"
+    ed_fmt 1 "$@"
 
     if [ "$_fmt" ]; then
         set -- "$_fmt" "$@"
 
         if hint 3 -crc "$@"; then
-            _crc="$(printf "%s" "$1" | cksum)" || return "$?"
+            _crc="$(printf "%s" "$1" | cksum)"
             _crc="${_crc%%' '*}"
 
             [ "$_crc" = "$_hint" ] || {
@@ -1734,26 +1737,41 @@ __write() {
 }
 } # END client_lib
 
+#! .desc:
+# Perform error handling on trap/signal
+#! .params:
+# [$1] - signal
+# [$2] - exit status
+#! .desc.ext:
+# Recognized portable signals: 2/INT; 15/TERM.
+#.
 err_handler() {
     IFS=' 	''
 '
 
-    trap - INT TERM
+    trap - 0 2 15
 
-    if [ "$1" = 0 ]; then
-        exit 0
-    elif [ "$2" = INT ]; then
-        err -red - "${0##*/}: Received INT signal. ($1)"; kill -2 "$$"
-    else
-        err -red - "${0##*/}: Received $2 signal. ($1)"; exit "$1"
-    fi
+    case "$1" in
+        INT|2)
+            err - - "${0##*/}: Received INT/2 signal."
+            kill -2 "$$"
+        ;;
+        TERM|15)
+            err - - "${0##*/}: Received TERM/15 signal."
+            kill -15 "$$"
+        ;;
+    esac
+
+    exit "${2:-1}"
 }
 
 main() {
-    LC_ALL=C; export LC_ALL
     set -e
-    trap "err_handler \$? INT" INT
-    trap "err_handler \$? TERM" TERM
+
+    LC_ALL=C; export LC_ALL
+    trap 'err_handler ERR $?' 0  # 0 = `EXIT` signal.
+    trap 'err_handler INT' 2
+    trap 'err_handler TERM' 15
 
     case "$1" in
         '-0')
@@ -1944,7 +1962,7 @@ main() {
     while [ "$1" ]; do
         # In the future, clients will be launched as an external command,
         # lexed and parsed by syscfg.
-        ( . "$1" "$1"; ) || return "$?"
+        ( . "$1" "$1"; )
 
         info -green - "$1:" 'Done!'
 
@@ -1957,4 +1975,4 @@ main() {
 assertive_functions;
 helper_functions;
 client_lib;
-main "$@" || { err_handler "$?" 'ERR'; }
+main "$@"
