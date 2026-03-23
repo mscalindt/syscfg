@@ -1,0 +1,472 @@
+.TH SYSCFG "1" "March 23, 2025" "syscfg 20260315" ""
+
+.SH NAME
+syscfg - declarative OS configuration
+
+.SH SYNOPSIS
+\fBsyscfg\fR
+\fR[\fIoptions\fR]
+[\fB--\fR]
+\fIFILE...\fR
+
+.PP
+Options can be specified in any order.
+
+.SH DESCRIPTION
+\fBsyscfg\fR is a general-purpose system configuration utility that exposes a
+powerful system administration API for its clients to use.
+
+.SH API
+Certain API functions may reference and/or refer to documentation outside of
+their scope. Refer to the documentation and/or source of \fBshell-glossary\fR.
+
+.PP
+\fB__action\fR - execute an action on an object on the filesystem
+.RS
+Parameters:
+.RS
+[\fIhint...\fR]
+.br
+[\fIhint_arg...\fR]
+.RE
+Variables/Environment:
+.RS
+[\fBOBJ\fR]
+.br
+<\fBOBJ_PATH\fR>
+.RE
+Hints:
+.RS
+\fB-del\fR - delete \fBOBJ_PATH\fR
+.br
+\fB-no-sanit\fR - preserve \fBOBJ\fR and \fBOBJ_PATH\fR
+.br
+\fB-trunc\fR - truncate \fBOBJ_PATH\fR
+.RE
+.RE
+
+.PP
+\fB__bin_write\fR - write a binary (octal) file
+.RS
+Parameters:
+.RS
+[\fIhint...\fR]
+.br
+[\fIhint_arg...\fR]
+.RE
+Variables/Environment:
+.RS
+<\fBOBJ\fR> - POSIX shell-compatible octal escape sequence(s) of the file
+.br
+<\fBOBJ_PATH\fR> - path to write the file at
+.RE
+Hints:
+.RS
+Refer to \fB__write\fR.
+.RE
+.RE
+
+.PP
+\fB__bin_write_ow_hard\fR - write a binary (octal) file (overwrite by deletion)
+.RS
+Refer to \fB__bin_write\fR.
+.RE
+
+.PP
+\fB__bin_write_ow_soft\fR - write a binary (octal) file (in-place + atomic
+overwrite)
+.RS
+Refer to \fB__bin_write\fR.
+.RE
+
+.PP
+\fB__cmd\fR - perform a command
+.RS
+Parameters:
+.RS
+[\fIhint...\fR]
+.br
+[\fIhint_arg...\fR]
+.br
+<\fB--\fR>
+.br
+<\fIcmd\fR>
+.br
+[\fIcmd_arg...\fR]
+.RE
+Hints:
+.RS
+\fB-out-save\fR - specify variable name to save &1 (stdout) to
+.br
+\fB-req-out\fR - empty &1 (stdout) is a fatal error condition
+.RE
+.RE
+
+.PP
+\fB__ed\fR - modify file data in-place according to format
+.RS
+Parameters:
+.RS
+[\fIhint...\fR]
+.br
+[\fIhint_arg...\fR]
+.br
+<\fB--\fR>
+.br
+<\fIoperation...\fR>
+.RE
+Variables/Environment:
+.RS
+<\fBOBJ\fR> - file data
+.br
+[\fBOBJ_PATH\fR] - file path to read if \fBOBJ\fR empty
+.RE
+Hints:
+.RS
+\fB-crc\fR - specify CRC32 string to assert the format against
+.RS
+\fBNote:\fR The format string will be asserted without any trailing <newline>
+characters.
+.RE
+.br
+\fB-log\fR - specify log file path for libfile()
+.br
+\fB-no-sanit\fR - preserve \fBOBJ_PATH\fR alongside \fBOBJ\fR
+.RE
+.RE
+
+.PP
+\fB__err\fR - print formatted text to stderr
+.RS
+Refer to \fBerr\fR.
+.RE
+
+.PP
+\fB__file_write\fR - write a file
+.RS
+Parameters:
+.RS
+[\fIhint...\fR]
+.br
+[\fIhint_arg...\fR]
+.RE
+Variables/Environment:
+.RS
+<\fBOBJ\fR> - file
+.br
+<\fBOBJ_PATH\fR> - path to write the file at
+.RE
+Hints:
+.RS
+Refer to \fB__write\fR.
+.RE
+.RE
+
+.PP
+\fB__file_write_ow_hard\fR - write a file (overwrite by deletion)
+.RS
+Refer to \fB__file_write\fR.
+.RE
+
+.PP
+\fB__file_write_ow_soft\fR - write a file (in-place + atomic overwrite)
+.RS
+Refer to \fB__file_write\fR.
+.RE
+
+.PP
+\fB__info\fR - print formatted text
+.RS
+Refer to \fBinfo\fR.
+.RE
+
+.PP
+\fB__obj_link\fR - symbolic link an object on the filesystem
+.RS
+Parameters:
+.RS
+[\fIhint...\fR]
+.br
+[\fIhint_arg...\fR]
+.RE
+Variables/Environment:
+.RS
+<\fBOBJ\fR> - path
+.br
+<\fBOBJ_PATH\fR> - path to link the object at
+.RE
+Hints:
+.RS
+Refer to \fB__write\fR.
+.RE
+.RE
+
+.PP
+\fB__obj_link_ow_hard\fR - symbolic link an object on the filesystem (overwrite
+by deletion)
+.RS
+Refer to \fB__obj_link\fR.
+.RE
+
+.PP
+\fB__obj_link_ow_soft\fR - symbolic link an object on the filesystem
+(in-place + atomic overwrite)
+.RS
+Refer to \fB__obj_link\fR.
+.RE
+
+.PP
+\fB__obj_write\fR - write (copy) an object on the filesystem
+.RS
+Parameters:
+.RS
+[\fIhint...\fR]
+.br
+[\fIhint_arg...\fR]
+.RE
+Variables/Environment:
+.RS
+<\fBOBJ\fR> - path
+.br
+<\fBOBJ_PATH\fR> - path to copy the object at
+.RE
+Hints:
+.RS
+Refer to \fB__write\fR.
+.RE
+.RE
+
+.PP
+\fB__obj_write_ow_hard\fR - write (copy) an object on the filesystem (overwrite
+by deletion)
+.RS
+Refer to \fB__obj_write\fR.
+.RE
+
+.PP
+\fB__obj_write_ow_soft\fR - write (copy) an object on the filesystem
+(in-place + atomic overwrite)
+.RS
+Refer to \fB__obj_write\fR.
+.RE
+
+.PP
+\fB__write\fR - validate and perform a write
+.RS
+Parameters:
+.RS
+<\fItype\fR>
+.RS
+\fB-c\fR - filesystem copy
+.br
+\fB-l\fR - symbolic link
+.br
+\fB-o\fR - octal write
+.br
+\fB-w\fR - file write
+.RE
+<\fIstring/object\fR>
+.br
+<\fIpath to write/copy/link the object at\fR>
+.br
+<[\fIstate\fR]>
+.RS
+\fB-f\fR - hard overwrite (target is to be deleted)
+.br
+\fB-o\fR - soft overwrite (in-place + atomic)
+.RE
+[\fIhint...\fR]
+.br
+[\fIhint_arg...\fR]
+.RE
+Hints:
+.RS
+\fB-crc\fR - colorize the \fB-log\fR parse assuming fed() format
+.br
+\fB-gid\fR - specify GID to assert/set
+.br
+\fB-group\fR - specify group name to assert/set
+.br
+\fB-log\fR - specify file path for write statistics
+.br
+\fB-mode\fR - specify file mode in octal to assert/set
+.br
+\fB-no-avoid\fR - disable write avoidance
+.br
+\fB-no-sanit\fR - preserve \fBOBJ\fR and \fBOBJ_PATH\fR
+.br
+\fB-no-sync\fR - disable write equivalence synchronization
+.br
+\fB-sanit\fR - delete hint paths, unset \fBOBJ\fR and \fBOBJ_PATH\fR
+.br
+\fB-trunc\fR - truncate the path specified by \fB-log\fR
+.br
+\fB-uid\fR - specify UID to assert/set
+.br
+\fB-user\fR - specify user name to assert/set
+.RE
+.RE
+
+.SH OPTIONS
+.B -d, --disable-write-avoidance
+.RS
+Disable write avoidance. \fBsyscfg\fR will not test the target object for
+equivalence to avoid performing an artificial write.
+.RE
+
+.PP
+.B --disable-write-avoidance-group
+.RS
+Disable the write avoidance assert of group ownership.
+.RE
+
+.PP
+.B --disable-write-avoidance-perm
+.RS
+Disable the write avoidance assert of permissions (mode).
+.RE
+
+.PP
+.B --disable-write-avoidance-type
+.RS
+Disable the write avoidance assert of object type.
+.RE
+
+.PP
+.B --disable-write-avoidance-type-attr
+.RS
+Disable the write avoidance assert of object type attributes.
+.RE
+
+.PP
+.B --disable-write-avoidance-user
+.RS
+Disable the write avoidance assert of user ownership.
+.RE
+
+.PP
+.B -D, --disable-write-sync
+.RS
+Disable write equivalence (inode) synchronization. \fBsyscfg\fR will not test
+the target object for inode equivalence on (any) specified properties.
+
+\fBNote:\fR Disabling this functionality will make \fBsyscfg\fR avoid (if
+applicable) a write that would otherwise be performed to satisfy any specified
+inode properties for the target object.
+.RE
+
+.PP
+.B --disable-write-sync-group
+.RS
+Disable the write equivalence synchronization for group ownership.
+.RE
+
+.PP
+.B --disable-write-sync-perm
+.RS
+Disable the write equivalence synchronization for permissions (mode).
+.RE
+
+.PP
+.B --disable-write-sync-type
+.RS
+Disable the write equivalence synchronization for object type.
+.RE
+
+.PP
+.B --disable-write-sync-type-attr
+.RS
+Disable the write equivalence synchronization for object type attributes.
+.RE
+
+.PP
+.B --disable-write-sync-user
+.RS
+Disable the write equivalence synchronization for user ownership.
+.RE
+
+.PP
+.B --silent-cmd
+.RS
+Disable command output.
+.RE
+
+.PP
+.B --silent-cmd-info
+.RS
+Disable commands to be ran information.
+.RE
+
+.PP
+.B --silent-write
+.RS
+Disable write content information.
+.RE
+
+.PP
+.B --silent-write-avoidance
+.RS
+Disable write avoidance information.
+.RE
+
+.PP
+.B --silent-write-stat
+.RS
+Disable write statistics information.
+.RE
+
+.PP
+.B -w, --write-always
+.RS
+Elevate to state "hard overwrite" all (soft) overwrites. A hard overwrite is
+always valid and overwrites by deletion.
+.RE
+
+.PP
+.B -W, --write-forced
+.RS
+Elevate to state "soft overwrite" all default writes. A soft overwrite could be
+avoided and is supposed to be an in-place, atomic overwrite.
+
+\fBNote:\fR Currently no writes are atomic, and some targets are not supported
+for write avoidance and/or in-place overwrite. A soft overwrite will
+automatically be elevated to hard overwrite when unsupported.
+.RE
+
+.PP
+.B --help
+.RS
+Display help text and exit.
+.RE
+
+.PP
+.B --version
+.RS
+Display version information and exit.
+.RE
+
+.SH EXIT STATUS
+The following exit values are returned:
+.IP \fB0\fR
+Success.
+.IP \fB1\fR
+General error.
+.IP \fB2\fR
+Usage error / ENOENT.
+.IP \fB17\fR
+EEXIST.
+.IP \fB255\fR
+Bad API usage.
+
+.SH COPYRIGHT
+Copyright (C) 2021-2026 Dimitar Yurukov <mscalindt@protonmail.com>
+
+.SH LICENSE
+License KEYCLA: KEYCLA 1.0 License
+
+.SH NOTICE
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+.SH AUTHOR
+Dimitar Yurukov (mscalindt@protonmail.com)

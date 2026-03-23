@@ -1,11 +1,90 @@
 #!/bin/sh
-# Copyright (C) 2021-2026 Dimitar Yurukov <mscalindt@protonmail.com>
-#
-# syscfg - declarative OS configuration
 #
 # Use to_octal() or to_octal_offset() to obtain the POSIX shell-compatible
 # octal escape sequence(s) of octal byte streams produced by `od -b -An` or
 # `od -b`, respectively.
+
+_copyright() {
+    printf "%s\n" \
+'Copyright (C) 2021-2026 Dimitar Yurukov <mscalindt@protonmail.com>'
+}
+
+_description() {
+    printf "%s\n" \
+'Declarative OS configuration.'
+}
+
+_license() {
+    printf "%s\n" \
+'License KEYCLA: KEYCLA 1.0 License'
+}
+
+_notice() {
+    printf "%s\n" \
+'This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.'
+}
+
+_misc() {
+    printf "%s\n" \
+'Options:
+  -d, --disable-write-avoidance
+                                disable write avoidance
+      --disable-write-avoidance-group
+                                disable the write avoidance assert of group
+                                ownership
+      --disable-write-avoidance-perm
+                                disable the write avoidance assert of
+                                permissions (mode)
+      --disable-write-avoidance-type
+                                disable the write avoidance assert of object
+                                type
+      --disable-write-avoidance-type-attr
+                                disable the write avoidance assert of object
+                                type attributes
+      --disable-write-avoidance-user
+                                disable the write avoidance assert of user
+                                ownership
+  -D, --disable-write-sync      disable write equivalence synchronization
+      --disable-write-sync-group
+                                disable the write equivalence synchronization
+                                for group ownership
+      --disable-write-sync-perm
+                                disable the write equivalence synchronization
+                                for permissions (mode)
+      --disable-write-sync-type
+                                disable the write equivalence synchronization
+                                for object type
+      --disable-write-sync-type-attr
+                                disable the write equivalence synchronization
+                                for object type attributes
+      --disable-write-sync-user
+                                disable the write equivalence synchronization
+                                for user ownership
+      --silent-cmd              disable command output
+      --silent-cmd-info         disable commands to be ran information
+      --silent-write            disable write content information
+      --silent-write-avoidance  disable write avoidance information
+      --silent-write-stat       disable write statistics information
+  -w, --write-always            elevate to state "hard overwrite" all (soft)
+                                overwrites
+  -W, --write-forced            elevate to state "soft overwrite" all default
+                                writes
+      --help     display this help text and exit
+      --version  display version information and exit
+
+For more information, refer to the man page: `man syscfg`.'
+}
+
+_usage() {
+    printf "%s\n" \
+'Usage: syscfg [options] [--] FILE...'
+}
+
+_version() {
+    printf "%s\n" \
+'syscfg 20260315'
+}
 
 helper_functions() { # START helper_functions
 #! .desc:
@@ -1755,7 +1834,25 @@ err_handler() {
     exit "${2:-1}"
 }
 
+#! .desc:
+# Wrapper for simultaneous opt() and opt_long()
+#! .desc.ext:
+# First "short form", then "long form". No hyphen prefixes.
+#
+# For more information, refer to the documentation of opt() and opt_long().
+#.
+option() {
+    opt "$1" "$2" "$3" "$4" || opt_long "$1" "$2" "$3" "$5"
+}
+
 main() {
+    # Set `-o posix` for compatibility with other shells to specify strict
+    # POSIX compliance. We do not care if only `bash` specifically recognizes
+    # `-o posix`.
+    case "$(set -o posix 2> /dev/null && echo 0)" in
+        0) set -o posix ;;
+    esac
+
     set -e
 
     LC_ALL=C; export LC_ALL
@@ -1763,200 +1860,330 @@ main() {
     trap 'err_handler INT' 2
     trap 'err_handler TERM' 15
 
-    case "$1" in
-        '-0')
-            _lib_sg="$2"; shift 2
-        ;;
-        *)
-            case "$0" in
-                /*) _a="$0" ;;
-                *) _a="${PWD%"${PWD##*[!/]}"}"/"$0" ;;
+    # Save options and operands in an evaluable string, then slice and save it
+    # into options and operands; operands shall be a pseudo array of
+    # single-quote-escaped arguments.
+    #
+    # To prevent ambiguity in slicing with the single-quote-escaped variable
+    # assignments (options), any options taking arguments shall end with `;`,
+    # for example option `foo` and argument `bar`: `foo='bar';`.
+    # This is a requirement to make slicing based on `'--'` unambiguous.
+    _arr=$(
+        o_disable_write_avoidance() {
+            printf " %s" "disable_write_avoidance='1';"
+        }
+        o_disable_write_avoidance_group() {
+            printf " %s" "disable_write_avoidance_group='1';"
+        }
+        o_disable_write_avoidance_perm() {
+            printf " %s" "disable_write_avoidance_perm='1';"
+        }
+        o_disable_write_avoidance_type() {
+            printf " %s" "disable_write_avoidance_type='1';"
+        }
+        o_disable_write_avoidance_type_attr() {
+            printf " %s" "disable_write_avoidance_type_attr='1';"
+        }
+        o_disable_write_avoidance_user() {
+            printf " %s" "disable_write_avoidance_user='1';"
+        }
+        o_disable_write_sync() {
+            printf " %s" "disable_write_sync='1';"
+        }
+        o_disable_write_sync_group() {
+            printf " %s" "disable_write_sync_group='1';"
+        }
+        o_disable_write_sync_perm() {
+            printf " %s" "disable_write_sync_perm='1';"
+        }
+        o_disable_write_sync_type() {
+            printf " %s" "disable_write_sync_type='1';"
+        }
+        o_disable_write_sync_type_attr() {
+            printf " %s" "disable_write_sync_type_attr='1';"
+        }
+        o_disable_write_sync_user() {
+            printf " %s" "disable_write_sync_user='1';"
+        }
+        o_help() {
+            printf " %s" "help='1';"
+        }
+        o_silent_cmd() {
+            printf " %s" "silent_cmd='1';"
+        }
+        o_silent_cmd_info() {
+            printf " %s" "silent_cmd_info='1';"
+        }
+        o_silent_write() {
+            printf " %s" "silent_write='1';"
+        }
+        o_silent_write_avoidance() {
+            printf " %s" "silent_write_avoidance='1';"
+        }
+        o_silent_write_stat() {
+            printf " %s" "silent_write_stat='1';"
+        }
+        o_version() {
+            printf " %s" "version='1';"
+        }
+        o_write_always() {
+            printf " %s" "write_always='1';"
+        }
+        o_write_forced() {
+            printf " %s" "write_forced='1';"
+        }
+
+        # Sanitize the environment.
+        printf " %s" "disable_write_avoidance="
+        printf " %s" "disable_write_avoidance_group="
+        printf " %s" "disable_write_avoidance_perm="
+        printf " %s" "disable_write_avoidance_type="
+        printf " %s" "disable_write_avoidance_type_attr="
+        printf " %s" "disable_write_avoidance_user="
+        printf " %s" "disable_write_sync="
+        printf " %s" "disable_write_sync_group="
+        printf " %s" "disable_write_sync_perm="
+        printf " %s" "disable_write_sync_type="
+        printf " %s" "disable_write_sync_type_attr="
+        printf " %s" "disable_write_sync_user="
+        printf " %s" "help="
+        printf " %s" "silent_cmd="
+        printf " %s" "silent_cmd_info="
+        printf " %s" "silent_write="
+        printf " %s" "silent_write_avoidance="
+        printf " %s" "silent_write_stat="
+        printf " %s" "version="
+        printf " %s" "write_always="
+        printf " %s" "write_forced="
+
+        # Parse options.
+        while [ "$#" -ge 1 ]; do
+            case "$1" in
+                '-') opt_invalid "-"; exit 2 ;;
+                '--') shift && break ;;
             esac
 
-            if [ -h "$_a" ]; then
-                _a="$(realpath -- "$_a" && printf "%s" x)"
-                _a="${_a%??}"
+            # Options set again for $_opt and $_shift.
+            if option "$1" "$2" -s 'd' 'disable-write-avoidance'; then
+                o_disable_write_avoidance;
+                option "$1" "$2" -s 'd' 'disable-write-avoidance'
+            elif opt_long "$1" "$2" -s 'disable-write-avoidance-group'; then
+                o_disable_write_avoidance_group;
+                opt_long "$1" "$2" -s 'disable-write-avoidance-group'
+            elif opt_long "$1" "$2" -s 'disable-write-avoidance-perm'; then
+                o_disable_write_avoidance_perm;
+                opt_long "$1" "$2" -s 'disable-write-avoidance-perm'
+            elif opt_long "$1" "$2" -s 'disable-write-avoidance-type'; then
+                o_disable_write_avoidance_type;
+                opt_long "$1" "$2" -s 'disable-write-avoidance-type'
+            elif opt_long "$1" "$2" -s 'disable-write-avoidance-type-attr'; then
+                o_disable_write_avoidance_type_attr;
+                opt_long "$1" "$2" -s 'disable-write-avoidance-type-attr'
+            elif opt_long "$1" "$2" -s 'disable-write-avoidance-user'; then
+                o_disable_write_avoidance_user;
+                opt_long "$1" "$2" -s 'disable-write-avoidance-user'
+            elif option "$1" "$2" -s 'D' 'disable-write-sync'; then
+                o_disable_write_sync;
+                option "$1" "$2" -s 'D' 'disable-write-sync'
+            elif opt_long "$1" "$2" -s 'disable-write-sync-group'; then
+                o_disable_write_sync_group;
+                opt_long "$1" "$2" -s 'disable-write-sync-group'
+            elif opt_long "$1" "$2" -s 'disable-write-sync-perm'; then
+                o_disable_write_sync_perm;
+                opt_long "$1" "$2" -s 'disable-write-sync-perm'
+            elif opt_long "$1" "$2" -s 'disable-write-sync-type'; then
+                o_disable_write_sync_type;
+                opt_long "$1" "$2" -s 'disable-write-sync-type'
+            elif opt_long "$1" "$2" -s 'disable-write-sync-type-attr'; then
+                o_disable_write_sync_type_attr;
+                opt_long "$1" "$2" -s 'disable-write-sync-type-attr'
+            elif opt_long "$1" "$2" -s 'disable-write-sync-user'; then
+                o_disable_write_sync_user;
+                opt_long "$1" "$2" -s 'disable-write-sync-user'
+            elif opt_long "$1" "$2" -s 'help'; then
+                o_help;
+                opt_long "$1" "$2" -s 'help'
+            elif opt_long "$1" "$2" -s 'silent-cmd'; then
+                o_silent_cmd;
+                opt_long "$1" "$2" -s 'silent-cmd'
+            elif opt_long "$1" "$2" -s 'silent-cmd-info'; then
+                o_silent_cmd_info;
+                opt_long "$1" "$2" -s 'silent-cmd-info'
+            elif opt_long "$1" "$2" -s 'silent-write'; then
+                o_silent_write;
+                opt_long "$1" "$2" -s 'silent-write'
+            elif opt_long "$1" "$2" -s 'silent-write-avoidance'; then
+                o_silent_write_avoidance;
+                opt_long "$1" "$2" -s 'silent-write-avoidance'
+            elif opt_long "$1" "$2" -s 'silent-write-stat'; then
+                o_silent_write_stat;
+                opt_long "$1" "$2" -s 'silent-write-stat'
+            elif opt_long "$1" "$2" -s 'version'; then
+                o_version;
+                opt_long "$1" "$2" -s 'version'
+            elif option "$1" "$2" -s 'w' 'write-always'; then
+                o_write_always;
+                option "$1" "$2" -s 'w' 'write-always'
+            elif option "$1" "$2" -s 'W' 'write-forced'; then
+                o_write_forced;
+                option "$1" "$2" -s 'W' 'write-forced'
+            else
+                case "$1" in
+                    '--'*) opt_invalid "$1"; exit 2 ;;
+                    '-'*) opt_invalid "${1%"${1#??}"}"; exit 2 ;;
+                    *) break ;;
+                esac
             fi
 
-            _a="${_a%"${_a##*[!/]}"}"
-            _a="${_a%/*}"
-            _a="${_a%"${_a##*[!/]}"}"
-            _a="${_a%/*}"
-            _a="${_a%"${_a##*[!/]}"}"
+            # If $_opt is still present and `--` is the prefix, it means `-`
+            # has been specified as an option in a "group of options"
+            # construct; reject it here.
+            case "$_opt" in
+                '--'*) opt_invalid "-"; exit 2 ;;
+            esac
 
-            _lib_sg="$_a"/lib/shell-glossary/src
-        ;;
-    esac
+            shift; set -- "$_opt" "$@"; shift "$_shift"
+        done
 
-    for _func in "$_lib_sg"/*; do
-        if [ -f "$_func" ]; then
-            . "$_func"
-        fi
-    done
+        printf " %s" "'--'"
 
-    # Control switches
-    # Disable write avoidance:
-    disable_write_avoid=
-    # Disable write avoidance assert on group ownership:
-    disable_write_avoid_group=
-    # Disable write avoidance assert on object mode:
-    disable_write_avoid_perm=
-    # Disable write avoidance assert on object type:
-    disable_write_avoid_type=
-    # Disable write avoidance assert on object type attributes:
-    disable_write_avoid_type_attr=
-    # Disable write avoidance assert on user ownership:
-    disable_write_avoid_user=
-    # Disable write equivalence synchronization:
-    disable_write_sync=
-    # Disable write equivalence synchronization for group ownership:
-    disable_write_sync_group=
-    # Disable write equivalence synchronization for object mode:
-    disable_write_sync_perm=
-    # Disable write equivalence synchronization for object type:
-    disable_write_sync_type=
-    # Disable write equivalence synchronization for object type attributes:
-    disable_write_sync_type_attr=
-    # Disable write equivalence synchronization for user ownership:
-    disable_write_sync_user=
-    # Disable command output:
-    silent_cmd=
-    # Disable command information output:
-    silent_cmd_info=
-    # Disable write information output:
-    silent_write=
-    # Disable write avoidance output:
-    silent_write_avoid=
-    # Disable write statistics output:
-    silent_write_stat=
-    # Specify default state "hard overwrite" for all overwrites:
-    write_always=
-    # Specify default state "soft overwrite" for all writes:
-    write_forced=
+        # Parse operands.
+        for _arg in "$@"; do
+            arg_set _quot "$_arg"; printf " %s" "$_quot"
+        done
+    )
+    _opts="$_arr "
+    _opts="${_opts%%"'--' "*}"
+    _opts="${_opts%"${_opts##*[! ]}"}"
+    _opds=" $_arr"
+    _opds="${_opds#*" '--'"}"
+    _opds="${_opds#"${_opds%%[! ]*}"}"
+    set -- "$_opts" "$_opds"
 
-    while :; do case "$1" in
-        '^DWA') disable_write_avoid=1; shift && continue ;;
-        '^DWAG') disable_write_avoid_group=1; shift && continue ;;
-        '^DWAP') disable_write_avoid_perm=1; shift && continue ;;
-        '^DWAT') disable_write_avoid_type=1; shift && continue ;;
-        '^DWATA') disable_write_avoid_type_attr=1; shift && continue ;;
-        '^DWAU') disable_write_avoid_user=1; shift && continue ;;
-        '^DWS') disable_write_sync=1; shift && continue ;;
-        '^DWSG') disable_write_sync_group=1; shift && continue ;;
-        '^DWSP') disable_write_sync_perm=1; shift && continue ;;
-        '^DWST') disable_write_sync_type=1; shift && continue ;;
-        '^DWSTA') disable_write_sync_type_attr=1; shift && continue ;;
-        '^DWSU') disable_write_sync_user=1; shift && continue ;;
-        '^SC') silent_cmd=1; shift && continue ;;
-        '^SCI') silent_cmd_info=1; shift && continue ;;
-        '^SW') silent_write=1; shift && continue ;;
-        '^SWA') silent_write_avoid=1; shift && continue ;;
-        '^SWS') silent_write_stat=1; shift && continue ;;
-        '^WA') write_always=1; shift && continue ;;
-        '^WF') write_forced=1; shift && continue ;;
-        *) break ;;
-    esac done
+    # Set variables according to any specified options.
+    eval " $1"
 
-    [ ! "$disable_write_avoid" ] || {
+    if [ "$help" ]; then
+        _usage; _description; echo
+        _misc;
+
+        exit 0
+    elif [ "$version" ]; then
+        _version; echo
+        _copyright; echo
+        _license; _notice;
+
+        exit 0
+    fi
+
+    if [ ! "$2" ]; then
+        err - - "${0##*/}: No files have been specified."
+
+        exit 2
+    fi
+
+    if [ "$disable_write_avoidance" ]; then
         fs_equiv() { return 0; }
-    }
+    fi
 
-    [ ! "$disable_write_avoid_group" ] || {
+    if [ "$disable_write_avoidance_group" ]; then
         fs_equiv_group() { return 0; }
-    }
+    fi
 
-    [ ! "$disable_write_avoid_perm" ] || {
+    if [ "$disable_write_avoidance_perm" ]; then
         fs_equiv_perm() { return 0; }
-    }
+    fi
 
-    [ ! "$disable_write_avoid_type" ] || {
+    if [ "$disable_write_avoidance_type" ]; then
         fs_equiv_type() { return 0; }
-    }
+    fi
 
-    [ ! "$disable_write_avoid_type_attr" ] || {
+    if [ "$disable_write_avoidance_type_attr" ]; then
         fs_equiv_type_attr() { return 0; }
-    }
+    fi
 
-    [ ! "$disable_write_avoid_user" ] || {
+    if [ "$disable_write_avoidance_user" ]; then
         fs_equiv_owner() { return 0; }
-    }
+    fi
 
-    [ ! "$disable_write_sync" ] || {
+    if [ "$disable_write_sync" ]; then
         inode_align() { return 0; }
-    }
+    fi
 
-    [ ! "$disable_write_sync_group" ] || {
+    if [ "$disable_write_sync_group" ]; then
         inode_align_group() { return 0; }
-    }
+    fi
 
-    [ ! "$disable_write_sync_perm" ] || {
+    if [ "$disable_write_sync_perm" ]; then
         inode_align_perm() { return 0; }
-    }
+    fi
 
-    [ ! "$disable_write_sync_type" ] || {
+    if [ "$disable_write_sync_type" ]; then
         inode_align_type() { return 0; }
-    }
+    fi
 
-    [ ! "$disable_write_sync_type_attr" ] || {
+    if [ "$disable_write_sync_type_attr" ]; then
         inode_align_type_attr() { return 0; }
-    }
+    fi
 
-    [ ! "$disable_write_sync_user" ] || {
+    if [ "$disable_write_sync_user" ]; then
         inode_align_owner() { return 0; }
-    }
+    fi
 
-    [ ! "$write_always" ] || {
+    if [ "$silent_cmd" ]; then
+        cmd_exec() { command -- "$@" > /dev/null; }
+    fi
+
+    if [ "$silent_cmd_info" ]; then
+        cmd_info() { return 0; }
+    fi
+
+    if [ "$silent_write" ]; then
+        write_info() { return 0; }
+    fi
+
+    if [ "$silent_write_avoidance" ]; then
+        write_info_avoidance() { return 0; }
+    fi
+
+    if [ "$silent_write_stat" ]; then
+        write_info_stat() { return 0; }
+    fi
+
+    if [ "$write_always" ]; then
         __bin_write_ow_soft() { __bin_write_ow_hard "$@"; }
         __file_write_ow_soft() { __file_write_ow_hard "$@"; }
         __obj_link_ow_soft() { __obj_link_ow_hard "$@"; }
         __obj_write_ow_soft() { __obj_write_ow_hard "$@"; }
-    }
+    fi
 
-    [ ! "$write_forced" ] || {
+    if [ "$write_forced" ]; then
         __bin_write() { __bin_write_ow_soft "$@"; }
         __file_write() { __file_write_ow_soft "$@"; }
         __obj_link() { __obj_link_ow_soft "$@"; }
         __obj_write() { __obj_write_ow_soft "$@"; }
-    }
+    fi
 
-    [ ! "$silent_cmd" ] || {
-        cmd_exec() { command -- "$@" > /dev/null; }
-    }
-
-    [ ! "$silent_cmd_info" ] || {
-        cmd_info() { return 0; }
-    }
-
-    [ ! "$silent_write" ] || {
-        write_info() { return 0; }
-    }
-
-    [ ! "$silent_write_avoid" ] || {
-        write_info_avoidance() { return 0; }
-    }
-
-    [ ! "$silent_write_stat" ] || {
-        write_info_stat() { return 0; }
-    }
-
-    assert -min "$#" 1 || {
-        err -red - 'No client has been specified.'; exit 2
-    }
-
-    # end arg parsing; main()
+    # Expand the pseudo array of single-quote-escaped file operand arguments.
+    _opts="$1"; eval set -- "$2"; set -- "$_opts" "$@"
 
     [ "$(id -u)" = 0 ] || {
         err -red - 'Missing root rights.'; exit 1
     }
 
-    while [ "$1" ]; do
+    while [ "$#" -ge 2 ]; do
+        if [ ! -f "$2" ]; then
+            err - - "${0##*/}: Not a valid file: $2"
+
+            exit 2
+        fi
+
         # In the future, clients will be launched as an external command,
         # lexed and parsed by syscfg.
-        ( . "$1" "$1"; )
+        ( shift; . "$1" "$1"; )
+        info -green - "$2:" 'Done!'
 
-        info -green - "$1:" 'Done!'
-
-        shift
+        _opts="$1"; shift 2; set -- "$_opts" "$@"
     done
 
     return 0

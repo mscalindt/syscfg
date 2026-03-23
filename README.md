@@ -1,8 +1,41 @@
 ## Table of Contents
 
-1. [Releases](#releases)
-2. [License](#license)
-3. [Notice](#notice)
+1. [Introduction](#introduction)
+2. [Features](#features)
+3. [Build](#build)
+4. [Releases](#releases)
+5. [License](#license)
+6. [Notice](#notice)
+
+## Introduction
+
+[`syscfg`](https://github.com/mscalindt/syscfg) is a general-purpose system
+configuration utility that exposes a powerful system administration API for
+its clients to use.
+
+## Features
+
+* Portable octal to binary file mechanism.
+* Write avoidance and inode state synchronization.
+* Written in POSIX shell language.
+
+## Build
+
+Clone the repository using the `--recursive` option to ensure all submodules
+are downloaded.
+
+```
+git clone --recursive https://github.com/mscalindt/syscfg
+cd syscfg
+make
+```
+
+If the repository has been cloned without the submodules, they can be
+initialized and fetched with:
+
+```
+git submodule update --init --recursive
+```
 
 ## Releases
 

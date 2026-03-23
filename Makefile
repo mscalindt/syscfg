@@ -1,4 +1,11 @@
-.PHONY: rel sbm_up
+.PHONY: build clean rel sbm_up
+
+build: ./syscfg
+./syscfg: ./src/syscfg.sh
+	sh ./scripts/build.sh ./src/syscfg.sh
+
+clean:
+	rm ./syscfg
 
 rel:
 	@test -n "$(REL)" || { echo 'REL is empty'; exit 2; }
