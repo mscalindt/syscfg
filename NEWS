@@ -1,9 +1,12 @@
 syscfg NEWS
 
 
-2026-03-21 - 2026-03-21
+2026-03-21 - 2026-03-23
 =======================
 * syscfg will trap EXIT instead of continuing to emulate it. (670ec0b)
+
+* syscfg now has a standard cmdline and documentation. Additionally, it now
+  builds shell-glossary into itself. (c205fcc)
 
 
 2026-03-13 - 2026-03-15
