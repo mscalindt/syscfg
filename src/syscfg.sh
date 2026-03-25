@@ -156,13 +156,7 @@ chattr_remove() {
 # For more information, refer to the documentation of __cmd().
 #.
 cmd() {
-    while hint_set 0 "$@"; do
-        case "$_hint" in
-            '--') shift "$_offset" && break ;;
-        esac
-
-        shift "$_offset"
-    done
+    hints_offset 0 "$@" && shift "$_offset"
 
     [ "$1" ] || {
         err -red - '${0##*/}: Missing command specification.'
@@ -198,13 +192,7 @@ cmd_exec() {
 # For more information, refer to the documentation of __cmd().
 #.
 cmd_info() {
-    while hint_set 0 "$@"; do
-        case "$_hint" in
-            '--') shift "$_offset" && break ;;
-        esac
-
-        shift "$_offset"
-    done
+    hints_offset 0 "$@" && shift "$_offset"
 
     [ "$1" ] || return 0
 
@@ -240,17 +228,8 @@ ed_fmt() {
     assert -whole-n "$1" || exit 255
 
     _a="$2"; shift "$((2 + $1))"; set -- "$_a" "$@"
-
-    while hint_set 1 "$@"; do
-        _a="$1"
-        _offset="$((_offset + 1))"
-
-        case "$_hint" in
-            '--') shift "$_offset"; set -- "$_a" "$@"; break ;;
-        esac
-
-        shift "$_offset"; set -- "$_a" "$@"
-    done
+    hints_offset 1 "$@"
+    _a="$1"; shift "$((1 + _offset))"; set -- "$_a" "$@"
 
     fed "$@"
 }
@@ -662,6 +641,40 @@ hint_set() {
     esac
 
     return 1
+}
+
+#! .desc:
+# Provide shift count to offset all hints in arguments
+#! .params:
+# <$1> - N
+# [$2]+ - argument
+#! .gives.var:
+# (0) <_offset> - integer;
+#                 shift count to offset all hints
+#! .rc:
+# (0) success
+#! .ec:
+# (255) input error
+#! .desc.ext:
+# $1 is a whole number that specifies the number of arguments to offset.
+#
+# For more information, refer to the documentation of hint().
+#.
+hints_offset() {
+    assert -whole-n "$1" || exit 255
+
+    shift "$((1 + $1))"
+
+    set -- 0 "$@"
+    while hint_set 1 "$@"; do
+        case "$_hint" in
+            '--') set -- "$(($1 + _offset))" "$@" && break ;;
+        esac
+
+        set -- "$(($1 + _offset))" "$@"
+    done
+
+    _offset="$1"
 }
 
 #! .desc:
