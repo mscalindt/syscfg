@@ -1,4 +1,4 @@
-.TH SYSCFG "1" "March 23, 2025" "syscfg 20260315" ""
+.TH SYSCFG "1" "March 25, 2025" "syscfg 20260315" ""
 
 .SH NAME
 syscfg - declarative OS configuration
@@ -420,13 +420,16 @@ Disable write statistics information.
 .RS
 Elevate to state "hard overwrite" all (soft) overwrites. A hard overwrite is
 always valid and overwrites by deletion.
+
+\fBNote:\fR This option only elevates all soft (and soft elevated) overwrites.
 .RE
 
 .PP
 .B -W, --write-forced
 .RS
-Elevate to state "soft overwrite" all default writes. A soft overwrite could be
-avoided and is supposed to be an in-place, atomic overwrite.
+Elevate to state "soft overwrite" all default (non-overwriting) writes. When
+an overwrite is required, a soft overwrite is supposed to be an in-place,
+atomic overwrite.
 
 \fBNote:\fR Currently no writes are atomic, and some targets are not supported
 for write avoidance and/or in-place overwrite. A soft overwrite will
