@@ -156,7 +156,7 @@ chattr_remove() {
 # For more information, refer to the documentation of __cmd().
 #.
 cmd() {
-    hints_offset 0 "$@" && shift "$_offset"
+    hints_offset 0 0 "$@" && shift "$_offset"
 
     [ "$1" ] || {
         err -red - '${0##*/}: Missing command specification.'
@@ -192,7 +192,7 @@ cmd_exec() {
 # For more information, refer to the documentation of __cmd().
 #.
 cmd_info() {
-    hints_offset 0 "$@" && shift "$_offset"
+    hints_offset 0 0 "$@" && shift "$_offset"
 
     [ "$1" ] || return 0
 
@@ -228,7 +228,7 @@ ed_fmt() {
     assert -whole-n "$1" || exit 255
 
     _a="$2"; shift "$((2 + $1))"; set -- "$_a" "$@"
-    hints_offset 1 "$@"
+    hints_offset 1 0 "$@"
     _a="$1"; shift "$((1 + _offset))"; set -- "$_a" "$@"
 
     fed "$@"
@@ -274,7 +274,7 @@ fs_equiv() {
         '-c' | '-l') return 1 ;;
     esac
 
-    { ! hint 4 -no-avoid "$@"; } || return 1
+    { ! hint 4 0 -no-avoid "$@"; } || return 1
 
     # Assert the state, i.e. the inode type and attributes.
     fs_equiv_type "$@" || return 1
@@ -342,13 +342,13 @@ fs_equiv_group() {
 
             set -- "$_a" "$@"
 
-            if hint 5 -group "$@"; then
+            if hint 5 0 -group "$@"; then
                 [ ! "$1" = "$_hint" ] || return 0
             else
                 [ ! "$1" = "$(id -ng)" ] || return 0
             fi
 
-            if hint 5 -gid "$@"; then
+            if hint 5 0 -gid "$@"; then
                 [ ! "$1" = "$_hint" ] || return 0
             else
                 [ ! "$1" = "$(id -g)" ] || return 0
@@ -382,13 +382,13 @@ fs_equiv_owner() {
 
             set -- "$_a" "$@"
 
-            if hint 5 -user "$@"; then
+            if hint 5 0 -user "$@"; then
                 [ ! "$1" = "$_hint" ] || return 0
             else
                 [ ! "$1" = "$(id -nu)" ] || return 0
             fi
 
-            if hint 5 -uid "$@"; then
+            if hint 5 0 -uid "$@"; then
                 [ ! "$1" = "$_hint" ] || return 0
             else
                 [ ! "$1" = "$(id -u)" ] || return 0
@@ -422,7 +422,7 @@ fs_equiv_perm() {
 
             set -- "$_a" "$@"
 
-            if hint 5 -mode "$@"; then
+            if hint 5 0 -mode "$@"; then
                 fmode_octal "$_hint"
 
                 # `-` = "regular file"
@@ -473,9 +473,10 @@ fs_equiv_type_attr() {
 #! .desc:
 # Query the presence of an independent hint among arguments
 #! .params:
-# <$1> - N
-# <$2> - hint
-# [$3]+ - argument
+# <$1> - LTR N offset
+# <$2> - RTL N offset
+# <$3> - hint
+# [$4]+ - argument
 #! .gives.var:
 # (0) <_hint> - [string];
 #               [hint argument]
@@ -485,8 +486,8 @@ fs_equiv_type_attr() {
 #! .ec:
 # (255) input error
 #! .desc.ext:
-# $1 is a whole number that specifies the number of arguments to offset, to
-# skip any wrapper/external arguments accordingly.
+# $1/$2 are whole numbers that specify count of arguments to offset LTR/RTL,
+# respectively. The offset is used to skip unrelated arguments.
 #
 # Hint `--` will be respected at all times.
 #
@@ -495,6 +496,7 @@ fs_equiv_type_attr() {
 hint() {
     assert -min "$#" 2 || exit 255
     assert -whole-n "$1" || exit 255
+    assert -whole-n "$2" || exit 255
 
     # Let an independent implementation dictate the outcome. This could be
     # desirable when, for example, a hint is to be enabled (or disabled)
@@ -513,16 +515,16 @@ hint() {
         exit 255
     fi
 
-    _hint="$2"; shift "$((2 + $1))"
+    _rtl_offset="$2"; _hint="$3"; shift "$((3 + $1))"
 
-    while [ "$#" -ge 1 ]; do
+    while [ "$(($# - _rtl_offset))" -ge 1 ]; do
         case "$1" in
             "$_hint") ;;
             '--') break ;;
             *) shift && continue ;;
         esac
 
-        hint_set 0 "$@" || {
+        hint_set 0 0 "$@" || {
             err -red - '${0##*/}: Invalid hint:' "$1"
 
             exit 255
@@ -558,8 +560,9 @@ hint_act() {
 #! .desc:
 # Set the hint properties of the first encountered argument
 #! .params:
-# <$1> - N
-# [$2]+ - argument
+# <$1> - LTR N offset
+# <$2> - RTL N offset
+# [$3]+ - argument
 #! .gives.var:
 # (0) <_hint> - string;
 #               hint string
@@ -591,19 +594,24 @@ hint_act() {
 # `-uid`, <string>: User ID;
 # `-user`, <string>: User name.
 #
-# $1 is a whole number that specifies the number of arguments to offset.
+# $1/$2 are whole numbers that specify count of arguments to offset LTR/RTL,
+# respectively. The offset is used to skip unrelated arguments.
 #
 # The function can only ever be successful when the first argument is
-# a recognized hint; otherwise error is returned.
+# a recognized hint; otherwise error (rc 1) is returned.
 #.
 hint_set() {
     assert -whole-n "$1" || exit 255
+    assert -whole-n "$2" || exit 255
 
-    shift "$((1 + $1))"
+    _rtl_offset="$2"
+    shift "$((2 + $1))"
 
     case "$1" in
         '--' | '-color' | '-del' | '-no-avoid' | '-no-sanit' | '-req-out' | \
         '-sanit' | '-trunc')
+            [ "$(($# - _rtl_offset))" -ge 1 ] || return 1
+
             _hint="$1"
             _hint_arg=
             _offset=1
@@ -611,7 +619,7 @@ hint_set() {
             return 0
         ;;
         '-mode')
-            [ "$#" -ge 2 ] || {
+            [ "$(($# - _rtl_offset))" -ge 2 ] || {
                 err -red - '${0##*/}: Missing argument specification:' "$1"
                 err -red - '${0##*/}: Use empty quotes to define no value.'
 
@@ -625,7 +633,7 @@ hint_set() {
             return 0
         ;;
         '-crc' | '-gid' | '-group' | '-log' | '-out-save' | '-uid' | '-user')
-            [ "$2" ] || {
+            [ "$(($# - _rtl_offset))" -ge 2 ] && [ "$2" ] || {
                 err -red - '${0##*/}: Missing argument specification:' "$1"
 
                 exit 255
@@ -645,27 +653,30 @@ hint_set() {
 #! .desc:
 # Provide shift count to offset all hints in arguments
 #! .params:
-# <$1> - N
-# [$2]+ - argument
+# <$1> - LTR N offset
+# <$2> - RTL N offset
+# [$3]+ - argument
 #! .gives.var:
 # (0) <_offset> - integer;
-#                 shift count to offset all hints
+#                 LTR shift count to offset all hints
 #! .rc:
 # (0) success
 #! .ec:
 # (255) input error
 #! .desc.ext:
-# $1 is a whole number that specifies the number of arguments to offset.
+# $1/$2 are whole numbers that specify count of arguments to offset LTR/RTL,
+# respectively. The offset is used to skip unrelated arguments.
 #
 # For more information, refer to the documentation of hint().
 #.
 hints_offset() {
     assert -whole-n "$1" || exit 255
 
-    shift "$((1 + $1))"
+    _rtl_offset="$2"
+    shift "$((2 + $1))"
+    set -- 0 "$_rtl_offset" "$@"
 
-    set -- 0 "$@"
-    while hint_set 1 "$@"; do
+    while hint_set 2 "$2" "$@"; do
         case "$_hint" in
             '--') set -- "$(($1 + _offset))" "$@" && break ;;
         esac
@@ -694,7 +705,7 @@ inode_align() {
         '-c' | '-l') return 1 ;;
     esac
 
-    { ! hint 4 -no-sync "$@"; } || return 1
+    { ! hint 4 0 -no-sync "$@"; } || return 1
 
     inode_align_type "$@" && \
     inode_align_type_attr "$@" && \
@@ -728,15 +739,15 @@ inode_align_group() {
 
             set -- "$_a" "$@"
 
-            if hint 5 -group "$@" || hint 5 -gid "$@"; then
-                if hint 5 -group "$@"; then
+            if hint 5 0 -group "$@" || hint 5 0 -gid "$@"; then
+                if hint 5 0 -group "$@"; then
                     if [ "$1" != "$_hint" ] || [ "$1" != "$(id -ng)" ]; then
                         __cmd -- \
                         chgrp -h "$_hint" -- "$4" && return 0 || return "$?"
                     fi
                 fi
 
-                if hint 5 -gid "$@"; then
+                if hint 5 0 -gid "$@"; then
                     if [ "$1" != "$_hint" ] || [ "$1" != "$(id -g)" ]; then
                         __cmd -- chgrp -h "$_hint" -- "$4" || return "$?"
                     fi
@@ -776,15 +787,15 @@ inode_align_owner() {
 
             set -- "$_a" "$@"
 
-            if hint 5 -user "$@" || hint 5 -uid "$@"; then
-                if hint 5 -user "$@"; then
+            if hint 5 0 -user "$@" || hint 5 0 -uid "$@"; then
+                if hint 5 0 -user "$@"; then
                     if [ "$1" != "$_hint" ] || [ "$1" != "$(id -nu)" ]; then
                         __cmd -- \
                         chown -h "$_hint" -- "$4" && return 0 || return "$?"
                     fi
                 fi
 
-                if hint 5 -uid "$@"; then
+                if hint 5 0 -uid "$@"; then
                     if [ "$1" != "$_hint" ] || [ "$1" != "$(id -u)" ]; then
                         __cmd -- chown -h "$_hint" -- "$4" || return "$?"
                     fi
@@ -823,12 +834,12 @@ inode_align_perm() {
 
             set -- "$_a" "$@"
 
-            if hint 5 -mode "$@"; then
+            if hint 5 0 -mode "$@"; then
                 fmode_octal "$_hint"
 
                 # `-` = "regular file"
                 if [ ! "$1" = "-$_mode" ]; then
-                    hint 5 -mode "$@"
+                    hint 5 0 -mode "$@"
                     __cmd -- chmod "$_hint" -- "$4" || return "$?"
                 fi
             else
@@ -1055,21 +1066,21 @@ write() {
         ;;
     esac
 
-    if hint 4 -uid "$@" || hint 4 -user "$@"; then
+    if hint 4 0 -uid "$@" || hint 4 0 -user "$@"; then
         set -- "$_hint" "$@"
 
-        if hint 5 -gid "$@" || hint 5 -group "$@"; then
+        if hint 5 0 -gid "$@" || hint 5 0 -group "$@"; then
             chown -h "$1"":$_hint" -- "$4" || return "$?"
         else
             chown -h "$1" -- "$4" || return "$?"
         fi
 
         shift
-    elif hint 4 -gid "$@" || hint 4 -group "$@"; then
+    elif hint 4 0 -gid "$@" || hint 4 0 -group "$@"; then
         chgrp -h "$_hint" -- "$3" || return "$?"
     fi
 
-    if hint 4 -mode "$@"; then
+    if hint 4 0 -mode "$@"; then
         chmod "$_hint" -- "$3" || return "$?"
     fi
 
@@ -1100,7 +1111,7 @@ write_info() {
         '-o') __info -white - 'Will write a binary file:' ;;
     esac
 
-    if hint 4 -log "$@"; then
+    if hint 4 0 -log "$@"; then
         case "$1$4" in
             '-w-f') __info -white - 'Will update a file (OW_HARD):' ;;
             '-w-o') __info -white - 'Will update a file (OW_SOFT):' ;;
@@ -1188,7 +1199,7 @@ write_info_avoidance() {
 # For more information, refer to the documentation of __write().
 #.
 write_info_stat() {
-    if hint 4 -color "$@" && hint 4 -log "$@"; then
+    if hint 4 0 -color "$@" && hint 4 0 -log "$@"; then
         if [ ! -e "$_hint" ]; then
             __info -yellow - 'No log available.'
 
@@ -1203,7 +1214,7 @@ write_info_stat() {
                 *'-') info -red -- "$_n " && info - - "$1" ;;
             esac
         done < "$_hint"
-    elif hint 4 -log "$@"; then
+    elif hint 4 0 -log "$@"; then
         if [ ! -e "$_hint" ]; then
             __info -yellow - 'No log available.'
 
@@ -1284,7 +1295,7 @@ __action() {
         exit 2
     }
 
-    if hint 2 -trunc "$@"; then
+    if hint 2 0 -trunc "$@"; then
         if ftype "$2"/; then
             rm -rf -- "$2"/* || return "$?"
         else
@@ -1292,13 +1303,13 @@ __action() {
         fi
     fi
 
-    if hint 2 -del "$@"; then
+    if hint 2 0 -del "$@"; then
         chattr_remove "$2"
         unmount "$2"
         rm -rf -- "$2" || return "$?"
     fi
 
-    if hint 2 -no-sanit "$@"; then
+    if hint 2 0 -no-sanit "$@"; then
         OBJ="$1"; OBJ_PATH="$2"
     fi
 
@@ -1382,14 +1393,14 @@ __cmd() {
 
     cmd_info "$@"
 
-    if hint 0 -req-out "$@" || hint 0 -out-save "$@"; then
+    if hint 0 0 -req-out "$@" || hint 0 0 -out-save "$@"; then
         set -- "$(cmd "$@" && printf "%s" x)" "$@" || return "$?"
         set -- "${1%?}" "$@"
     else
         cmd "$@" && return 0 || return "$?"
     fi
 
-    if hint 1 -req-out "$@"; then
+    if hint 1 0 -req-out "$@"; then
         [ "$1" ] || {
             __err -red - 'No output has been received.'
 
@@ -1397,7 +1408,7 @@ __cmd() {
         }
     fi
 
-    if hint 1 -out-save "$@"; then
+    if hint 1 0 -out-save "$@"; then
         arg_set "$_hint" "$1" || return "$?"
     fi
 
@@ -1451,7 +1462,7 @@ __ed() {
     if [ "$_fmt" ]; then
         set -- "$_fmt" "$@"
 
-        if hint 3 -crc "$@"; then
+        if hint 3 0 -crc "$@"; then
             _crc="$(printf "%s" "$1" | cksum)"
             _crc="${_crc%%' '*}"
 
@@ -1462,7 +1473,7 @@ __ed() {
             }
         fi
 
-        if hint 3 -log "$@"; then
+        if hint 3 0 -log "$@"; then
             ed_exec "$_hint" "$2" "$1" || return "$?"
         else
             ed_exec '' "$2" "$1" || return "$?"
@@ -1471,7 +1482,7 @@ __ed() {
         shift 2 && set -- "$_file" "$@"
     fi
 
-    if hint 2 -no-sanit "$@"; then
+    if hint 2 0 -no-sanit "$@"; then
         OBJ="$1"; OBJ_PATH="$2"
     else
         OBJ="$1"; OBJ_PATH=
@@ -1788,7 +1799,7 @@ __write() {
         ;;
     esac
 
-    if hint 4 -trunc "$@" && hint 4 -log "$@"; then
+    if hint 4 0 -trunc "$@" && hint 4 0 -log "$@"; then
         if [ -e "$_hint" ]; then
             { : > "$_hint"; } || {
                 err -white - "Failed to truncate the log file. ($?)"
@@ -1798,8 +1809,8 @@ __write() {
         fi
     fi
 
-    if hint 4 -sanit "$@"; then
-        if hint 4 -log "$@"; then
+    if hint 4 0 -sanit "$@"; then
+        if hint 4 0 -log "$@"; then
             if [ -e "$_hint" ]; then
                 rm -rf "$_hint" || {
                     err -white - "Failed to delete the log file. ($?)"
@@ -1810,7 +1821,7 @@ __write() {
         fi
 
         unset OBJ OBJ_PATH
-    elif hint 4 -no-sanit "$@"; then
+    elif hint 4 0 -no-sanit "$@"; then
         OBJ="$2"; OBJ_PATH="$3"
     fi
 
