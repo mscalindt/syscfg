@@ -490,8 +490,7 @@ fs_equiv_type_attr() {
 #
 # Hint `--` will be respected at all times.
 #
-# For more information, refer to the documentation of hint_act() and
-# hint_set().
+# For more information, refer to the documentation of hint_set().
 #.
 hint() {
     assert -min "$#" 2 || exit 255
@@ -504,7 +503,7 @@ hint() {
     # By default, it is expected hint_act() to return false to proceed with
     # the original hint query logic. Shall hint_act() return true, it is
     # required that $_act is set to either `0` or `1` to fulfill the outcome.
-    if hint_act "$2"; then
+    if hint_act "$@"; then
         case "$_act" in
             0|1) return "$_act" ;;
         esac
@@ -540,7 +539,7 @@ hint() {
 #! .desc:
 # Dictate the outcome of a hint query independently
 #! .params:
-# <$1> - hint
+# <$@> - hint()
 #! .gives.var:
 # (0) <_act> - integer;
 #              `0` = act true; `1` = act false
