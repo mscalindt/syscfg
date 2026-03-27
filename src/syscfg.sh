@@ -88,6 +88,52 @@ _version() {
 
 helper_functions() { # START helper_functions
 #! .desc:
+# Create a parent directory respecting the API specification
+#! .params:
+# <$@> - __write()
+# <$1> - path
+#! .uses.var:
+# <_pchunk> - string;
+#             path
+#! .rc:
+# (0) success
+# (*) error
+#! .desc.ext:
+# Supported hints:
+# `-gid`: Specify GID to set;
+# `-group`: Specify group name to set;
+# `-uid`: Specify UID to set;
+# `-user`: Specify user name to set.
+#
+# For more information, refer to the documentation of __write(), hint(), and
+# pchunk_map().
+#.
+_mkdir() {
+    [ ! -e "$_pchunk" ] || return 0
+    [ "$3" != "$_pchunk" ] || return 0
+
+    shift 4; set -- "$_pchunk" "$@"
+
+    mkdir "$1" || return "$?"
+
+    if hint 1 1 -uid "$@" || hint 1 1 -user "$@"; then
+        set -- "$_hint" "$@"
+
+        if hint 2 1 -gid "$@" || hint 2 1 -group "$@"; then
+            chown -h "$1"":$_hint" -- "$2" || return "$?"
+        else
+            chown -h "$1" -- "$2" || return "$?"
+        fi
+
+        shift
+    elif hint 1 1 -gid "$@" || hint 1 1 -group "$@"; then
+        chgrp -h "$_hint" -- "$1" || return "$?"
+    fi
+
+    return 0
+}
+
+#! .desc:
 # Print bytes in human-readable fmt: "N" "X"iB / "N" "X"B
 #! .params:
 # <$1> - bytes
@@ -882,32 +928,6 @@ inode_align_type_attr() {
 }
 
 #! .desc:
-# Create the parents of a file/directory
-#! .params:
-# <$1> - path
-#! .rc:
-# (0) success
-# (*) error
-#! .ec:
-# (255) input error
-#.
-mkdir_parents() {
-    assert -eq "$#" 1 || exit 255
-
-    set -- "${1%"${1##*[!/]}"}"
-
-    if [ -d "${1%/*}/" ]; then
-        return 0
-    fi
-
-    # Shall consider implementing 'mkdir -p' within the shell by path
-    # traversing the function argument and passing separate consequental
-    # arguments to mkdir. Important to note that in such situation, error
-    # handling would be on us, including the handling of race conditions.
-    mkdir -p -- "${1%/*}"
-}
-
-#! .desc:
 # Print POSIX shell-compatible octal escape sequence(s) of `od -b -An` string
 #! .params:
 # <[$1]> - string
@@ -1048,7 +1068,7 @@ write() {
         inode_align "$@" || rm -rf -- "$3" || return "$?"
     }
 
-    mkdir_parents "$3"
+    pchunk_map "$3" '' '' _mkdir "$@"
 
     # Atomic overwrites are currently not supported.
     case "$1" in
@@ -1717,6 +1737,10 @@ __obj_write_ow_soft() {
 # '-trunc': Truncate the path specified by `-log`;
 # `-uid`: Specify UID to assert/set;
 # `-user`: Specify user name to assert/set.
+#
+# Missing directory parents will be created and inherit ownership hints, with
+# default (mkdir-driven) directory mode "777 - umask" (755) unaffected by
+# the `-mode` hint.
 #
 # For more information, refer to the documentation of hint(), validate_write(),
 # and write().
