@@ -1048,6 +1048,8 @@ BEGIN {
 #! .rc:
 # (0) success
 # (*) error
+#! .ec:
+# (13) EACCES
 #! .desc.ext:
 # We do not yet have an in-place overwrite mechanism for types `-c` and `-l`.
 # We do not yet have atomic overwrites.
@@ -1055,18 +1057,49 @@ BEGIN {
 # For more information, refer to the documentation of __write().
 #.
 write() {
-    # When the target object exists, try to align or else remove it. Alignment
-    # is important for expected overwrite behavior when the inode state itself
-    # forced a write, otherwise a write would keep occurring in a circular
-    # chain of forced writes irrespective of the object content.
-    #
-    # Types `-c` and `-l` are currently not supported and always removed.
-    { ! ftype "$3"; } || {
+    if ftype "$3"; then
+        path_strip "$3" 1 -floor
+        if [ ! -w "$_path" ] || [ ! -w "$3" ]; then
+            err -red - 'EACCES:'
+
+            # Do not assume the path still exists.
+            ftype "$3" -err && {
+                err - - " $3"
+            } || {
+                err -red -- '>'
+                err - - " $3"
+            }
+
+            exit 13
+        fi
+    else
+        path_strip "$3" 1 -floor
+        if [ ! -w "$_path" ]; then
+            err -red - 'EACCES:'
+
+            # Do not assume the path still does NOT exist.
+            ftype "$3" -err && {
+                err - - " $3"
+            } || {
+                err -red -- '>'
+                err - - " $3"
+            }
+
+            exit 13
+        fi
+
         chattr_remove "$3"
         unmount "$3"
 
+        # When the target object exists, try to align or else remove it.
+        # Alignment is important for expected overwrite behavior when the inode
+        # state itself forced a write, otherwise a write would keep occurring
+        # in a circular chain of forced writes irrespective of the object
+        # content.
+        #
+        # Types `-c` and `-l` are currently not supported and always removed.
         inode_align "$@" || rm -rf -- "$3" || return "$?"
-    }
+    fi
 
     for_pchunk "$3" '' '' _mkdir "$@"
 
@@ -1290,6 +1323,7 @@ client_lib() { # START client_lib
 # (*) error
 #! .ec:
 # (2) ENOENT
+# (13) EACCES
 # (255) input error
 #! .desc.ext:
 # Supported hints:
@@ -1314,6 +1348,21 @@ __action() {
 
         exit 2
     }
+
+    path_strip "$2" 1 -floor
+    if [ ! -w "$_path" ] || [ ! -w "$2" ]; then
+        err -red - 'EACCES:'
+
+        # Do not assume the path still exists.
+        ftype "$2" -err && {
+            err - - " $2"
+        } || {
+            err -red -- '>'
+            err - - " $2"
+        }
+
+       exit 13
+    fi
 
     if hint 2 0 -trunc "$@"; then
         if ftype "$2"/; then
@@ -2212,10 +2261,6 @@ main() {
 
     # Expand the pseudo array of single-quote-escaped file operand arguments.
     _opts="$1"; eval set -- "$2"; set -- "$_opts" "$@"
-
-    [ "$(id -u)" = 0 ] || {
-        err -red - 'Missing root rights.'; exit 1
-    }
 
     while [ "$#" -ge 2 ]; do
         if [ ! -f "$2" ]; then

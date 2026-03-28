@@ -21,6 +21,9 @@ syscfg NEWS
 * A <newline> character (one) will always be stripped from the CRC hint when
   passed along with the string.
 
+* EUID 0 is not a runtime requirement anymore. Instead, EACCES would be issued
+  where appropriate.
+
 
 2026-03-13 - 2026-03-15
 =======================
