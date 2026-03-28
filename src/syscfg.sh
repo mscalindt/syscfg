@@ -720,17 +720,17 @@ hints_offset() {
 
     _rtl_offset="$2"
     shift "$((2 + $1))"
-    set -- 0 "$_rtl_offset" "$@"
+    set -- 2 "$_rtl_offset" "$@"
 
-    while hint_set 2 "$2" "$@"; do
+    while hint_set "$1" "$2" "$@"; do
+        _offset="$((_offset + $1))"; shift; set -- "$_offset" "$@"
+
         case "$_hint" in
-            '--') set -- "$(($1 + _offset))" "$@" && break ;;
+            '--') break ;;
         esac
-
-        set -- "$(($1 + _offset))" "$@"
     done
 
-    _offset="$1"
+    _offset="$(($1 - 2))"
 }
 
 #! .desc:
