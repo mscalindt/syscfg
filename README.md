@@ -10,7 +10,7 @@
 ## Introduction
 
 [`syscfg`](https://github.com/mscalindt/syscfg) is a general-purpose system
-configuration utility that exposes a powerful system administration API for
+configuration utility that exposes a powerful administration API for
 its clients to use.
 
 ## Features
