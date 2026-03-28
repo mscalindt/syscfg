@@ -297,7 +297,7 @@ Hints:
 .br
 \fB-no-sanit\fR - preserve \fBOBJ\fR and \fBOBJ_PATH\fR
 .br
-\fB-no-sync\fR - disable write equivalence synchronization
+\fB-no-sync\fR - disable write synchronization
 .br
 \fB-sanit\fR - delete hint paths, unset \fBOBJ\fR and \fBOBJ_PATH\fR
 .br
@@ -312,8 +312,12 @@ Hints:
 .SH OPTIONS
 .B -d, --disable-write-avoidance
 .RS
-Disable write avoidance. \fBsyscfg\fR will not test the target object for
-equivalence to avoid performing an artificial write.
+Completely disable write avoidance functionality. \fBsyscfg\fR will not test
+the target object for equivalence to avoid performing an artificial write,
+and will instead always mark a write as valid.
+
+\fBNote:\fR Individual write avoidance components can be turned off instead
+to achieve a more "naive" write avoidance behavior.
 .RE
 
 .PP
@@ -349,42 +353,46 @@ Disable the write avoidance assert of user ownership.
 .PP
 .B -D, --disable-write-sync
 .RS
-Disable write equivalence (inode) synchronization. \fBsyscfg\fR will not test
-the target object for inode equivalence on (any) specified properties.
+Completely disable write synchronization functionality. \fBsyscfg\fR will not
+test/perform inode equivalence for/on any specified target object properties,
+and will instead proceed with its removal to ensure write integrity.
 
-\fBNote:\fR Disabling this functionality will make \fBsyscfg\fR avoid (if
-applicable) a write that would otherwise be performed to satisfy any specified
-inode properties for the target object.
+\fBNote:\fR Disabling this functionality invalidates in-place and atomic
+overwrites.
+
+\fBNote:\fR Individual write synchronization components can be turned off
+instead to achieve a more lenient write integrity behavior. Disabling
+individual components may invalidate in-place and/or atomic overwrites.
 .RE
 
 .PP
 .B --disable-write-sync-group
 .RS
-Disable the write equivalence synchronization for group ownership.
+Disable the write synchronization for group ownership.
 .RE
 
 .PP
 .B --disable-write-sync-perm
 .RS
-Disable the write equivalence synchronization for permissions (mode).
+Disable the write synchronization for permissions (mode).
 .RE
 
 .PP
 .B --disable-write-sync-type
 .RS
-Disable the write equivalence synchronization for object type.
+Disable the write synchronization for object type.
 .RE
 
 .PP
 .B --disable-write-sync-type-attr
 .RS
-Disable the write equivalence synchronization for object type attributes.
+Disable the write synchronization for object type attributes.
 .RE
 
 .PP
 .B --disable-write-sync-user
 .RS
-Disable the write equivalence synchronization for user ownership.
+Disable the write synchronization for user ownership.
 .RE
 
 .PP

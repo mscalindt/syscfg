@@ -45,21 +45,21 @@ _misc() {
       --disable-write-avoidance-user
                                 disable the write avoidance assert of user
                                 ownership
-  -D, --disable-write-sync      disable write equivalence synchronization
+  -D, --disable-write-sync      disable write synchronization
       --disable-write-sync-group
-                                disable the write equivalence synchronization
-                                for group ownership
+                                disable the write synchronization for group
+                                ownership
       --disable-write-sync-perm
-                                disable the write equivalence synchronization
-                                for permissions (mode)
+                                disable the write synchronization for
+                                permissions (mode)
       --disable-write-sync-type
-                                disable the write equivalence synchronization
-                                for object type
+                                disable the write synchronization for object
+                                type
       --disable-write-sync-type-attr
-                                disable the write equivalence synchronization
-                                for object type attributes
+                                disable the write synchronization for object
+                                type attributes
       --disable-write-sync-user
-                                disable the write equivalence synchronization
+                                disable the write synchronization
                                 for user ownership
       --silent-cmd              disable command output
       --silent-cmd-info         disable commands to be ran information
@@ -734,15 +734,14 @@ hints_offset() {
 }
 
 #! .desc:
-# Synchronize equivalence (complete inode state) of a write
+# Synchronize inode state for a write
 #! .params:
 # <$@> - __write()
 #! .rc:
 # (0) success
 # (*) error
 #! .desc.ext:
-# We do not yet have write equivalence synchronization support for types `-c`
-# and `-l`.
+# We do not yet have write synchronization support for types `-c` and `-l`.
 #
 # For more information, refer to the documentation of __write().
 #.
@@ -1780,7 +1779,7 @@ __obj_write_ow_soft() {
 # `-mode`: Specify file mode in octal to assert/set;
 # `-no-avoid`: Disable write avoidance;
 # `-no-sanit`: Preserve $OBJ and $OBJ_PATH;
-# `-no-sync`: Disable write equivalence synchronization;
+# `-no-sync`: Disable write synchronization;
 # `-sanit`: Delete hint paths, unset $OBJ and $OBJ_PATH;
 # '-trunc': Truncate the path specified by `-log`;
 # `-uid`: Specify UID to assert/set;
@@ -2178,7 +2177,7 @@ main() {
     fi
 
     if [ "$disable_write_avoidance" ]; then
-        fs_equiv() { return 0; }
+        fs_equiv() { return 1; }
     fi
 
     if [ "$disable_write_avoidance_group" ]; then
@@ -2202,7 +2201,7 @@ main() {
     fi
 
     if [ "$disable_write_sync" ]; then
-        inode_align() { return 0; }
+        inode_align() { return 1; }
     fi
 
     if [ "$disable_write_sync_group" ]; then

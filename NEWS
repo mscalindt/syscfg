@@ -24,6 +24,11 @@ syscfg NEWS
 * EUID 0 is not a runtime requirement anymore. Instead, EACCES would be issued
   where appropriate.
 
+* Fixed an oversight of how `-d`/`-D` options shall work and clarified their
+  role and related documentation. Behavior now matches `-no-avoid`/`-no-sync`
+  hints, respectively.
+  Breaking (backward-incompatible) change.
+
 
 2026-03-13 - 2026-03-15
 =======================
