@@ -2123,7 +2123,7 @@ main() {
     fi
 
     if [ ! "$2" ]; then
-        err - - "${0##*/}: No files have been specified."
+        err - - "${0##*/}: No clients have been specified."
 
         exit 2
     fi
