@@ -105,8 +105,8 @@ helper_functions() { # START helper_functions
 # `-uid`: Specify UID to set;
 # `-user`: Specify user name to set.
 #
-# For more information, refer to the documentation of __write(), hint(), and
-# pchunk_map().
+# For more information, refer to the documentation of __write(), for_pchunk(),
+# and hint().
 #.
 _mkdir() {
     [ ! -e "$_pchunk" ] || return 0
@@ -961,7 +961,7 @@ to_octal_offset() {
 
     assert -eq "$#" 1 || exit 255
 
-    to_octal "$(sline_map "$1" to_octal_offset_)"
+    to_octal "$(for_sline "$1" to_octal_offset_)"
 }
 
 #! .desc:
@@ -1068,7 +1068,7 @@ write() {
         inode_align "$@" || rm -rf -- "$3" || return "$?"
     }
 
-    pchunk_map "$3" '' '' _mkdir "$@"
+    for_pchunk "$3" '' '' _mkdir "$@"
 
     # Atomic overwrites are currently not supported.
     case "$1" in
