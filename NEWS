@@ -7,6 +7,7 @@ syscfg NEWS
 
 * syscfg now has a standard cmdline and documentation. Additionally, it now
   builds shell-glossary into itself. (c205fcc)
+  Breaking (backward-incompatible) change.
 
 * Internally, the hint system underwent peculiar maintainer-focused
   improvements. (37d6931, 4ed6cc2, 89dcc88)
