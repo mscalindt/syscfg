@@ -1,7 +1,7 @@
 syscfg NEWS
 
 
-2026-03-21 - 2026-03-27
+2026-03-21 - 2026-03-28
 =======================
 * syscfg will trap EXIT instead of continuing to emulate it. (670ec0b)
 
@@ -14,6 +14,9 @@ syscfg NEWS
 * The created filesystem parents for a write now inherit all relevant inode
   properties of the target, and their mode is additionally specified to be
   "umask-explicit" (default mkdir-driven directory mode).
+
+* A <newline> character (one) will always be stripped from the CRC hint when
+  passed along with the string.
 
 
 2026-03-13 - 2026-03-15

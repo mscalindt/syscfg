@@ -1459,9 +1459,6 @@ __cmd() {
 # `-log`: Specify log file path for libfile();
 # `-no-sanit`: Preserve $OBJ_PATH alongside $OBJ.
 #
-# For hint `-crc`, the format string will be asserted without any trailing
-# <newline> characters.
-#
 # For more information, refer to the documentation of fed(), hint() and
 # libfile().
 #.
@@ -1486,8 +1483,10 @@ __ed() {
             _crc="$(printf "%s" "$1" | cksum)"
             _crc="${_crc%%' '*}"
 
-            [ "$_crc" = "$_hint" ] || {
-                __err -red - "CRC32 mismatch. (hint = $_hint; crc = $_crc)"
+            [ "$_crc" = "${_hint%
+}" ] || {
+                __err -red - "CRC32 mismatch. (hint = ${_hint%
+}; crc = $_crc)"
 
                 exit 1
             }
