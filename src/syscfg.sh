@@ -1499,7 +1499,7 @@ __cmd() {
 # (0) success
 # (*) error
 #! .ec:
-# (1) hint assertion failed
+# (1) CRC32 mismatch
 # (255) input error
 #! .desc.ext:
 # Supported hints:
