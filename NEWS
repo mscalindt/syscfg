@@ -16,6 +16,8 @@ syscfg NEWS
   properties of the target, and their mode is additionally specified to be
   "umask-explicit" (default mkdir-driven directory mode).
 
+* Synced shell-glossary to release 20260328. (de12818)
+
 * A <newline> character (one) will always be stripped from the CRC hint when
   passed along with the string.
 
