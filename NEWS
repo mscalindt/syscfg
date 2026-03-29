@@ -36,6 +36,8 @@ syscfg NEWS
   consider the arguments to be more clients to execute.
   Breaking (backward-incompatible) change.
 
+* Now supports `-s`/`--source`.
+
 
 2026-03-13 - 2026-03-15
 =======================

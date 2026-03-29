@@ -62,6 +62,7 @@ _misc() {
                                 disable the write synchronization
                                 for user ownership
   -n, --client-name <NAME>      specify the client name
+  -s, --source <PATH>           specify a file path to source
       --silent-cmd              disable command output
       --silent-cmd-info         disable commands to be ran information
       --silent-write            disable write content information
@@ -2022,6 +2023,10 @@ main() {
         o_silent_write_stat() {
             printf " %s" "silent_write_stat='1';"
         }
+        o_source() {
+            arg_set _quot "$2"
+            printf " %s" "source=$_quot;"
+        }
         o_version() {
             printf " %s" "version='1';"
         }
@@ -2052,6 +2057,7 @@ main() {
         printf " %s" "silent_write="
         printf " %s" "silent_write_avoidance="
         printf " %s" "silent_write_stat="
+        printf " %s" "source="
         printf " %s" "version="
         printf " %s" "write_always="
         printf " %s" "write_forced="
@@ -2121,6 +2127,9 @@ main() {
             elif opt_long "$1" "$2" -s 'silent-write-stat'; then
                 o_silent_write_stat;
                 opt_long "$1" "$2" -s 'silent-write-stat'
+            elif option "$1" "$2" -c 's' 'source'; then
+                o_source "$_match" "$_arg"
+                option "$1" "$2" -c 's' 'source'
             elif opt_long "$1" "$2" -s 'version'; then
                 o_version;
                 opt_long "$1" "$2" -s 'version'
@@ -2292,6 +2301,17 @@ main() {
         eval " $1"
         CLIENT_NAME="$client_name"
         readonly CLIENT_NAME
+
+        if [ "$source" ]; then
+            if [ ! -f "$source" ]; then
+                err - - "${0##*/}: Not a valid file: $source"
+
+                exit 1
+            fi
+
+            . "$source"
+        fi
+
         shift
         . "$@"
     )
