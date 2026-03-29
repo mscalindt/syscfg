@@ -74,7 +74,7 @@ For more information, refer to the man page: `man syscfg`.
 ## Features
 
 * Portable octal to binary file mechanism.
-* Write avoidance and inode state synchronization.
+* Write avoidance and integrity.
 * Written in POSIX shell language.
 
 ## Build
