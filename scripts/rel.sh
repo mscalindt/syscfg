@@ -67,7 +67,7 @@ $NEWS
 - Filtered log of core changes:
 $SRC_LOG
 
-- Complete log between $2 and $1 (${3%"${3#???????}"}):
+- Complete log between $2 and $1:
 $LOG" -as "$1" "$3"
 elif [ "$LOG" ]; then
     git tag -m \
@@ -75,7 +75,7 @@ elif [ "$LOG" ]; then
 
 $NEWS
 
-- Complete log between $2 and $1 (${3%"${3#???????}"}):
+- Complete log between $2 and $1:
 $LOG" -as "$1" "$3"
 else
     git tag -m "syscfg $1" -as "$1" "$3"
