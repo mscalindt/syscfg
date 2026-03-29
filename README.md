@@ -13,6 +13,64 @@
 configuration utility that exposes a powerful administration API for
 its clients to use.
 
+```
+$ git describe
+20260329
+$ ./syscfg --help
+Usage: syscfg [options] [--] FILE [ARG...]
+Declarative OS configuration.
+
+Options:
+  -d, --disable-write-avoidance
+                                disable write avoidance
+      --disable-write-avoidance-group
+                                disable the write avoidance assert of group
+                                ownership
+      --disable-write-avoidance-perm
+                                disable the write avoidance assert of
+                                permissions (mode)
+      --disable-write-avoidance-type
+                                disable the write avoidance assert of object
+                                type
+      --disable-write-avoidance-type-attr
+                                disable the write avoidance assert of object
+                                type attributes
+      --disable-write-avoidance-user
+                                disable the write avoidance assert of user
+                                ownership
+  -D, --disable-write-sync      disable write synchronization
+      --disable-write-sync-group
+                                disable the write synchronization for group
+                                ownership
+      --disable-write-sync-perm
+                                disable the write synchronization for
+                                permissions (mode)
+      --disable-write-sync-type
+                                disable the write synchronization for object
+                                type
+      --disable-write-sync-type-attr
+                                disable the write synchronization for object
+                                type attributes
+      --disable-write-sync-user
+                                disable the write synchronization
+                                for user ownership
+  -n, --client-name <NAME>      specify the client name
+  -s, --source <PATH>           specify a file path to source
+      --silent-cmd              disable command output
+      --silent-cmd-info         disable commands to be ran information
+      --silent-write            disable write content information
+      --silent-write-avoidance  disable write avoidance information
+      --silent-write-stat       disable write statistics information
+  -w, --write-always            elevate to state "hard overwrite" all (soft)
+                                overwrites
+  -W, --write-forced            elevate to state "soft overwrite" all default
+                                writes
+      --help     display this help text and exit
+      --version  display version information and exit
+
+For more information, refer to the man page: `man syscfg`.
+```
+
 ## Features
 
 * Portable octal to binary file mechanism.
