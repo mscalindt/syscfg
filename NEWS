@@ -1,7 +1,7 @@
 syscfg NEWS
 
 
-2026-03-21 - 2026-03-28
+2026-03-21 - 2026-03-29
 =======================
 * syscfg will trap EXIT instead of continuing to emulate it. (670ec0b)
 
@@ -27,6 +27,13 @@ syscfg NEWS
 * Fixed an oversight of how `-d`/`-D` options shall work and clarified their
   role and related documentation. Behavior now matches `-no-avoid`/`-no-sync`
   hints, respectively.
+  Breaking (backward-incompatible) change.
+
+* $opd has been renamed to $CLIENT_NAME and formally specified. Clients
+  shall not set it themselves anymore; `syscfg` manages it now, and the caller
+  can also specify it using `-n`/`--client-name`. Additionally, `syscfg` now
+  supports passing any arguments to only one client and in turn does not
+  consider the arguments to be more clients to execute.
   Breaking (backward-incompatible) change.
 
 

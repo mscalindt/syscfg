@@ -1,4 +1,4 @@
-.TH SYSCFG "1" "March 28, 2025" "syscfg 20260315" ""
+.TH SYSCFG "1" "March 29, 2025" "syscfg 20260315" ""
 
 .SH NAME
 syscfg - declarative OS configuration
@@ -7,7 +7,8 @@ syscfg - declarative OS configuration
 \fBsyscfg\fR
 \fR[\fIoptions\fR]
 [\fB--\fR]
-\fIFILE...\fR
+\fIFILE\fR
+\fR[\fIARG...\fR]
 
 .PP
 Options can be specified in any order.
@@ -17,6 +18,9 @@ Options can be specified in any order.
 powerful administration API for its clients to use. Clients are configuration
 files that may contain de facto POSIX shell code to execute along with
 the API.
+
+Variable \fBCLIENT_NAME\fR, if not manually specified, will be derived from
+the basename of the client.
 
 .SH API
 Certain API functions may reference and/or refer to documentation outside of
@@ -393,6 +397,12 @@ Disable the write synchronization for object type attributes.
 .B --disable-write-sync-user
 .RS
 Disable the write synchronization for user ownership.
+.RE
+
+.PP
+\fB-n, --client-name\fR \fISTRING\fR
+.RS
+Specify the client name.
 .RE
 
 .PP

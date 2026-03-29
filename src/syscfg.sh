@@ -61,6 +61,7 @@ _misc() {
       --disable-write-sync-user
                                 disable the write synchronization
                                 for user ownership
+  -n, --client-name <NAME>      specify the client name
       --silent-cmd              disable command output
       --silent-cmd-info         disable commands to be ran information
       --silent-write            disable write content information
@@ -78,7 +79,7 @@ For more information, refer to the man page: `man syscfg`.'
 
 _usage() {
     printf "%s\n" \
-'Usage: syscfg [options] [--] FILE...'
+'Usage: syscfg [options] [--] FILE [ARG...]'
 }
 
 _version() {
@@ -1569,7 +1570,7 @@ __err() {
     _clr="$1"
     _fmt="$2"
 
-    shift 2 && set -- "$_clr" "$_fmt" "[E $$ $opd]" "$@"
+    shift 2 && set -- "$_clr" "$_fmt" "[E $$ $CLIENT_NAME]" "$@"
 
     err "$@"
 }
@@ -1636,7 +1637,7 @@ __info() {
     _clr="$1"
     _fmt="$2"
 
-    shift 2 && set -- "$_clr" "$_fmt" "[I $$ $opd]" "$@"
+    shift 2 && set -- "$_clr" "$_fmt" "[I $$ $CLIENT_NAME]" "$@"
 
     info "$@"
 }
@@ -1963,6 +1964,10 @@ main() {
     # for example option `foo` and argument `bar`: `foo='bar';`.
     # This is a requirement to make slicing based on `'--'` unambiguous.
     _arr=$(
+        o_client_name() {
+            arg_set _quot "$2"
+            printf " %s" "client_name=$_quot;"
+        }
         o_disable_write_avoidance() {
             printf " %s" "disable_write_avoidance='1';"
         }
@@ -2028,6 +2033,7 @@ main() {
         }
 
         # Sanitize the environment.
+        printf " %s" "client_name="
         printf " %s" "disable_write_avoidance="
         printf " %s" "disable_write_avoidance_group="
         printf " %s" "disable_write_avoidance_perm="
@@ -2058,7 +2064,10 @@ main() {
             esac
 
             # Options set again for $_opt and $_shift.
-            if option "$1" "$2" -s 'd' 'disable-write-avoidance'; then
+            if option "$1" "$2" -c 'n' 'client-name'; then
+                o_client_name "$_match" "$_arg"
+                option "$1" "$2" -c 'n' 'client-name'
+            elif option "$1" "$2" -s 'd' 'disable-write-avoidance'; then
                 o_disable_write_avoidance;
                 option "$1" "$2" -s 'd' 'disable-write-avoidance'
             elif opt_long "$1" "$2" -s 'disable-write-avoidance-group'; then
@@ -2261,20 +2270,32 @@ main() {
     # Expand the pseudo array of single-quote-escaped file operand arguments.
     _opts="$1"; eval set -- "$2"; set -- "$_opts" "$@"
 
-    while [ "$#" -ge 2 ]; do
-        if [ ! -f "$2" ]; then
-            err - - "${0##*/}: Not a valid file: $2"
+    if [ ! -f "$2" ]; then
+        err - - "${0##*/}: Not a valid file: $2"
 
-            exit 2
-        fi
+        exit 2
+    fi
 
-        # In the future, clients will be launched as an external command,
-        # lexed and parsed by syscfg.
-        ( shift; . "$1" "$1"; )
-        info -green - "$2:" 'Done!'
+    eval " $1"
+    if [ ! "$client_name" ]; then
+        _name="$2"
+        _name="${_name%"${_name##*[!/]}"}"
+        _name="${_name##*/}"
 
-        _opts="$1"; shift 2; set -- "$_opts" "$@"
-    done
+        arg_set _quot "$_name"
+        _opts="$1"; shift; set -- "$_opts client_name=$_quot;" "$@"
+    fi
+
+    # In the future, clients will be launched as an external command,
+    # lexed and parsed by syscfg.
+    (
+        eval " $1"
+        CLIENT_NAME="$client_name"
+        readonly CLIENT_NAME
+        shift
+        . "$@"
+    )
+    info -green - "$2:" 'Done!'
 
     return 0
 }
