@@ -26,7 +26,7 @@ SRC_LOG=$(
     printf "%s\n" "$LOG" | {
         while IFS= read -r LINE; do
             case "$LINE" in
-                *': [doc]'*)
+                *': [doc]'* | *': [fmt]'*)
                     continue
                 ;;
                 *'syscfg: '* | *'(): '* | *'.gitmodules: '*)
