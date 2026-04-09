@@ -63,6 +63,7 @@ _misc() {
                                 for user ownership
   -n, --client-name <NAME>      specify the client name
   -s, --source <PATH>           specify a file path to source
+  -S, --silent                  disable all syscfg output
       --silent-cmd              disable command output
       --silent-cmd-info         disable commands to be ran information
       --silent-write            disable write content information
@@ -2008,6 +2009,9 @@ main() {
         o_help() {
             printf " %s" "help='1';"
         }
+        o_silent() {
+            printf " %s" "silent='1';"
+        }
         o_silent_cmd() {
             printf " %s" "silent_cmd='1';"
         }
@@ -2052,6 +2056,7 @@ main() {
         printf " %s" "disable_write_sync_type_attr="
         printf " %s" "disable_write_sync_user="
         printf " %s" "help="
+        printf " %s" "silent="
         printf " %s" "silent_cmd="
         printf " %s" "silent_cmd_info="
         printf " %s" "silent_write="
@@ -2112,6 +2117,9 @@ main() {
             elif opt_long "$1" "$2" -s 'help'; then
                 o_help;
                 opt_long "$1" "$2" -s 'help'
+            elif option "$1" "$2" -s 'S' 'silent'; then
+                o_silent;
+                option "$1" "$2" -s 'S' 'silent'
             elif opt_long "$1" "$2" -s 'silent-cmd'; then
                 o_silent_cmd;
                 opt_long "$1" "$2" -s 'silent-cmd'
@@ -2242,6 +2250,14 @@ main() {
         inode_align_owner() { return 0; }
     fi
 
+    if [ "$silent" ]; then
+        __info() { info "$@"; }
+        cmd_info() { return 0; }
+        write_info() { return 0; }
+        write_info_avoidance() { return 0; }
+        write_info_stat() { return 0; }
+    fi
+
     if [ "$silent_cmd" ]; then
         cmd_exec() { command -- "$@" > /dev/null; }
     fi
@@ -2295,10 +2311,10 @@ main() {
         _opts="$1"; shift; set -- "$_opts client_name=$_quot;" "$@"
     fi
 
+    eval " $1"
     # In the future, clients will be launched as an external command,
     # lexed and parsed by syscfg.
     (
-        eval " $1"
         CLIENT_NAME="$client_name"
         readonly CLIENT_NAME
 
@@ -2315,7 +2331,9 @@ main() {
         shift
         . "$@"
     )
-    info -green - "$2:" 'Done!'
+    if [ ! "$silent" ]; then
+        info -green - "$2:" 'Done!'
+    fi
 
     return 0
 }
