@@ -476,7 +476,7 @@ fs_equiv_perm() {
                 # `-` = "regular file"
                 [ ! "$1" = "-$_mode" ] || return 0
             else
-                # `-`, `rw-r--r--` = "regular file", 0644"
+                # `-`, `rw-r--r--` = "regular file", 0644
                 [ ! "$1" = '-rw-r--r--' ] || return 0
             fi
         ;;
@@ -890,7 +890,7 @@ inode_align_perm() {
                     __cmd -- chmod "$_hint" -- "$4" || return "$?"
                 fi
             else
-                # `-`, `rw-r--r--` = "regular file", 0644"
+                # `-`, `rw-r--r--` = "regular file", 0644
                 if [ ! "$1" = '-rw-r--r--' ]; then
                     __cmd -- chmod 0644 -- "$4" || return "$?"
                 fi
