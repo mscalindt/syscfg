@@ -15,7 +15,7 @@ its clients to use.
 
 ```
 $ git describe
-20260329
+20260410
 $ ./syscfg --help
 Usage: syscfg [options] [--] FILE [ARG...]
 Declarative OS configuration.
@@ -55,7 +55,10 @@ Options:
                                 disable the write synchronization
                                 for user ownership
   -n, --client-name <NAME>      specify the client name
+  -o, --output <PATH>           specify a file path to write the client output
+                                to
   -s, --source <PATH>           specify a file path to source
+  -S, --silent                  disable all syscfg output
       --silent-cmd              disable command output
       --silent-cmd-info         disable commands to be ran information
       --silent-write            disable write content information
