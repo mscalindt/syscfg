@@ -1,4 +1,4 @@
-.TH SYSCFG "1" "April 09, 2025" "syscfg 20260329" ""
+.TH SYSCFG "1" "April 10, 2025" "syscfg 20260329" ""
 
 .SH NAME
 syscfg - declarative OS configuration
@@ -403,6 +403,13 @@ Disable the write synchronization for user ownership.
 \fB-n, --client-name\fR \fISTRING\fR
 .RS
 Specify the client name.
+.RE
+
+.PP
+\fB-o, --output\fR \fIPATH\fR
+.RS
+Specify a file path to write the client output to. If the file already exists,
+execution will abort with exit status \fB1\fR.
 .RE
 
 .PP

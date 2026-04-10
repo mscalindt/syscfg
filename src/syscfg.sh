@@ -62,6 +62,8 @@ _misc() {
                                 disable the write synchronization
                                 for user ownership
   -n, --client-name <NAME>      specify the client name
+  -o, --output <PATH>           specify a file path to write the client output
+                                to
   -s, --source <PATH>           specify a file path to source
   -S, --silent                  disable all syscfg output
       --silent-cmd              disable command output
@@ -2009,6 +2011,10 @@ main() {
         o_help() {
             printf " %s" "help='1';"
         }
+        o_output() {
+            arg_set _quot "$2"
+            printf " %s" "output=$_quot;"
+        }
         o_silent() {
             printf " %s" "silent='1';"
         }
@@ -2056,6 +2062,7 @@ main() {
         printf " %s" "disable_write_sync_type_attr="
         printf " %s" "disable_write_sync_user="
         printf " %s" "help="
+        printf " %s" "output="
         printf " %s" "silent="
         printf " %s" "silent_cmd="
         printf " %s" "silent_cmd_info="
@@ -2120,6 +2127,9 @@ main() {
             elif option "$1" "$2" -s 'S' 'silent'; then
                 o_silent;
                 option "$1" "$2" -s 'S' 'silent'
+            elif option "$1" "$2" -c 'o' 'output'; then
+                o_output "$_match" "$_arg"
+                option "$1" "$2" -c 'o' 'output'
             elif opt_long "$1" "$2" -s 'silent-cmd'; then
                 o_silent_cmd;
                 opt_long "$1" "$2" -s 'silent-cmd'
@@ -2328,8 +2338,20 @@ main() {
             . "$source"
         fi
 
-        shift
-        . "$@"
+        eval " $1"
+        if [ "$output" ]; then
+            if [ -e "$output" ] || [ -h "$output" ]; then
+                err - - "${0##*/}: Will not overwrite: $output"
+
+                exit 1
+            fi
+
+            shift
+            { . "$@"; } > "$output"
+        else
+            shift
+            . "$@"
+        fi
     )
     if [ ! "$silent" ]; then
         info -green - "$2:" 'Done!'

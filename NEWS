@@ -1,10 +1,12 @@
 syscfg NEWS
 
 
-2026-04-09 - 2026-04-09
+2026-04-09 - 2026-04-10
 =======================
 * Now supports `-S`/`--silent`. Useful for programmatical clients whose output
   shall not be polluted.
+
+* Now supports `-o`/`--output`.
 
 
 2026-03-21 - 2026-03-29
