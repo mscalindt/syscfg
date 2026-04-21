@@ -1061,6 +1061,8 @@ BEGIN {
 # For more information, refer to the documentation of __write().
 #.
 write() {
+    for_pchunk "$3" '' '' _mkdir "$@"
+
     if ftype "$3"; then
         path_strip "$3" 1 -floor
         if [ ! -w "$_path" ] || [ ! -w "$3" ]; then
@@ -1104,8 +1106,6 @@ write() {
         # Types `-c` and `-l` are currently not supported and always removed.
         inode_align "$@" || rm -rf -- "$3" || return "$?"
     fi
-
-    for_pchunk "$3" '' '' _mkdir "$@"
 
     # Atomic overwrites are currently not supported.
     case "$1" in

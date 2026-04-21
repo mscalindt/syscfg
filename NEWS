@@ -1,6 +1,11 @@
 syscfg NEWS
 
 
+2026-04-22 - 2026-04-22
+=======================
+* Fixed EACCES being returned when the target and its parent are both missing.
+
+
 2026-04-09 - 2026-04-10
 =======================
 * Now supports `-S`/`--silent`. Useful for programmatical clients whose output
