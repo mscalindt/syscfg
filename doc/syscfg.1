@@ -420,6 +420,12 @@ execution will abort with exit status \fB1\fR.
 .RE
 
 .PP
+\fB-p, --pager\fR \fINAME\fR
+.RS
+Specify a pager to use if required.
+.RE
+
+.PP
 .B -S, --silent
 .RS
 Disable all syscfg output. Error and client-invoked output remain unaffected.
@@ -460,6 +466,15 @@ Disable write statistics information.
 .RS
 Specify a file path to source. If the file does not exist, execution will abort
 with exit status \fB1\fR.
+.RE
+
+.PP
+.B --status-pager
+.RS
+Send the client output to a pager to inspect. \fBless\fR is the pager used by
+default. The output will be piped.
+
+\fBNote:\fR ANSI escape sequences in the client output are not accounted for.
 .RE
 
 .PP

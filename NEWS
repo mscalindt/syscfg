@@ -10,6 +10,9 @@ syscfg NEWS
   that clients themselves support $NO_COLOR, which will additionally be set by
   syscfg.
 
+* Now supports `--status-pager` (and `-p`/`--pager`) to inspect the output of
+  a client. By default, `less` is used (hardcoded) if no pager is specified.
+
 
 2026-04-09 - 2026-04-10
 =======================

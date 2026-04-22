@@ -65,6 +65,7 @@ _misc() {
       --no-color                do not use color escape sequences
   -o, --output <PATH>           specify a file path to write the client output
                                 to
+  -p, --pager <NAME>            specify a pager to use if required
   -s, --source <PATH>           specify a file path to source
   -S, --silent                  disable all syscfg output
       --silent-cmd              disable command output
@@ -72,6 +73,7 @@ _misc() {
       --silent-write            disable write content information
       --silent-write-avoidance  disable write avoidance information
       --silent-write-stat       disable write statistics information
+      --status-pager            send the client output to a pager
   -w, --write-always            elevate to state "hard overwrite" all (soft)
                                 overwrites
   -W, --write-forced            elevate to state "soft overwrite" all default
@@ -2019,6 +2021,10 @@ main() {
             arg_set _quot "$2"
             printf " %s" "output=$_quot;"
         }
+        o_pager() {
+            arg_set _quot "$2"
+            printf " %s" "pager=$_quot;"
+        }
         o_silent() {
             printf " %s" "silent='1';"
         }
@@ -2040,6 +2046,9 @@ main() {
         o_source() {
             arg_set _quot "$2"
             printf " %s" "source=$_quot;"
+        }
+        o_status_pager() {
+            printf " %s" "status_pager='1';"
         }
         o_version() {
             printf " %s" "version='1';"
@@ -2068,6 +2077,7 @@ main() {
         printf " %s" "help="
         printf " %s" "output="
         printf " %s" "no_color="
+        printf " %s" "pager="
         printf " %s" "silent="
         printf " %s" "silent_cmd="
         printf " %s" "silent_cmd_info="
@@ -2075,6 +2085,7 @@ main() {
         printf " %s" "silent_write_avoidance="
         printf " %s" "silent_write_stat="
         printf " %s" "source="
+        printf " %s" "status_pager="
         printf " %s" "version="
         printf " %s" "write_always="
         printf " %s" "write_forced="
@@ -2138,6 +2149,9 @@ main() {
             elif option "$1" "$2" -c 'o' 'output'; then
                 o_output "$_match" "$_arg"
                 option "$1" "$2" -c 'o' 'output'
+            elif option "$1" "$2" -c 'p' 'pager'; then
+                o_pager "$_match" "$_arg"
+                option "$1" "$2" -c 'p' 'pager'
             elif opt_long "$1" "$2" -s 'silent-cmd'; then
                 o_silent_cmd;
                 opt_long "$1" "$2" -s 'silent-cmd'
@@ -2156,6 +2170,9 @@ main() {
             elif option "$1" "$2" -c 's' 'source'; then
                 o_source "$_match" "$_arg"
                 option "$1" "$2" -c 's' 'source'
+            elif opt_long "$1" "$2" -s 'status-pager'; then
+                o_status_pager;
+                opt_long "$1" "$2" -s 'status-pager'
             elif opt_long "$1" "$2" -s 'version'; then
                 o_version;
                 opt_long "$1" "$2" -s 'version'
@@ -2352,6 +2369,8 @@ main() {
         fi
 
         eval " $1"
+        pager="${pager:-less}"
+        readonly pager
         if [ "$output" ]; then
             if [ -e "$output" ] || [ -h "$output" ]; then
                 err - - "${0##*/}: Will not overwrite: $output"
@@ -2359,11 +2378,25 @@ main() {
                 exit 1
             fi
 
-            shift
-            { . "$@"; } > "$output"
+            if [ "$status_pager" ]; then
+                shift
+                { . "$@"; } | {
+                    file_preload -
+                    printf "%s" "$_file" > "$output"
+                    printf "%s" "$_file" | "$pager"
+                }
+            else
+                shift
+                { . "$@"; } > "$output"
+            fi
         else
-            shift
-            . "$@"
+            if [ "$status_pager" ]; then
+                shift
+                . "$@" | "$pager"
+            else
+                shift
+                . "$@"
+            fi
         fi
     )
     if [ ! "$silent" ]; then
