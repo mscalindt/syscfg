@@ -62,6 +62,7 @@ _misc() {
                                 disable the write synchronization
                                 for user ownership
   -n, --client-name <NAME>      specify the client name
+      --no-color                do not use color escape sequences
   -o, --output <PATH>           specify a file path to write the client output
                                 to
   -s, --source <PATH>           specify a file path to source
@@ -2011,6 +2012,9 @@ main() {
         o_help() {
             printf " %s" "help='1';"
         }
+        o_no_color() {
+            printf " %s" "no_color='1';"
+        }
         o_output() {
             arg_set _quot "$2"
             printf " %s" "output=$_quot;"
@@ -2063,6 +2067,7 @@ main() {
         printf " %s" "disable_write_sync_user="
         printf " %s" "help="
         printf " %s" "output="
+        printf " %s" "no_color="
         printf " %s" "silent="
         printf " %s" "silent_cmd="
         printf " %s" "silent_cmd_info="
@@ -2124,6 +2129,9 @@ main() {
             elif opt_long "$1" "$2" -s 'help'; then
                 o_help;
                 opt_long "$1" "$2" -s 'help'
+            elif opt_long "$1" "$2" -s 'no-color'; then
+                o_no_color;
+                opt_long "$1" "$2" -s 'no-color'
             elif option "$1" "$2" -s 'S' 'silent'; then
                 o_silent;
                 option "$1" "$2" -s 'S' 'silent'
@@ -2204,6 +2212,11 @@ main() {
         _license; _notice;
 
         exit 0
+    fi
+
+    if [ "$no_color" ]; then
+        NO_COLOR=1
+        readonly NO_COLOR
     fi
 
     if [ ! "$2" ]; then

@@ -5,6 +5,11 @@ syscfg NEWS
 =======================
 * Fixed EACCES being returned when the target and its parent are both missing.
 
+* Now supports `--no-color` to disable all ANSI color escape sequences in
+  syscfg and its API. Clients can still manually issue them; it is expected
+  that clients themselves support $NO_COLOR, which will additionally be set by
+  syscfg.
+
 
 2026-04-09 - 2026-04-10
 =======================

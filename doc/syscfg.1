@@ -1,4 +1,4 @@
-.TH SYSCFG "1" "April 10, 2025" "syscfg 20260410" ""
+.TH SYSCFG "1" "April 22, 2025" "syscfg 20260410" ""
 
 .SH NAME
 syscfg - declarative OS configuration
@@ -403,6 +403,13 @@ Disable the write synchronization for user ownership.
 \fB-n, --client-name\fR \fISTRING\fR
 .RS
 Specify the client name.
+.RE
+
+.PP
+.B --no-color
+.RS
+Specify not to use ANSI color escape sequences. Variable \fBNO_COLOR\fR will be
+set to a non-empty value.
 .RE
 
 .PP
