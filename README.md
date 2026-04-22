@@ -15,7 +15,7 @@ its clients to use.
 
 ```
 $ git describe
-20260410
+20260422
 $ ./syscfg --help
 Usage: syscfg [options] [--] FILE [ARG...]
 Declarative OS configuration.
@@ -55,8 +55,10 @@ Options:
                                 disable the write synchronization
                                 for user ownership
   -n, --client-name <NAME>      specify the client name
+      --no-color                do not use color escape sequences
   -o, --output <PATH>           specify a file path to write the client output
                                 to
+  -p, --pager <NAME>            specify a pager to use if required
   -s, --source <PATH>           specify a file path to source
   -S, --silent                  disable all syscfg output
       --silent-cmd              disable command output
@@ -64,6 +66,7 @@ Options:
       --silent-write            disable write content information
       --silent-write-avoidance  disable write avoidance information
       --silent-write-stat       disable write statistics information
+      --status-pager            send the client output to a pager
   -w, --write-always            elevate to state "hard overwrite" all (soft)
                                 overwrites
   -W, --write-forced            elevate to state "soft overwrite" all default
