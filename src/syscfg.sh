@@ -2373,10 +2373,19 @@ main() {
 
             if [ "$status_pager" ]; then
                 shift
-                { . "$@"; } | {
+                { \
+                (. "$@" 2>&1) && \
+                printf "%s" '01' || \
+                printf "%s" "$?${#?}"; } | {
                     file_preload -
-                    printf "%s" "$_file" > "$output"
-                    printf "%s" "$_file" | "$pager"
+                    case "${_file#"${_file%?}"}" in
+                        1) set -- "${_file#"${_file%??}"}" "${_file%??}" ;;
+                        2) set -- "${_file#"${_file%???}"}" "${_file%???}" ;;
+                        3) set -- "${_file#"${_file%????}"}" "${_file%????}" ;;
+                    esac; set -- "${1%?}" "$2"
+                    printf "%s" "$2" > "$output"
+                    printf "%s" "$2" | "$pager"
+                    return "$1"
                 }
             else
                 shift
@@ -2385,7 +2394,19 @@ main() {
         else
             if [ "$status_pager" ]; then
                 shift
-                . "$@" | "$pager"
+                { \
+                (. "$@" 2>&1) && \
+                printf "%s" '01' || \
+                printf "%s" "$?${#?}"; } | {
+                    file_preload -
+                    case "${_file#"${_file%?}"}" in
+                        1) set -- "${_file#"${_file%??}"}" "${_file%??}" ;;
+                        2) set -- "${_file#"${_file%???}"}" "${_file%???}" ;;
+                        3) set -- "${_file#"${_file%????}"}" "${_file%????}" ;;
+                    esac; set -- "${1%?}" "$2"
+                    printf "%s" "$2" | "$pager"
+                    return "$1"
+                }
             else
                 shift
                 . "$@"

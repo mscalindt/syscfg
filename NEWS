@@ -5,6 +5,9 @@ syscfg NEWS
 =======================
 * Fixed ENOENT being issued by __action() for `-del`/`-trunc` hints.
 
+* Fixed the exit status of the client being disrupted by the pipe construct
+  when a pager is used.
+
 
 2026-04-22 - 2026-04-22
 =======================
