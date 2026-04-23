@@ -1,6 +1,11 @@
 syscfg NEWS
 
 
+2026-04-23 - 2026-04-23
+=======================
+* Fixed ENOENT being issued by __action() for `-del`/`-trunc` hints.
+
+
 2026-04-22 - 2026-04-22
 =======================
 * Fixed EACCES being returned when the target and its parent are both missing.

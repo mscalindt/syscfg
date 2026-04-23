@@ -1347,28 +1347,21 @@ __action() {
         err -red - 'Missing OBJ_PATH.'; exit 255
     }
 
-    ftype "$2" || {
-        err -red - 'ENOENT:'
+    if ftype "$2"; then
+        path_strip "$2" 1 -floor
+        if [ ! -w "$_path" ] || [ ! -w "$2" ]; then
+            err -red - 'EACCES:'
 
-        err -red -- '>'
-        err - - " $2"
+            # Do not assume the path still exists.
+            ftype "$2" -err && {
+                err - - " $2"
+            } || {
+                err -red -- '>'
+                err - - " $2"
+            }
 
-        exit 2
-    }
-
-    path_strip "$2" 1 -floor
-    if [ ! -w "$_path" ] || [ ! -w "$2" ]; then
-        err -red - 'EACCES:'
-
-        # Do not assume the path still exists.
-        ftype "$2" -err && {
-            err - - " $2"
-        } || {
-            err -red -- '>'
-            err - - " $2"
-        }
-
-       exit 13
+           exit 13
+        fi
     fi
 
     if hint 2 0 -trunc "$@"; then
