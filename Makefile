@@ -1,4 +1,4 @@
-.PHONY: build clean rel sbm_up
+.PHONY: build clean rel sbm_up srcs
 
 build: ./syscfg
 ./syscfg: ./src/syscfg.sh
