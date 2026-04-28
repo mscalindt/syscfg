@@ -1536,6 +1536,8 @@ __ed() {
 }" ] || {
                 __err -red - "CRC32 mismatch. (hint = ${_hint%
 }; crc = $_crc)"
+                __err -red - 'Format string:'
+                __err - - "$1"
 
                 exit 1
             }
