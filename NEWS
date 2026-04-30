@@ -1,10 +1,12 @@
 syscfg NEWS
 
 
-2026-04-30 - 2026-04-30
+2026-04-30 - 2026-05-01
 =======================
 * Fixed EACCES oversight where files will not be written if the directory is
   read-only. Writes in /proc, for example.
+
+* Fixed the old year date of the manpage.
 
 
 2026-04-23 - 2026-04-23
