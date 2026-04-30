@@ -1,4 +1,4 @@
-.PHONY: build clean rel sbm_up srcs
+.PHONY: build clean rel rel_commit sbm_up srcs
 
 build: ./syscfg
 ./syscfg: ./src/syscfg.sh
@@ -13,6 +13,10 @@ rel:
 	@test -n "$(CUR)" || { echo 'CUR is empty'; exit 2; }
 	@test -n "$(NEWS)" || { echo 'NEWS is empty'; exit 2; }
 	sh ./scripts/rel.sh "$(REL)" "$(PRE)" "$(CUR)" "$(NEWS)"
+
+rel_commit:
+	@test -n "$(NEWS)" || { echo 'NEWS is empty'; exit 2; }
+	sh ./scripts/rel_commit.sh "$(NEWS)"
 
 sbm_up:
 	@test -n "$(SUB)" || { echo 'SUB is empty'; exit 2; }
