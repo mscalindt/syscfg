@@ -1,6 +1,12 @@
 syscfg NEWS
 
 
+2026-04-30 - 2026-04-30
+=======================
+* Fixed EACCES oversight where files will not be written if the directory is
+  read-only. Writes in /proc, for example.
+
+
 2026-04-23 - 2026-04-23
 =======================
 * Fixed ENOENT being issued by __action() for `-del`/`-trunc` hints.

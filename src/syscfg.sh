@@ -1067,8 +1067,7 @@ write() {
     for_pchunk "$3" '' '' _mkdir "$@"
 
     if ftype "$3"; then
-        path_strip "$3" 1 -floor
-        if [ ! -w "$_path" ] || [ ! -w "$3" ]; then
+        if [ ! -w "$3" ]; then
             err -red - 'EACCES:'
 
             # Do not assume the path still exists.
