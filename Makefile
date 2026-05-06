@@ -5,7 +5,7 @@ build: ./syscfg
 	sh ./scripts/build.sh ./src/syscfg.sh
 
 clean:
-	rm ./syscfg
+	rm -fv ./syscfg
 
 rel:
 	@test -n "$(REL)" || { echo 'REL is empty'; exit 2; }
