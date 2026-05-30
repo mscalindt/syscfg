@@ -6,6 +6,8 @@ syscfg NEWS
 * Fixed broken inode alignment since commit f92315c ("syscfg: Remove EUID 0
   runtime requirement").
 
+* Fixed spurious EACCES error conditions.
+
 
 2026-04-30 - 2026-05-01
 =======================

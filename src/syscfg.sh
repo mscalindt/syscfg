@@ -1037,6 +1037,22 @@ BEGIN {
         ;;
     esac
 
+    path_strip "$3" 1 -floor
+    if [ ! -w "$3" ] || [ ! -w "$_path" ]; then
+        if [ "$(id -u)" != 0 ]; then
+            err -red - 'EACCES:'
+
+            ftype "$3" -err && {
+                err - - " $3"
+            } || {
+                err -red -- '>'
+                err - - " $3"
+            }
+
+            exit 13
+        fi
+    fi
+
     case "$4" in
         '-f') return 0 ;;
         '-o') ;;
@@ -1064,23 +1080,7 @@ BEGIN {
 # For more information, refer to the documentation of __write().
 #.
 write() {
-    for_pchunk "$3" '' '' _mkdir "$@"
-
     if ftype "$3"; then
-        if [ ! -w "$3" ]; then
-            err -red - 'EACCES:'
-
-            # Do not assume the path still exists.
-            ftype "$3" -err && {
-                err - - " $3"
-            } || {
-                err -red -- '>'
-                err - - " $3"
-            }
-
-            exit 13
-        fi
-
         chattr_remove "$3"
         unmount "$3"
 
@@ -1092,22 +1092,9 @@ write() {
         #
         # Types `-c` and `-l` are currently not supported and always removed.
         inode_align "$@" || rm -rf -- "$3" || return "$?"
-    else
-        path_strip "$3" 1 -floor
-        if [ ! -w "$_path" ]; then
-            err -red - 'EACCES:'
-
-            # Do not assume the path still does NOT exist.
-            ftype "$3" -err && {
-                err - - " $3"
-            } || {
-                err -red -- '>'
-                err - - " $3"
-            }
-
-            exit 13
-        fi
     fi
+
+    for_pchunk "$3" '' '' _mkdir "$@"
 
     # Atomic overwrites are currently not supported.
     case "$1" in
@@ -1346,12 +1333,11 @@ __action() {
         err -red - 'Missing OBJ_PATH.'; exit 255
     }
 
-    if ftype "$2"; then
-        path_strip "$2" 1 -floor
-        if [ ! -w "$_path" ] || [ ! -w "$2" ]; then
+    path_strip "$2" 1 -floor
+    if [ ! -w "$2" ] || [ ! -w "$_path" ]; then
+        if [ "$(id -u)" != 0 ]; then
             err -red - 'EACCES:'
 
-            # Do not assume the path still exists.
             ftype "$2" -err && {
                 err - - " $2"
             } || {
@@ -1359,7 +1345,7 @@ __action() {
                 err - - " $2"
             }
 
-           exit 13
+            exit 13
         fi
     fi
 
