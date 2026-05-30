@@ -1080,6 +1080,18 @@ write() {
 
             exit 13
         fi
+
+        chattr_remove "$3"
+        unmount "$3"
+
+        # When the target object exists, try to align or else remove it.
+        # Alignment is important for expected overwrite behavior when the inode
+        # state itself forced a write, otherwise a write would keep occurring
+        # in a circular chain of forced writes irrespective of the object
+        # content.
+        #
+        # Types `-c` and `-l` are currently not supported and always removed.
+        inode_align "$@" || rm -rf -- "$3" || return "$?"
     else
         path_strip "$3" 1 -floor
         if [ ! -w "$_path" ]; then
@@ -1095,18 +1107,6 @@ write() {
 
             exit 13
         fi
-
-        chattr_remove "$3"
-        unmount "$3"
-
-        # When the target object exists, try to align or else remove it.
-        # Alignment is important for expected overwrite behavior when the inode
-        # state itself forced a write, otherwise a write would keep occurring
-        # in a circular chain of forced writes irrespective of the object
-        # content.
-        #
-        # Types `-c` and `-l` are currently not supported and always removed.
-        inode_align "$@" || rm -rf -- "$3" || return "$?"
     fi
 
     # Atomic overwrites are currently not supported.
