@@ -792,19 +792,14 @@ inode_align_group() {
 
             set -- "$_a" "$@"
 
-            if hint 5 0 -group "$@" || hint 5 0 -gid "$@"; then
-                if hint 5 0 -group "$@"; then
-                    if [ "$1" != "$_hint" ] || [ "$1" != "$(id -ng)" ]; then
-                        __cmd -- \
-                        chgrp -h "$_hint" -- "$4" && return 0 || return "$?"
-                    fi
-                fi
+            { ! hint 5 0 -group "$@"; } || [ "$1" != "$_hint" ] || return 0
+            { ! hint 5 0 -gid "$@"; } || [ "$1" != "$_hint" ] || return 0
 
-                if hint 5 0 -gid "$@"; then
-                    if [ "$1" != "$_hint" ] || [ "$1" != "$(id -g)" ]; then
-                        __cmd -- chgrp -h "$_hint" -- "$4" || return "$?"
-                    fi
-                fi
+            # EGID is not considered when hints are specified because they are
+            # authoritative to alignment since commit f92315c
+            # ("syscfg: Remove EUID 0 runtime requirement").
+            if hint 5 0 -group "$@" || hint 5 0 -gid "$@"; then
+                __cmd -- chgrp -h "$_hint" -- "$4" || return "$?"
             else
                 if [ "$1" != "$(id -ng)" ] && [ "$1" != "$(id -g)" ]; then
                     __cmd -- chgrp -h "$(id -g)" -- "$4" || return "$?"
@@ -840,19 +835,14 @@ inode_align_owner() {
 
             set -- "$_a" "$@"
 
-            if hint 5 0 -user "$@" || hint 5 0 -uid "$@"; then
-                if hint 5 0 -user "$@"; then
-                    if [ "$1" != "$_hint" ] || [ "$1" != "$(id -nu)" ]; then
-                        __cmd -- \
-                        chown -h "$_hint" -- "$4" && return 0 || return "$?"
-                    fi
-                fi
+            { ! hint 5 0 -user "$@"; } || [ "$1" != "$_hint" ] || return 0
+            { ! hint 5 0 -uid "$@"; } || [ "$1" != "$_hint" ] || return 0
 
-                if hint 5 0 -uid "$@"; then
-                    if [ "$1" != "$_hint" ] || [ "$1" != "$(id -u)" ]; then
-                        __cmd -- chown -h "$_hint" -- "$4" || return "$?"
-                    fi
-                fi
+            # EUID is not considered when hints are specified because they are
+            # authoritative to alignment since commit f92315c
+            # ("syscfg: Remove EUID 0 runtime requirement").
+            if hint 5 0 -user "$@" || hint 5 0 -uid "$@"; then
+                __cmd -- chown -h "$_hint" -- "$4" || return "$?"
             else
                 if [ "$1" != "$(id -nu)" ] && [ "$1" != "$(id -u)" ]; then
                     __cmd -- chown -h "$(id -u)" -- "$4" || return "$?"

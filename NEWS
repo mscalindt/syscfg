@@ -1,6 +1,13 @@
 syscfg NEWS
 
 
+2026-05-31 - 2026-05-31
+=======================
+* Fixed bad inode alignment behavior since commit f92315c ("syscfg: Remove EUID
+  0 runtime requirement"). Object ownership hints are now authoritative to
+  write alignment and treated as sole source of truth when specified.
+
+
 2026-05-30 - 2026-05-30
 =======================
 * Fixed broken inode alignment since commit f92315c ("syscfg: Remove EUID 0
