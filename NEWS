@@ -7,6 +7,8 @@ syscfg NEWS
   0 runtime requirement"). Object ownership hints are now authoritative to
   write alignment and treated as sole source of truth when specified.
 
+* Fixed write avoidance not considering the output of `ls -ld` in edge cases.
+
 
 2026-05-30 - 2026-05-30
 =======================

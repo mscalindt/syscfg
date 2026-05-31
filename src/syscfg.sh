@@ -396,17 +396,12 @@ fs_equiv_group() {
 
             set -- "$_a" "$@"
 
-            if hint 5 0 -group "$@"; then
-                [ ! "$1" = "$_hint" ] || return 0
-            else
-                [ ! "$1" = "$(id -ng)" ] || return 0
-            fi
-
-            if hint 5 0 -gid "$@"; then
-                [ ! "$1" = "$_hint" ] || return 0
-            else
-                [ ! "$1" = "$(id -g)" ] || return 0
-            fi
+            # It is ambiguous whether $1 is the GID or the group name, hence
+            # all hints are strictly asserted first.
+            { ! hint 5 0 -group "$@"; } || [ "$1" != "$_hint" ] || return 0
+            { ! hint 5 0 -gid "$@"; } || [ "$1" != "$_hint" ] || return 0
+            [ "$1" != "$(id -ng)" ] || return 0
+            [ "$1" != "$(id -g)" ] || return 0
         ;;
     esac
 
@@ -436,17 +431,12 @@ fs_equiv_owner() {
 
             set -- "$_a" "$@"
 
-            if hint 5 0 -user "$@"; then
-                [ ! "$1" = "$_hint" ] || return 0
-            else
-                [ ! "$1" = "$(id -nu)" ] || return 0
-            fi
-
-            if hint 5 0 -uid "$@"; then
-                [ ! "$1" = "$_hint" ] || return 0
-            else
-                [ ! "$1" = "$(id -u)" ] || return 0
-            fi
+            # It is ambiguous whether $1 is the UID or the user name, hence
+            # all hints are strictly asserted first.
+            { ! hint 5 0 -user "$@"; } || [ "$1" != "$_hint" ] || return 0
+            { ! hint 5 0 -uid "$@"; } || [ "$1" != "$_hint" ] || return 0
+            [ "$1" != "$(id -nu)" ] || return 0
+            [ "$1" != "$(id -u)" ] || return 0
         ;;
     esac
 
