@@ -91,7 +91,7 @@ _usage() {
 
 _version() {
     printf "%s\n" \
-'syscfg 20260530'
+'syscfg 20260531'
 }
 
 helper_functions() { # START helper_functions
