@@ -1017,22 +1017,6 @@ BEGIN {
         ;;
     esac
 
-    path_strip "$3" 1 -floor
-    if [ ! -w "$3" ] || [ ! -w "$_path" ]; then
-        if [ "$(id -u)" != 0 ]; then
-            err -red - 'EACCES:'
-
-            ftype "$3" -err && {
-                err - - " $3"
-            } || {
-                err -red -- '>'
-                err - - " $3"
-            }
-
-            exit 13
-        fi
-    fi
-
     case "$4" in
         '-f') return 0 ;;
         '-o') ;;
@@ -1051,8 +1035,6 @@ BEGIN {
 #! .rc:
 # (0) success
 # (*) error
-#! .ec:
-# (13) EACCES
 #! .desc.ext:
 # We do not yet have an in-place overwrite mechanism for types `-c` and `-l`.
 # We do not yet have atomic overwrites.
@@ -1296,7 +1278,6 @@ client_lib() { # START client_lib
 # (*) error
 #! .ec:
 # (2) ENOENT
-# (13) EACCES
 # (255) input error
 #! .desc.ext:
 # Supported hints:
@@ -1312,22 +1293,6 @@ __action() {
     [ "$2" ] || {
         err -red - 'Missing OBJ_PATH.'; exit 255
     }
-
-    path_strip "$2" 1 -floor
-    if [ ! -w "$2" ] || [ ! -w "$_path" ]; then
-        if [ "$(id -u)" != 0 ]; then
-            err -red - 'EACCES:'
-
-            ftype "$2" -err && {
-                err - - " $2"
-            } || {
-                err -red -- '>'
-                err - - " $2"
-            }
-
-            exit 13
-        fi
-    fi
 
     if hint 2 0 -trunc "$@"; then
         if ftype "$2"/; then

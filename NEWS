@@ -1,6 +1,12 @@
 syscfg NEWS
 
 
+2026-06-09 - 2026-06-09
+=======================
+* Removed the EACCES assert to fix non-root users unable to create files and
+  other potential issues.
+
+
 2026-05-31 - 2026-05-31
 =======================
 * Fixed bad inode alignment behavior since commit f92315c ("syscfg: Remove EUID
