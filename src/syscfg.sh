@@ -1718,6 +1718,9 @@ __obj_write_ow_soft() {
 # `-uid`: Specify UID to assert/set;
 # `-user`: Specify user name to assert/set.
 #
+# Hints are authoritative to write avoidance and synchronization over effective
+# UID/GID.
+#
 # Missing directory parents will be created and inherit ownership hints, with
 # default (mkdir-driven) directory mode "777 - umask" (755) unaffected by
 # the `-mode` hint.
