@@ -631,6 +631,7 @@ hint_act() {
 # `-mode`, <[string]>: Octal mode;
 # `-no-avoid`: No write avoidance;
 # `-no-sanit`: No environment sanitization;
+# `-no-sync`: No write synchronization;
 # `-out-save`, <variable name>: Save &1 (stdout);
 # `-req-out`: Require &1 (stdout);
 # `-sanit`: Environment sanitization;
@@ -652,8 +653,8 @@ hint_set() {
     shift "$((2 + $1))"
 
     case "$1" in
-        '--' | '-color' | '-del' | '-no-avoid' | '-no-sanit' | '-req-out' | \
-        '-sanit' | '-trunc')
+        '--' | '-color' | '-del' | '-no-avoid' | '-no-sanit' | '-no-sync' | \
+        '-req-out' | '-sanit' | '-trunc')
             [ "$(($# - _rtl_offset))" -ge 1 ] || return 1
 
             _hint="$1"
