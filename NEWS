@@ -1,10 +1,17 @@
 syscfg NEWS
 
 
-2026-06-09 - 2026-06-09
+2026-06-09 - 2026-06-12
 =======================
 * Removed the EACCES assert to fix non-root users unable to create files and
   other potential issues.
+
+* Clarified why both `-uid`/`-user` (or `-gid`/`-group`) should be specified
+  together to avoid unspecified behavior. (649bc2e)
+
+* Clarified hints take priority over EUID/EGID. (4612a73)
+
+* Fixed `-no-sync` hint being considered as invalid. (15d0ca6)
 
 
 2026-05-31 - 2026-05-31
