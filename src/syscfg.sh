@@ -1722,6 +1722,10 @@ __obj_write_ow_soft() {
 # default (mkdir-driven) directory mode "777 - umask" (755) unaffected by
 # the `-mode` hint.
 #
+# When dealing with user/group permissions, make sure that hints specify both
+# the numerical ID (`-uid`/`-gid`) and the string name (`-user`/`-group`)
+# respective equivalents, to avoid unspecified behavior.
+#
 # For more information, refer to the documentation of hint(), validate_write(),
 # and write().
 #.
