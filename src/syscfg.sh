@@ -538,7 +538,7 @@ fs_equiv_type_attr() {
 # For more information, refer to the documentation of hint_set().
 #.
 hint() {
-    assert -min "$#" 2 || exit 255
+    assert -min "$#" 3 || exit 255
     assert -whole-n "$1" || exit 255
     assert -whole-n "$2" || exit 255
 
@@ -715,6 +715,7 @@ hint_set() {
 #.
 hints_offset() {
     assert -whole-n "$1" || exit 255
+    assert -whole-n "$2" || exit 255
 
     _rtl_offset="$2"
     shift "$((2 + $1))"
