@@ -1,7 +1,7 @@
 syscfg NEWS
 
 
-2026-06-09 - 2026-06-12
+2026-06-09 - 2026-06-13
 =======================
 * Removed the EACCES assert to fix non-root users unable to create files and
   other potential issues.
@@ -12,6 +12,11 @@ syscfg NEWS
 * Clarified hints take priority over EUID/EGID. (4612a73)
 
 * Fixed `-no-sync` hint being considered as invalid. (15d0ca6)
+
+* Internally, hint() takes one additional required parameter now. This would
+  typically be a breaking change for any independent hint implementations, if
+  any, and is therefore marked as one.
+  Breaking (backward-incompatible) change.
 
 
 2026-05-31 - 2026-05-31
