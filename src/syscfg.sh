@@ -107,11 +107,11 @@ helper_functions() { # START helper_functions
 # (0) success
 # (*) error
 #! .desc.ext:
-# Supported hints:
-# `-gid`: Specify GID to set;
-# `-group`: Specify group name to set;
-# `-uid`: Specify UID to set;
-# `-user`: Specify user name to set.
+# Hints:
+# -c `-gid`: GID to set.
+# -c `-group`: Group name to set.
+# -c `-uid`: UID to set.
+# -c `-user`: User name to set.
 #
 # For more information, refer to the documentation of __write(), for_pchunk(),
 # and hint().
@@ -319,6 +319,9 @@ ed_exec() {
 # (0) true
 # (1) false
 #! .desc.ext:
+# Hints:
+# -s `-no-avoid`: Return false.
+#
 # We do not yet have write avoidance support for types `-c` and `-l`.
 #
 # For more information, refer to the documentation of __write().
@@ -380,6 +383,10 @@ BEGIN {
 # (0) true
 # (1) false
 #! .desc.ext:
+# Hints:
+# -c `-gid`: GID to assert.
+# -c `-group`: Group name to assert.
+#
 # For more information, refer to the documentation of __write().
 #.
 fs_equiv_group() {
@@ -416,6 +423,10 @@ fs_equiv_group() {
 # (0) true
 # (1) false
 #! .desc.ext:
+# Hints:
+# -c `-uid`: UID to assert.
+# -c `-user`: User name to assert.
+#
 # For more information, refer to the documentation of __write().
 #.
 fs_equiv_owner() {
@@ -451,6 +462,9 @@ fs_equiv_owner() {
 # (0) true
 # (1) false
 #! .desc.ext:
+# Hints:
+# -c `-mode`: File mode to assert.
+#
 # For more information, refer to the documentation of __write().
 #.
 fs_equiv_perm() {
@@ -670,6 +684,9 @@ hints_offset() {
 # (0) success
 # (*) error
 #! .desc.ext:
+# Hints:
+# -s `-no-sync`: Return error/false.
+#
 # We do not yet have write synchronization support for types `-c` and `-l`.
 #
 # For more information, refer to the documentation of __write().
@@ -696,6 +713,10 @@ inode_align() {
 # (0) success
 # (*) error
 #! .desc.ext:
+# Hints:
+# -c `-gid`: GID to synchronize.
+# -c `-group`: Group name to synchronize.
+#
 # For more information, refer to the documentation of __write().
 #.
 inode_align_group() {
@@ -740,6 +761,10 @@ inode_align_group() {
 # (0) success
 # (*) error
 #! .desc.ext:
+# Hints:
+# -c `-uid`: UID to synchronize.
+# -c `-user`: User name to synchronize.
+#
 # For more information, refer to the documentation of __write().
 #.
 inode_align_owner() {
@@ -783,6 +808,9 @@ inode_align_owner() {
 # (0) success
 # (*) error
 #! .desc.ext:
+# Hints:
+# -c `-mode`: File mode to synchronize.
+#
 # For more information, refer to the documentation of __write().
 #.
 inode_align_perm() {
@@ -967,6 +995,13 @@ BEGIN {
 # (0) success
 # (*) error
 #! .desc.ext:
+# Hints:
+# -c `-gid`: GID.
+# -c `-group`: Group name.
+# -c `-mode`: File mode.
+# -c `-uid`: UID.
+# -c `-user`: User name.
+#
 # We do not yet have an in-place overwrite mechanism for types `-c` and `-l`.
 # We do not yet have atomic overwrites.
 #
@@ -1035,6 +1070,9 @@ write() {
 #! .ec:
 # (2) ENOENT
 #! .desc.ext:
+# Hints:
+# -s `-log`: Indicate the write is of type log.
+#
 # For more information, refer to the documentation of __write().
 #.
 write_info() {
@@ -1050,7 +1088,7 @@ write_info() {
         '-o') __info -white - 'Will write a binary file:' ;;
     esac
 
-    if hint -c 4 0 -log "$@"; then
+    if hint -s 4 0 -log "$@"; then
         case "$1$4" in
             '-w-f') __info -white - 'Will update a file (OW_HARD):' ;;
             '-w-o') __info -white - 'Will update a file (OW_SOFT):' ;;
@@ -1135,6 +1173,10 @@ write_info_avoidance() {
 #! .rc:
 # (0) success
 #! .desc.ext:
+# Hints:
+# -s `-color`: Colorize the diff-log content.
+# -c `-log`: Diff-log file path.
+#
 # For more information, refer to the documentation of __write().
 #.
 write_info_stat() {
@@ -1211,10 +1253,10 @@ client_lib() { # START client_lib
 # (2) ENOENT
 # (255) input error
 #! .desc.ext:
-# Supported hints:
-# `-del`: Delete $OBJ_PATH;
-# `-no-sanit`: Preserve $OBJ and $OBJ_PATH;
-# `-trunc`: Truncate $OBJ_PATH.
+# Hints:
+# -s `-del`: Delete.
+# -s `-no-sanit`: Preserve $OBJ and $OBJ_PATH variables.
+# -s `-trunc`: Truncate.
 #
 # For more information, refer to the documentation of hint().
 #.
@@ -1312,9 +1354,9 @@ __bin_write_ow_soft() {
 # (1) hint assertion failed
 # (255) input error
 #! .desc.ext:
-# Supported hints:
-# `-out-save`: Specify variable name to save &1 to;
-# `-req-out`: Empty &1 is a fatal error condition.
+# Hints:
+# -c `-out-save`: Save &1 in a variable.
+# -s `-req-out`: &1 shall not be empty.
 #
 # For more information, refer to the documentation of cmd() and hint().
 #.
@@ -1323,7 +1365,7 @@ __cmd() {
 
     cmd_info "$@"
 
-    if hint -s 0 0 -req-out "$@" || hint -c 0 0 -out-save "$@"; then
+    if hint -s 0 0 -req-out "$@" || hint -s 0 0 -out-save "$@"; then
         set -- "$(cmd "$@" && printf "%s" x)" "$@" || return "$?"
         set -- "${1%?}" "$@"
     else
@@ -1364,10 +1406,10 @@ __cmd() {
 # (1) CRC32 mismatch
 # (255) input error
 #! .desc.ext:
-# Supported hints:
-# `-crc`: Specify CRC32 string to assert the format against;
-# `-log`: Specify log file path for libfile();
-# `-no-sanit`: Preserve $OBJ_PATH alongside $OBJ.
+# Hints:
+# -c `-crc`: CRC32 string to assert the format against.
+# -c `-log`: Log file path for libfile().
+# -s `-no-sanit`: Preserve $OBJ_PATH variable.
 #
 # For more information, refer to the documentation of fed(), hint() and
 # libfile().
@@ -1635,19 +1677,19 @@ __obj_write_ow_soft() {
 # (17) EEXIST
 # (255) input error
 #! .desc.ext:
-# Supported hints:
-# `-color`: Colorize the `-log` parse assuming fed() format;
-# `-gid`: Specify GID to assert/set;
-# `-group`: Specify group name to assert/set;
-# `-log`: Specify file path for write statistics;
-# `-mode`: Specify file mode in octal to assert/set;
-# `-no-avoid`: Disable write avoidance;
-# `-no-sanit`: Preserve $OBJ and $OBJ_PATH;
-# `-no-sync`: Disable write synchronization;
-# `-sanit`: Delete hint paths, unset $OBJ and $OBJ_PATH;
-# '-trunc': Truncate the path specified by `-log`;
-# `-uid`: Specify UID to assert/set;
-# `-user`: Specify user name to assert/set.
+# Hints:
+# -s `-color`: Colorize output where applicable.
+# -c `-gid`: GID.
+# -c `-group`: Group name.
+# -c `-log`: Diff-log file path.
+# -c `-mode`: File mode.
+# -s `-no-avoid`: Disable write avoidance.
+# -s `-no-sanit`: Preserve $2/$3 as $OBJ/$OBJ_PATH variables.
+# -s `-no-sync`: Disable write synchronization.
+# -s `-sanit`: Delete hint paths and unset $OBJ/$OBJ_PATH variables.
+# -s `-trunc`: Truncate hint paths.
+# -c `-uid`: UID.
+# -c `-user`: User name.
 #
 # Hints are authoritative to write avoidance and synchronization over effective
 # UID/GID.
