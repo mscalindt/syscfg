@@ -1267,18 +1267,16 @@ __action() {
         err -red - 'Missing OBJ_PATH.'; exit 255
     }
 
-    if hint -s 2 0 -trunc "$@"; then
+    if hint -s 2 0 -del "$@"; then
+        chattr_remove "$2"
+        unmount "$2"
+        rm -rf -- "$2" || return "$?"
+    elif hint -s 2 0 -trunc "$@"; then
         if ftype "$2"/; then
             rm -rf -- "$2"/* || return "$?"
         else
             { : > "$2"; } || return "$?"
         fi
-    fi
-
-    if hint -s 2 0 -del "$@"; then
-        chattr_remove "$2"
-        unmount "$2"
-        rm -rf -- "$2" || return "$?"
     fi
 
     if hint -s 2 0 -no-sanit "$@"; then
