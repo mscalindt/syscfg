@@ -77,6 +77,20 @@ Options:
 For more information, refer to the man page: `man syscfg`.
 ```
 
+System runtime and _make_ dependencies (GNU/Linux-oriented packages):
+
+* `coreutils` (POSIX subset)
+  - `install` (_make_)
+* `dash` (POSIX sh)
+* `gawk` (POSIX awk)
+* `make` (POSIX make; _make_)
+
+Optional runtime dependencies (GNU/Linux-oriented packages):
+
+* `e2fsprogs`
+* `less`
+* `util-linux`
+
 ## Features
 
 * 99.9% human written and architectured.
