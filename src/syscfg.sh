@@ -1258,6 +1258,8 @@ client_lib() { # START client_lib
 # -s `-no-sanit`: Preserve $OBJ and $OBJ_PATH variables.
 # -s `-trunc`: Truncate.
 #
+# Hint `-del` has priority over `-trunc`.
+#
 # For more information, refer to the documentation of hint().
 #.
 __action() {
@@ -1688,6 +1690,8 @@ __obj_write_ow_soft() {
 # -s `-trunc`: Truncate hint paths.
 # -c `-uid`: UID.
 # -c `-user`: User name.
+#
+# Hint `-no-sanit` has priority over `-sanit`.
 #
 # Hints are authoritative to write avoidance and synchronization over effective
 # UID/GID.
