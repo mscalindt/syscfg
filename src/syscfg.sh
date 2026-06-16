@@ -1793,7 +1793,9 @@ __write() {
         fi
     fi
 
-    if hint -s 4 0 -sanit "$@"; then
+    if hint -s 4 0 -no-sanit "$@"; then
+        OBJ="$2"; OBJ_PATH="$3"
+    elif hint -s 4 0 -sanit "$@"; then
         if hint -c 4 0 -log "$@"; then
             if [ -e "$_hint" ]; then
                 rm -rf "$_hint" || {
@@ -1805,8 +1807,6 @@ __write() {
         fi
 
         unset OBJ OBJ_PATH
-    elif hint -s 4 0 -no-sanit "$@"; then
-        OBJ="$2"; OBJ_PATH="$3"
     fi
 
     return 0
