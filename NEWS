@@ -1,7 +1,7 @@
 syscfg NEWS
 
 
-2026-06-09 - 2026-06-13
+2026-06-09 - 2026-06-17
 =======================
 * Removed the EACCES assert to fix non-root users unable to create files and
   other potential issues.
@@ -17,6 +17,11 @@ syscfg NEWS
   typically be a breaking change for any independent hint implementations, if
   any, and is therefore marked as one.
   Breaking (backward-incompatible) change.
+
+* Clarified and formally specified more hint priorities. (242cd77, e018aaa,
+  93961dc)
+
+* Clarified $OBJ_PATH in __ed(). (42b22bf)
 
 
 2026-05-31 - 2026-05-31
