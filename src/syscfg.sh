@@ -1411,6 +1411,8 @@ __cmd() {
 # -c `-log`: Log file path for libfile().
 # -s `-no-sanit`: Preserve $OBJ_PATH variable.
 #
+# On success, $OBJ is set with the modified file data.
+#
 # For more information, refer to the documentation of fed(), hint() and
 # libfile().
 #.
@@ -1456,10 +1458,9 @@ __ed() {
     fi
 
     if hint -s 2 0 -no-sanit "$@"; then
-        OBJ="$1"; OBJ_PATH="$2"
-    else
-        OBJ="$1"; OBJ_PATH=
+        OBJ_PATH="$2"
     fi
+    OBJ="$1"
 
     return 0
 }
