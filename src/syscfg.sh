@@ -96,6 +96,35 @@ _version() {
 
 helper_functions() { # START helper_functions
 #! .desc:
+# Execute a client without any inherited positional parameters
+#! .params:
+# <$1> - N
+# <$2> - client
+# [$3]+ - argument
+#! .rc:
+# (0) success
+# (*) error
+#! .desc.ext:
+# $1 is a whole number that specifies a count of arguments to offset LTR.
+# The offset is used to skip unrelated parent function arguments.
+#.
+_exec() {
+    assert -min "$#" 2 || exit 255
+    assert -whole-n "$1" || exit 255
+
+    shift "$((1 + $1))"
+
+    _exec=$(
+        for _arg in "$@"; do
+            arg_set _quot "$_arg"; printf " %s" "$_quot"
+        done
+    )
+    set --
+
+    eval . "$_exec"
+}
+
+#! .desc:
 # Create a parent directory respecting the API specification
 #! .params:
 # <$@> - __write()
@@ -2273,7 +2302,7 @@ main() {
                 exit 1
             fi
 
-            . "$source"
+            _exec 0 "$source"
         fi
 
         eval " $1"
@@ -2287,11 +2316,11 @@ main() {
             fi
 
             if [ "$status_pager" ]; then
-                shift
-                { \
-                (. "$@" 2>&1) && \
-                printf "%s" '01' || \
-                printf "%s" "$?${#?}"; } | {
+                {
+                    _exec 1 "$@" 2>&1 && \
+                    printf "%s" '01' || \
+                    printf "%s" "$?${#?}"
+                } | {
                     file_preload -
                     case "${_file#"${_file%?}"}" in
                         1) set -- "${_file#"${_file%??}"}" "${_file%??}" ;;
@@ -2303,16 +2332,15 @@ main() {
                     return "$1"
                 }
             else
-                shift
-                { . "$@"; } > "$output"
+                _exec 1 "$@" > "$output"
             fi
         else
             if [ "$status_pager" ]; then
-                shift
-                { \
-                (. "$@" 2>&1) && \
-                printf "%s" '01' || \
-                printf "%s" "$?${#?}"; } | {
+                {
+                    _exec 1 "$@" 2>&1 && \
+                    printf "%s" '01' || \
+                    printf "%s" "$?${#?}"
+                } | {
                     file_preload -
                     case "${_file#"${_file%?}"}" in
                         1) set -- "${_file#"${_file%??}"}" "${_file%??}" ;;
@@ -2323,8 +2351,7 @@ main() {
                     return "$1"
                 }
             else
-                shift
-                . "$@"
+                _exec 1 "$@"
             fi
         fi
     )
