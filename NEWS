@@ -1,6 +1,13 @@
 syscfg NEWS
 
 
+2026-06-20 - 2026-06-20
+=======================
+* Fixed 7660e94 ("syscfg: Fix `.` positional parameters pollution") for
+  dash / strict POSIX shell implementations. Positional parameters are now
+  reliable across all tested shells: bash, dash, and ksh.
+
+
 2026-06-18 - 2026-06-19
 =======================
 * Fixed syscfg polluting the positional parameters of clients and files

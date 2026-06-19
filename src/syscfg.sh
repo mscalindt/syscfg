@@ -114,14 +114,13 @@ _exec() {
 
     shift "$((1 + $1))"
 
-    _exec=$(
-        for _arg in "$@"; do
-            arg_set _quot "$_arg"; printf " %s" "$_quot"
-        done
-    )
-    set --
-
-    eval . "$_exec"
+    # Emulate positional parameters environment. In the future, _exec() could
+    # even declare and set a complete, reproducible environment altogether.
+    #
+    # Keep in mind that the environment is to be disposed of as it cannot be
+    # trusted now; do not write dynamic post-execution code, as no sanitization
+    # glue exists as of yet.
+    arg_set _exec "$1" && shift && eval . "$_exec"
 }
 
 #! .desc:
