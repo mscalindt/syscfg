@@ -2292,66 +2292,59 @@ main() {
     # In the future, clients will be launched as an external command,
     # lexed and parsed by syscfg.
     (
-        CLIENT_NAME="$client_name"
+        # As a courtesy, actively try not to pollute the environment here until
+        # the client has finished execution. To achieve this, set all needed
+        # variables as positional parameters and do not set variables.
+        set -- "$client_name" "$output" "$pager" "$source" "$status_pager" "$@"
+
+        # $CLIENT_NAME is formally specified and therefore set, here.
+        CLIENT_NAME="$1"
         readonly CLIENT_NAME
 
-        if [ "$source" ]; then
-            if [ ! -f "$source" ]; then
-                err - - "${0##*/}: Not a valid file: $source"
+        if [ -e "$2" ] || [ -h "$2" ]; then
+            err - - "${0##*/}: Will not overwrite: $2"
 
-                exit 1
-            fi
-
-            _exec 0 "$source"
+            exit 1
         fi
 
-        eval " $1"
-        pager="${pager:-less}"
-        readonly pager
-        if [ "$output" ]; then
-            if [ -e "$output" ] || [ -h "$output" ]; then
-                err - - "${0##*/}: Will not overwrite: $output"
+        if [ "$4" ]; then
+            if [ ! -f "$4" ]; then
+                err - - "${0##*/}: Not a valid file: $4"
 
                 exit 1
             fi
 
-            if [ "$status_pager" ]; then
-                {
-                    _exec 1 "$@" 2>&1 && \
-                    printf "%s" '01' || \
-                    printf "%s" "$?${#?}"
-                } | {
-                    file_preload -
-                    case "${_file#"${_file%?}"}" in
-                        1) set -- "${_file#"${_file%??}"}" "${_file%??}" ;;
-                        2) set -- "${_file#"${_file%???}"}" "${_file%???}" ;;
-                        3) set -- "${_file#"${_file%????}"}" "${_file%????}" ;;
-                    esac; set -- "${1%?}" "$2"
-                    printf "%s" "$2" > "$output"
-                    printf "%s" "$2" | "$pager"
-                    return "$1"
-                }
-            else
-                _exec 1 "$@" > "$output"
-            fi
+            _exec 0 "$4"
+        fi
+
+        # Offset the set positional parameters + 1 (original $1) using _exec().
+        if [ "$5" ]; then
+            {
+                _exec 6 "$@" 2>&1 && \
+                printf "%s" '01' || \
+                printf "%s" "$?${#?}"
+            } | {
+                # Extract and save the return code and client output as $1/$2,
+                # respectively. Keep in mind positional parameters shift.
+                file_preload -
+                case "${_file#"${_file%?}"}" in
+                    1) _rc="${_file#"${_file%??}"}"; _out="${_file%??}" ;;
+                    2) _rc="${_file#"${_file%???}"}"; _out="${_file%???}" ;;
+                    3) _rc="${_file#"${_file%????}"}"; _out="${_file%????}" ;;
+                esac
+                set -- "${_rc%?}" "$_out" "$@"  # strip rc len
+
+                if [ "$4" ]; then
+                    printf "%s" "$2" > "$4"
+                fi
+                printf "%s" "$2" | "${5:-less}"
+                return "$1"
+            }
         else
-            if [ "$status_pager" ]; then
-                {
-                    _exec 1 "$@" 2>&1 && \
-                    printf "%s" '01' || \
-                    printf "%s" "$?${#?}"
-                } | {
-                    file_preload -
-                    case "${_file#"${_file%?}"}" in
-                        1) set -- "${_file#"${_file%??}"}" "${_file%??}" ;;
-                        2) set -- "${_file#"${_file%???}"}" "${_file%???}" ;;
-                        3) set -- "${_file#"${_file%????}"}" "${_file%????}" ;;
-                    esac; set -- "${1%?}" "$2"
-                    printf "%s" "$2" | "$pager"
-                    return "$1"
-                }
+            if [ "$2" ]; then
+                _exec 6 "$@" > "$2"
             else
-                _exec 1 "$@"
+                _exec 6 "$@"
             fi
         fi
     )

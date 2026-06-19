@@ -1,12 +1,17 @@
 syscfg NEWS
 
 
-2026-06-18 - 2026-06-18
+2026-06-18 - 2026-06-19
 =======================
 * Fixed syscfg polluting the positional parameters of clients and files
   specified by $source. They will now have only $0 to access and all other
   parameters will be free to use, as was intended.
   Breaking (backward-incompatible) change.
+
+* Fixed syscfg polluting the environment of clients and files specified by
+  $source with readonly variables. From our point of view, clients and $source
+  files will now have a mostly identical environment. Additionally clarified
+  the environment for clients and $source files in documentation.
 
 
 2026-06-09 - 2026-06-17

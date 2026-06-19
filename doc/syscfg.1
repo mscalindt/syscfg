@@ -19,8 +19,13 @@ powerful administration API for its clients to use. Clients are configuration
 files that may contain de facto POSIX shell code to execute along with
 the API.
 
+.SH ENVIRONMENT
+
 Variable \fBCLIENT_NAME\fR, if not manually specified using
-\fB-n\fR / \fB--client-name\fR, will be derived from the basename of the client.
+\fB-n\fR / \fB--client-name\fR, will be derived from the basename of the client
+and \fBset readonly\fR.
+
+Variable \fBLC_ALL\fR will be set to \fBC\fR and \fBexported\fR.
 
 .SH API
 Certain API functions may reference and/or refer to documentation outside of
@@ -465,7 +470,10 @@ Disable write statistics information.
 \fB-s, --source\fR \fIPATH\fR
 .RS
 Specify a file path to source. If the file does not exist, execution will abort
-with exit status \fB1\fR.
+with exit status \fB1\fR. The sourced file will have an environment as defined
+by \fBsyscfg\fR for clients.
+
+\fBNote:\fR The sourced file can affect the environment of the client.
 .RE
 
 .PP
