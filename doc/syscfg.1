@@ -19,6 +19,10 @@ powerful administration API for its clients to use. Clients are configuration
 files that may contain de facto POSIX shell code to execute along with
 the API.
 
+\fBNote:\fR Currently, as \fBsyscfg\fR lacks its own lexer and parser of shell
+code, the execution of clients cannot be verified to be safe. Therefore,
+a manual, independent audit of client code is necessary for security.
+
 .SH ENVIRONMENT
 
 Variable \fBCLIENT_NAME\fR, if not manually specified using
