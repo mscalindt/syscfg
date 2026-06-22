@@ -327,13 +327,17 @@ ed_fmt() {
 #! .rc:
 # (0) success
 # (*) error
+#! .ec:
+# (255) input error
 #! .desc.ext:
-# The format must be an evaluable array of arguments.
+# The format must be a pseudo array of single-quote-escaped arguments.
 #
 # For more information, refer to the documentation of __ed(), fed(), and
 # libfile().
 #.
 ed_exec() {
+    assert -single-quotes-array "$3" || exit 255
+
     _a="$1"; _b="$2"; eval set -- "$3"
 
     libfile "$_a" "$_b" "$@"

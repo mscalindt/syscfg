@@ -1,6 +1,12 @@
 syscfg NEWS
 
 
+2026-06-22 - 2026-06-22
+=======================
+* Fixed critical use-without-assert `eval` vulnerability in ed_exec() and
+  precisely clarified the type of format accepted.
+
+
 2026-06-20 - 2026-06-20
 =======================
 * Fixed 7660e94 ("syscfg: Fix `.` positional parameters pollution") for
