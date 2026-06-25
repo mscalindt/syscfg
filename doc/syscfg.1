@@ -31,6 +31,9 @@ and \fBset readonly\fR.
 
 Variable \fBLC_ALL\fR will be set to \fBC\fR and \fBexported\fR.
 
+Variable \fBNO_COLOR\fR, if \fB--no-color\fR is specified, will be set to
+a non-empty value and \fBset readonly\fR.
+
 .SH API
 Certain API functions may reference and/or refer to documentation outside of
 their scope. Refer to the documentation and/or source of \fBshell-glossary\fR.
@@ -418,7 +421,7 @@ Specify the client name.
 .B --no-color
 .RS
 Specify not to use ANSI color escape sequences. Variable \fBNO_COLOR\fR will be
-set to a non-empty value.
+set as defined by \fBsyscfg\fR.
 .RE
 
 .PP
