@@ -1,12 +1,17 @@
 syscfg NEWS
 
 
-2026-06-22 - 2026-06-22
+2026-06-22 - 2026-06-28
 =======================
 * Fixed critical use-without-assert `eval` vulnerability in ed_exec() and
   precisely clarified the type of format accepted.
 
 * Documented how syscfg is not yet secure. (5c2fabc)
+
+* Synced shell-glossary to release 20260625. This removes the `---` format
+  option of info(); also applies to err(). In syscfg, this change also applies
+  to __info() and __err() API functions.
+  Breaking (backward-incompatible) change.
 
 
 2026-06-20 - 2026-06-20
