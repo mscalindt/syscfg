@@ -1683,6 +1683,20 @@ __obj_write_ow_soft() {
 }
 
 #! .desc:
+# Simply print a string as-is
+#! .params:
+# [$1]+ - string
+#! .desc.ext:
+# Multiple string parameters are joined together as if one whole, with no
+# spacing between parameters. No <newline> character is printed after it.
+#
+# For more information, refer to the documentation of info().
+#.
+__say() {
+    IFS= info - -- "$@"
+}
+
+#! .desc:
 # Validate and perform a write
 #! .params:
 # <$1> - type(

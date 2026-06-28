@@ -13,6 +13,10 @@ syscfg NEWS
   to __info() and __err() API functions.
   Breaking (backward-incompatible) change.
 
+* Introduced new __say() API function. It simply prints a string as passed,
+  naturally avoiding $IFS quirks and/or client string prefix of __info().
+  Intended for programmatical strings/clients.
+
 
 2026-06-20 - 2026-06-20
 =======================
