@@ -1,6 +1,14 @@
 syscfg NEWS
 
 
+2026-07-04 - 2026-07-04
+=======================
+* Makefile variables $BIN_INSTALL, $MAN1_INSTALL, $INS, $BIN_FLAGS, and
+  $MAN_FLAGS have been removed. Technically a breaking change, and is therefore
+  marked as one.
+  Breaking (backward-incompatible) change.
+
+
 2026-06-22 - 2026-06-28
 =======================
 * Fixed critical use-without-assert `eval` vulnerability in ed_exec() and

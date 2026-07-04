@@ -8,14 +8,6 @@ PREFIX  = /usr/local
 BINDIR  = $(PREFIX)/bin
 MAN1DIR = $(PREFIX)/share/man/man1
 
-BIN_INSTALL  = $(BINDIR)/$(PROGNAME)
-MAN1_INSTALL = $(MAN1DIR)/$(PROGNAME).1
-
-# Note: `install` is not POSIX and the `-D` option is not portable.
-INS       = install
-BIN_FLAGS = -D -m 755
-MAN_FLAGS = -D -m 644
-
 build: ./$(PROGNAME)
 ./$(PROGNAME): ./src/syscfg.sh
 	sh ./scripts/build.sh ./src/syscfg.sh
@@ -23,14 +15,16 @@ build: ./$(PROGNAME)
 clean:
 	rm -fv ./$(PROGNAME)
 
+# Note: `install` is not POSIX and the `-D` option is not portable.
+#
 # Leverages the timestamp checking capability of `make` to individually decide
 # whether to install all or some of the associated program files.
-install: $(DESTDIR)$(BIN_INSTALL) \
-         $(DESTDIR)$(MAN1_INSTALL)
-$(DESTDIR)$(BIN_INSTALL): ./$(PROGNAME)
-	$(INS) $(BIN_FLAGS) $< $@
-$(DESTDIR)$(MAN1_INSTALL): ./doc/$(PROGNAME).1
-	$(INS) $(MAN_FLAGS) $< $@
+install: $(DESTDIR)$(BINDIR)/$(PROGNAME) \
+         $(DESTDIR)$(MAN1DIR)/$(PROGNAME).1
+$(DESTDIR)$(BINDIR)/$(PROGNAME): ./$(PROGNAME)
+	install -Dm755 $< $@
+$(DESTDIR)$(MAN1DIR)/$(PROGNAME).1: ./doc/$(PROGNAME).1
+	install -Dm644 $< $@
 
 rel:
 	@test -n "$(REL)" || { echo 'REL is empty'; exit 2; }
@@ -52,5 +46,5 @@ srcs:
 	sh ./scripts/srcs.sh
 
 uninstall:
-	rm -fv $(DESTDIR)$(BIN_INSTALL)
-	rm -fv $(DESTDIR)$(MAN1_INSTALL)
+	rm -fv $(DESTDIR)$(BINDIR)/$(PROGNAME)
+	rm -fv $(DESTDIR)$(MAN1DIR)/$(PROGNAME).1
