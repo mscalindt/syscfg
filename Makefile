@@ -1,50 +1,51 @@
-.PHONY: build clean install rel rel_commit sbm_up srcs uninstall
-
-# Currently not meant to be modified, as the build does not account for it.
-PROGNAME = syscfg
+PROG = syscfg
+build: ./$(PROG)
 
 DESTDIR =
 PREFIX  = /usr/local
 BINDIR  = $(PREFIX)/bin
 MAN1DIR = $(PREFIX)/share/man/man1
 
-build: ./$(PROGNAME)
-./$(PROGNAME): ./src/syscfg.sh
-	sh ./scripts/build.sh ./src/syscfg.sh
+# A 'FORCE' prerequisite to always run a certain target. Similar to a target
+# defined in `.PHONY`.
+FORCE:
 
-clean:
-	rm -fv ./$(PROGNAME)
+./$(PROG): ./src/$(PROG).sh
+	@sh ./scripts/build.sh "$(PROG)" $^
+
+clean: FORCE
+	rm -fv ./$(PROG)
 
 # Note: `install` is not POSIX and the `-D` option is not portable.
 #
 # Leverages the timestamp checking capability of `make` to individually decide
 # whether to install all or some of the associated program files.
-install: $(DESTDIR)$(BINDIR)/$(PROGNAME) \
-         $(DESTDIR)$(MAN1DIR)/$(PROGNAME).1
-$(DESTDIR)$(BINDIR)/$(PROGNAME): ./$(PROGNAME)
+install: $(DESTDIR)$(BINDIR)/$(PROG) \
+         $(DESTDIR)$(MAN1DIR)/$(PROG).1
+$(DESTDIR)$(BINDIR)/$(PROG): ./$(PROG)
 	install -Dm755 $< $@
-$(DESTDIR)$(MAN1DIR)/$(PROGNAME).1: ./doc/$(PROGNAME).1
+$(DESTDIR)$(MAN1DIR)/$(PROG).1: ./doc/$(PROG).1
 	install -Dm644 $< $@
 
-rel:
+rel: FORCE
 	@test -n "$(REL)" || { echo 'REL is empty'; exit 2; }
 	@test -n "$(PRE)" || { echo 'PRE is empty'; exit 2; }
 	@test -n "$(CUR)" || { echo 'CUR is empty'; exit 2; }
 	@test -n "$(NEWS)" || { echo 'NEWS is empty'; exit 2; }
 	sh ./scripts/rel.sh "$(REL)" "$(PRE)" "$(CUR)" "$(NEWS)"
 
-rel_commit:
+rel_commit: FORCE
 	@test -n "$(NEWS)" || { echo 'NEWS is empty'; exit 2; }
 	sh ./scripts/rel_commit.sh "$(NEWS)"
 
-sbm_up:
+sbm_up: FORCE
 	@test -n "$(SUB)" || { echo 'SUB is empty'; exit 2; }
 	@test -n "$(TAG)" || { echo 'TAG is empty'; exit 2; }
 	sh ./scripts/sbm_up.sh "$(SUB)" "$(TAG)"
 
-srcs:
+srcs: FORCE
 	sh ./scripts/srcs.sh
 
-uninstall:
-	rm -fv $(DESTDIR)$(BINDIR)/$(PROGNAME)
-	rm -fv $(DESTDIR)$(MAN1DIR)/$(PROGNAME).1
+uninstall: FORCE
+	rm -fv $(DESTDIR)$(BINDIR)/$(PROG)
+	rm -fv $(DESTDIR)$(MAN1DIR)/$(PROG).1

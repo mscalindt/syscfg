@@ -1,27 +1,22 @@
+# $1 = name
+# $2+ = files
+
 set -e
 
-while [ "$#" -ge 1 ]; do
-    FILE=$(cat "$1")
-    read -r FILE_SHEBANG < "$1"
+NAME="$1"
+shift
 
-    FILE="${FILE#"$FILE_SHEBANG"}"
-
-    for f in ./lib/shell-glossary/src/*; do
-        f=$(cat "$f")
-        FILE="$f
-$FILE"
-    done
-
-    FILE="$FILE_SHEBANG
-$FILE"
-
-    NAME="$1"
-    NAME="${NAME##*/}"
-    NAME="${NAME%.sh}"
-    printf "%s\n" "$FILE" > ./"$NAME"
-    chmod 0755 "$NAME" || :
-
-    printf "%s\n" "> $PWD/$NAME"
-
-    shift
+read -r FILE < "$1"
+for _func in ./lib/shell-glossary/src/*; do
+    FILE="$FILE
+$(cat "$_func")"
 done
+for _file in "$@"; do
+    FILE="$FILE
+$(cat "$_file")"
+done
+
+printf "%s\n" "$FILE" > "$PWD/$NAME"
+chmod 0755 "$PWD/$NAME" || :
+
+printf "%s\n" "> $PWD/$NAME"
