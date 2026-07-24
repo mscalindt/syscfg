@@ -15,7 +15,7 @@ its clients to use.
 
 ```
 $ git describe
-20260422
+20260724
 $ ./syscfg --help
 Usage: syscfg [options] [--] FILE [ARG...]
 Declarative OS configuration.
@@ -24,36 +24,36 @@ Options:
   -d, --disable-write-avoidance
                                 disable write avoidance
       --disable-write-avoidance-group
-                                disable the write avoidance assert of group
-                                ownership
+                                disable the write avoidance assert of
+                                group ownership
       --disable-write-avoidance-perm
                                 disable the write avoidance assert of
                                 permissions (mode)
       --disable-write-avoidance-type
-                                disable the write avoidance assert of object
-                                type
+                                disable the write avoidance assert of
+                                object type
       --disable-write-avoidance-type-attr
-                                disable the write avoidance assert of object
-                                type attributes
+                                disable the write avoidance assert of
+                                object type attributes
       --disable-write-avoidance-user
-                                disable the write avoidance assert of user
-                                ownership
+                                disable the write avoidance assert of
+                                user ownership
   -D, --disable-write-sync      disable write synchronization
       --disable-write-sync-group
-                                disable the write synchronization for group
-                                ownership
+                                disable the write synchronization for
+                                group ownership
       --disable-write-sync-perm
                                 disable the write synchronization for
                                 permissions (mode)
       --disable-write-sync-type
-                                disable the write synchronization for object
-                                type
+                                disable the write synchronization for
+                                object type
       --disable-write-sync-type-attr
-                                disable the write synchronization for object
-                                type attributes
+                                disable the write synchronization for
+                                object type attributes
       --disable-write-sync-user
-                                disable the write synchronization
-                                for user ownership
+                                disable the write synchronization for
+                                user ownership
   -n, --client-name <NAME>      specify the client name
       --no-color                do not use color escape sequences
   -o, --output <PATH>           specify a file path to write the client output
