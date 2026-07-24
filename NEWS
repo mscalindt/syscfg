@@ -1,12 +1,15 @@
 syscfg NEWS
 
 
-2026-07-04 - 2026-07-04
+2026-07-04 - 2026-07-24
 =======================
 * Makefile variables $BIN_INSTALL, $MAN1_INSTALL, $INS, $BIN_FLAGS, and
   $MAN_FLAGS have been removed. Technically a breaking change, and is therefore
   marked as one.
   Breaking (backward-incompatible) change.
+
+* Synced shell-glossary to release 20260723. For more information, refer to
+  the corresponding documentation.
 
 
 2026-06-22 - 2026-06-28
