@@ -1398,8 +1398,8 @@ __cmd() {
     cmd_info "$@"
 
     if hint -s 0 0 -req-out "$@" || hint -s 0 0 -out-save "$@"; then
-        set -- "$(cmd "$@" && printf "%s" x)" "$@" || return "$?"
-        set -- "${1%?}" "$@"
+        set -- "$(cmd "$@" && printf "%s" .)" "$@" || return "$?"
+        set -- "${1%.}" "$@"
     else
         cmd "$@" && return 0 || return "$?"
     fi

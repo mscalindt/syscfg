@@ -45,8 +45,8 @@ case "$D" in
     0*) D="${D#0}" ;;
 esac
 
-FILE=$(cat ./src/syscfg.sh && printf "%s" 'x')
-FILE="${FILE%?}"
+FILE=$(cat ./src/syscfg.sh && printf "%s" .)
+FILE="${FILE%.}"
 FILE=$(
     x=
 
@@ -69,14 +69,14 @@ FILE=$(
     if [ "$LINE" ]; then
         printf "%s" "$LINE"
     fi
-    printf "%s" 'x'; }
+    printf "%s" .; }
 )
-FILE="${FILE%?}"
+FILE="${FILE%.}"
 printf "%s" "$FILE" > ./src/syscfg.sh
 git add ./src/syscfg.sh
 
-FILE=$(cat ./doc/syscfg.1 && printf "%s" 'x')
-FILE="${FILE%?}"
+FILE=$(cat ./doc/syscfg.1 && printf "%s" .)
+FILE="${FILE%.}"
 FILE=$(
     flag=1
 
@@ -92,9 +92,9 @@ FILE=$(
     if [ "$LINE" ]; then
         printf "%s" "$LINE"
     fi
-    printf "%s" 'x'; }
+    printf "%s" .; }
 )
-FILE="${FILE%?}"
+FILE="${FILE%.}"
 printf "%s" "$FILE" > ./doc/syscfg.1
 git add ./doc/syscfg.1
 
