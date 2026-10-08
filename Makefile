@@ -41,7 +41,7 @@ rel_commit: FORCE
 sbm_up: FORCE
 	@test -n "$(SUB)" || { echo 'SUB is empty'; exit 2; }
 	@test -n "$(TAG)" || { echo 'TAG is empty'; exit 2; }
-	sh ./scripts/sbm_up.sh "$(SUB)" "$(TAG)"
+	sh ./scripts/sbm_up.sh "$(SUB)" "$(TAG)" "$(ALIAS)"
 
 srcs: FORCE
 	sh ./scripts/srcs.sh

@@ -4,18 +4,18 @@ case "${1:-x}" in
     '-h' | '--help' | 'x')
         printf "%s\n" '$1 = SUBMODULE RELATIVE GIT PATH'
         printf "%s\n" '$2 = TAG'
+        printf "%s\n" '$3 = ALIAS'
 
         exit 0
     ;;
 esac
 
-[ "$#" -eq 2 ] || { echo "Expected exactly 2 arguments; got $#."; exit 2; }
+case "$#" in
+    2|3) ;;
+    *) echo "Expected 2 or 3 arguments; got $#."; exit 2 ;;
+esac
 [ "$1" ] || { echo '$1/SUB is empty.'; exit 2; }
 [ "$2" ] || { echo '$2/TAG is empty.'; exit 2; }
-
-case "$1" in
-    *'shell-glossary'*) MOD_ALIAS='shell-glossary' ;;
-esac
 
 cd "$1"
 MAIN_DIR="$OLDPWD"
@@ -29,9 +29,9 @@ git add .
 
 if [ "$LOG" ]; then
     git commit -m \
-".gitmodules: $MOD_ALIAS -> \`$2\`
+".gitmodules: ${3:-$1} -> \`$2\`
 
 $LOG" -Ss
 else
-    git commit -m ".gitmodules: $MOD_ALIAS -> \`$2\`" -Ss
+    git commit -m ".gitmodules: ${3:-$1} -> \`$2\`" -Ss
 fi
