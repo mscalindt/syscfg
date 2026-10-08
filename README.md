@@ -15,7 +15,7 @@ its clients to use.
 
 ```
 $ git describe
-20260724
+20261009
 $ ./syscfg --help
 Usage: syscfg [options] [--] FILE [ARG...]
 Declarative OS configuration.
@@ -61,11 +61,11 @@ Options:
   -p, --pager <NAME>            specify a pager to use if required
   -s, --source <PATH>           specify a file path to source
   -S, --silent                  disable all syscfg output
-      --silent-cmd              disable command output
-      --silent-cmd-info         disable commands to be ran information
-      --silent-write            disable write content information
-      --silent-write-avoidance  disable write avoidance information
-      --silent-write-stat       disable write statistics information
+      --silent-cmd              disable client command output
+      --silent-cmd-info         disable client commands to be ran output
+      --silent-write            disable syscfg write content output
+      --silent-write-avoidance  disable syscfg write avoidance output
+      --silent-write-stat       disable syscfg write statistics output
       --status-pager            send the client output to a pager
   -w, --write-always            elevate to state "hard overwrite" all (soft)
                                 overwrites
