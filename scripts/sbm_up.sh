@@ -23,46 +23,14 @@ git fetch
 COMMIT="$(git rev-list -n1 "$2")"
 LOG="$(git log --pretty=format:'%h %s' --no-decorate "HEAD..$COMMIT")"
 
-case "$MOD_ALIAS" in
-    'shell-glossary')
-        SRC_LOG=$(
-            printf "%s\n" "$LOG" | {
-                while IFS= read -r LINE; do
-                    case "$LINE" in
-                        *'(): [doc]'*)
-                            continue
-                        ;;
-                        *'src: '* | *'(): '*)
-                            printf "%s\n" "$LINE"
-                        ;;
-                        *)
-                            continue
-                        ;;
-                    esac
-                done
-            }
-        )
-    ;;
-esac
-
 git checkout "$COMMIT"
 cd "$MAIN_DIR"
 git add .
 
-if [ "$SRC_LOG" ] && [ ! "$SRC_LOG" = "$LOG" ]; then
+if [ "$LOG" ]; then
     git commit -m \
 ".gitmodules: $MOD_ALIAS -> \`$2\`
 
-- Filtered log:
-$SRC_LOG
-
-- Complete log:
-$LOG" -Ss
-elif [ "$LOG" ]; then
-    git commit -m \
-".gitmodules: $MOD_ALIAS -> \`$2\`
-
-- Complete log:
 $LOG" -Ss
 else
     git commit -m ".gitmodules: $MOD_ALIAS -> \`$2\`" -Ss
