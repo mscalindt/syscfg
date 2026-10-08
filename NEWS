@@ -1,6 +1,12 @@
 syscfg NEWS
 
 
+2026-10-09 - 2026-10-09
+=======================
+* Synced shell-glossary to release 20260916. For more information, refer to
+  the corresponding documentation.
+
+
 2026-07-04 - 2026-07-24
 =======================
 * Makefile variables $BIN_INSTALL, $MAN1_INSTALL, $INS, $BIN_FLAGS, and
