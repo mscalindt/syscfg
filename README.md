@@ -15,7 +15,7 @@ its clients to use.
 
 ```
 $ git describe
-20261009
+20261009.2
 $ ./syscfg --help
 Usage: syscfg [options] [--] FILE [ARG...]
 Declarative OS configuration.
