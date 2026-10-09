@@ -32,7 +32,7 @@ rel: FORCE
 	@test -n "$(PRE)" || { echo 'PRE is empty'; exit 2; }
 	@test -n "$(CUR)" || { echo 'CUR is empty'; exit 2; }
 	@test -n "$(NEWS)" || { echo 'NEWS is empty'; exit 2; }
-	sh ./scripts/rel.sh "$(REL)" "$(PRE)" "$(CUR)" "$(NEWS)"
+	sh ./scripts/rel.sh "$(REL)" "$(PRE)" "$(CUR)" "$(NEWS)" "$(EDIT)"
 
 rel_commit: FORCE
 	@test -n "$(NEWS)" || { echo 'NEWS is empty'; exit 2; }
