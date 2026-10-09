@@ -14,11 +14,10 @@ case "$1" in
     *) echo 'Bad $1/NEWS bool.'; exit 2 ;;
 esac
 
-if [ "$1" -eq 1 ]; then
-    NEWS='News are available in the description of the release tag.'
-else
-    NEWS='Release news may be missing.'
-fi
+case "$1" in
+    0) NEWS= ;;
+    1) NEWS='News are available in the description of the release tag.' ;;
+esac
 
 # not UTC
 DATE=$(date +%Y%m%d)
