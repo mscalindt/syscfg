@@ -97,6 +97,6 @@ FILE="${FILE%.}"
 printf "%s" "$FILE" > ./doc/syscfg.1
 git add ./doc/syscfg.1
 
-git commit -sS -m "syscfg $DATE
+git commit --allow-empty -sS -m "syscfg $DATE
 
 $NEWS"
