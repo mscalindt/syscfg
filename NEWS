@@ -1,6 +1,12 @@
 syscfg NEWS
 
 
+2026-11-23 - 2026-11-23
+=======================
+* Clarified in documentation that __write() is not subject to state changes by
+  any options that elevate the state of writes.
+
+
 2026-10-09 - 2026-10-09
 =======================
 * Synced shell-glossary to release 20260916. For more information, refer to

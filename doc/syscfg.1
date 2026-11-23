@@ -331,6 +331,9 @@ Hints:
 .RE
 .RE
 
+.PP
+\fBNote:\fR Direct usage of __write() is not subject to state changes.
+
 .SH OPTIONS
 Options can be specified in any order.
 
@@ -508,6 +511,8 @@ Elevate to state "hard overwrite" all (soft) overwrites. A hard overwrite is
 always valid and overwrites by deletion.
 
 \fBNote:\fR This option only elevates all soft (and soft elevated) overwrites.
+
+\fBNote:\fR __write() itself is not subject to state changes.
 .RE
 
 .PP
@@ -520,6 +525,8 @@ atomic overwrite.
 \fBNote:\fR Currently no writes are atomic, and some targets are not supported
 for write avoidance and/or in-place overwrite. A soft overwrite will
 automatically be elevated to hard overwrite when unsupported.
+
+\fBNote:\fR __write() itself is not subject to state changes.
 .RE
 
 .PP
