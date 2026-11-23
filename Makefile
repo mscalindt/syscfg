@@ -1,5 +1,5 @@
 PROG = syscfg
-build: ./$(PROG)
+build: ./$(PROG) ./shell-glossary
 
 DESTDIR =
 PREFIX  = /usr/local
@@ -10,11 +10,17 @@ MAN1DIR = $(PREFIX)/share/man/man1
 # defined in `.PHONY`.
 FORCE:
 
-./$(PROG): ./src/$(PROG).sh
+./$(PROG): ./shell-glossary ./src/$(PROG).sh
 	@sh ./scripts/build.sh "$(PROG)" $^
+./lib/shell-glossary/shell-glossary: FORCE
+	@(cd lib/shell-glossary && $(MAKE))
+./shell-glossary: ./lib/shell-glossary/shell-glossary
+	@cp $< ./$@
+	@printf "%s\n" "> $$PWD/$@"
 
 clean: FORCE
-	rm -fv ./$(PROG)
+	rm -fv ./$(PROG) ./shell-glossary
+	@-(cd lib/shell-glossary && $(MAKE) clean)
 
 # Note: `install` is not POSIX and the `-D` option is not portable.
 #

@@ -9,7 +9,7 @@ NAME="$1"
 shift
 
 FILE="$SHEBANG"
-for _arg in ./lib/shell-glossary/src/* "$@"; do
+for _arg in "$@"; do
     FILE="$FILE
 $(cat "$_arg")"
 done

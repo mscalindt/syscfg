@@ -6,6 +6,9 @@ syscfg NEWS
 * Clarified in documentation that __write() is not subject to state changes by
   any options that elevate the state of writes.
 
+* Synced shell-glossary to release 20261120. This allows syscfg to properly
+  track shell-glossary as a build dependency.
+
 
 2026-10-09 - 2026-10-09
 =======================
